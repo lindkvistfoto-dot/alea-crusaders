@@ -46,6 +46,7 @@ async function refreshMapOnce(){
   else void openMapLocationInfoByArea(mapSelectedAreaId,true);
  }
  renderMapPanel();
+ await window.aleaKartakademin?.syncCampaign(activeCampaignMap,areas,true);
 }
 export async function reconcileCampaignMap(){
  if(!mapPanelOpen())return;

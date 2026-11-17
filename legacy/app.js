@@ -3870,7 +3870,7 @@ async function deleteCampaignLocation(id){
  try{await dbJson('campaign_locations?id=eq.'+encodeURIComponent(id),{method:'DELETE',headers:{'Prefer':'return=minimal'}});await loadCampaignPlaceData();renderAdminMaps()}catch(e){alert('Kunde inte ta bort platsen: '+e.message)}
 }
 let mapAreaEditMap=null,mapAreaEditAreas=[],mapAreaDraft=[],mapAreaDrawing=false,mapAreaLastSnap='',mapAreaSelectedId=null,mapAreaNodeDrag=null,mapAreaHoleCandidates=[];
-function closeMapAreaEditor(){if(mapAreaNodeDrag)return;mapAreaDrawing=false;mapAreaDraft=[];mapAreaEditMap=null;mapAreaEditAreas=[];mapAreaSelectedId=null;mapAreaHoleCandidates=[];$('mapAreaEditor').classList.add('hidden')}
+function closeMapAreaEditor(){if(mapAreaNodeDrag)return;window.aleaKartakademin?.closeEditor();mapAreaDrawing=false;mapAreaDraft=[];mapAreaEditMap=null;mapAreaEditAreas=[];mapAreaSelectedId=null;mapAreaHoleCandidates=[];$('mapAreaEditor').classList.add('hidden')}
 async function openMapAreaEditor(mapId){
  let map=campaignMaps.find(m=>m.id===mapId);if(!map)return;
  try{
@@ -3882,6 +3882,7 @@ async function openMapAreaEditor(mapId){
   $('mapAreaSvg').setAttribute('viewBox',`0 0 ${map.width} ${map.height}`);
   $('mapAreaLocation').innerHTML='<option value="">Ingen plats kopplad ännu</option>'+campaignLocations.map(l=>`<option value="${l.id}">${escAttr(sitePath(l.site_id)+' › '+l.location_key+'. '+l.name)}</option>`).join('');
   $('mapAreaEditor').classList.remove('hidden');renderMapAreaEditor();
+  window.aleaKartakademin?.openEditor(map, areas, url);
  }catch(e){alert('Kunde inte öppna polygoneditorn: '+e.message)}
 }
 function areaShapePoints(a){
@@ -4009,7 +4010,7 @@ async function mapAreaNodeEnd(){
 async function showMapAreaHoles(){
  if(!mapAreaEditMap||mapAreaDrawing||mapAreaNodeDrag)return;
  try{
-  const {findHoles}=await import('./features/map/polygon-topology.js');
+  const {findHoles}=await import('../features/map/polygon-topology.js');
   mapAreaHoleCandidates=findHoles(mapAreaEditAreas.map(areaShapePoints));
   renderMapAreaEditor();
   showBackupToast(mapAreaHoleCandidates.length?'Välj ett markerat tomrum för att fylla det':'Inga slutna tomrum hittades');
@@ -4019,7 +4020,7 @@ async function fillMapAreaHole(e,index){
  e.stopPropagation();if(mapAreaDrawing||mapAreaNodeDrag||!mapAreaEditMap)return;
  const hole=mapAreaHoleCandidates[index];if(!hole)return;
  try{
-  const {mergeHole,sharedBoundaryLength}=await import('./features/map/polygon-topology.js');
+  const {mergeHole,sharedBoundaryLength}=await import('../features/map/polygon-topology.js');
   const candidates=mapAreaEditAreas.map(a=>({a,points:areaShapePoints(a)})).map(c=>({...c,merged:mergeHole(c.points,hole.points)})).filter(c=>c.merged);
   if(!candidates.length){alert('Tomrummet delar ingen sammanhängande kant med en polygon som kan utökas.');return}
   let choice=candidates.find(c=>c.a.id===mapAreaSelectedId)||candidates.sort((x,y)=>sharedBoundaryLength(y.points,hole.points)-sharedBoundaryLength(x.points,hole.points))[0];
@@ -4159,7 +4160,7 @@ async function openMap(){
  renderMapPanel();renderMapLibraryControls();
  try{await Promise.all([loadCampaignMaps(true),loadCampaignPlaceData(),loadCampaignContentData()])}catch(e){console.error('Kunde inte uppdatera kartor och platsinnehåll',e)}
 }
-function closeMap(){closeMapStatusMenu();
+function closeMap(){closeMapStatusMenu();window.aleaKartakademin?.clearCampaign();
  $('mapPage').classList.add('hidden');
  if(mapReturn==='combat'){$('combatPage').classList.remove('hidden')}
  else if(mapReturn==='dice'){$('dicePage').classList.remove('hidden')}
@@ -4169,6 +4170,7 @@ function closeMap(){closeMapStatusMenu();
 }
 function setCampaignMapData(map,areas=[]){activeCampaignMap=map||null;campaignMapAreas=Array.isArray(areas)?areas:[];renderMapPanel();if(activeCampaignMap)requestAnimationFrame(resetMapView)}
 function renderMapPanel(){
+ void window.aleaKartakademin?.syncCampaign(activeCampaignMap,campaignMapAreas);
  let img=$('mapImage'),overlay=$('mapOverlay'),placeholder=$('mapPlaceholder'),subtitle=$('mapSubtitle'),status=$('mapStatusText');
  let viewport=$('mapViewport');
  if(!activeCampaignMap){
