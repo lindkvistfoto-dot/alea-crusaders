@@ -34,7 +34,7 @@ describe('DEV-only OLYMPIA isolation',()=>{
 
   it('builds the DEV-only OLYMPIA tree only from the Cloudflare development branch',()=>{
     expect(vite).toContain('process.env.CF_PAGES === "1" ? process.env.CF_PAGES_BRANCH');
-    expect(vite).toContain('cloudflareBranch === "development"');
+    expect(vite).toContain('process.env.CF_PAGES_BRANCH === "development"');
     expect(vite).toContain('CF_PAGES_COMMIT_SHA');
     expect(vite).toContain('source_sha: sourceSha');
   });
