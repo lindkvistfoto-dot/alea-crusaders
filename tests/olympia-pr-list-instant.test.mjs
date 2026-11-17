@@ -9,11 +9,10 @@ const list = edge.slice(edge.indexOf('if (data.action === "pull_request_list")')
 const candidateHelper = edge.slice(edge.indexOf('async function fetchActiveCandidateParents'), edge.indexOf('Deno.serve'));
 
 describe('OLYMPIA instant PR-list recovery', () => {
-  it('uses the authenticated PR-list response as the normal Zeus verification and checks session separately only after list failure', () => {
+  it('verifies the ALEA session and Zeus before requesting GitHub PRs', () => {
     const verify = frontend.slice(frontend.indexOf('async function verify()'), frontend.indexOf('function feedback'));
-    expect(verify.indexOf("window.olympiaV2Request({action:'pull_request_list'})")).toBeLessThan(verify.indexOf('await prListPromise'));
-    expect(verify.indexOf("call({action:'session_check'}")).toBeGreaterThan(verify.indexOf('catch(listError)'));
-    expect(verify).toContain('Zeus verifierades av servern vid den skyddade PR-listan.');
+    expect(verify.indexOf("window.olympiaV2Request({action:'session_check'}")).toBeLessThan(verify.indexOf("window.olympiaV2Request({action:'pull_request_list',includeCandidateParents:false}"));
+    expect(verify).toContain('ALEA DEV-session och Zeus-behörighet verifierades.');
     expect(verify).toContain('window.olympiaV2Refresh?.(prListPromise)');
     expect(frontend).toContain('new AbortController()');
   });
@@ -57,11 +56,12 @@ describe('OLYMPIA instant PR-list recovery', () => {
     expect(refresh).toContain("global.textContent+=' · LIVE-kandidatstatus ej verifierad'");
   });
 
-  it('keeps list rendering independent of session classification when the list fails', () => {
+  it('keeps verified session and Zeus status when the GitHub list fails', () => {
     const verify = frontend.slice(frontend.indexOf('async function verify()'), frontend.indexOf('function feedback'));
-    expect(verify.indexOf('window.olympiaV2Refresh?.(prListPromise)')).toBeLessThan(verify.indexOf("call({action:'session_check'}"));
+    expect(verify.indexOf("window.olympiaV2Request({action:'session_check'}")).toBeLessThan(verify.indexOf("window.olympiaV2Request({action:'pull_request_list',includeCandidateParents:false}"));
     expect(verify).toContain('await listDisplay');
-    expect(verify).toContain('detta bekräftar inte att behörighet saknas');
+    expect(frontend).toContain("connectionStages.github=isTransportFailure(error)?'pending':'error'");
+    expect(frontend).toContain("connectionStages.zeus='ok'");
     expect(page).toContain("data-status-ready=\"'+String(ready)+'\"");
     expect(page).toContain('window.olympiaV2SetZeusVerified=verified=>');
     expect(page).toContain('now-Number(button.dataset.ciVerifiedAt)<120000');
