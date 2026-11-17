@@ -3,6 +3,7 @@ import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
 
 const source=readFileSync(new URL('../olympia-v2/session-client.js',import.meta.url),'utf8');
+const alea=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const issuer='https://wkiuyklzzroavclnsxna.supabase.co/auth/v1';
 const jwt=(exp,iss=issuer)=>'head.'+Buffer.from(JSON.stringify({exp,iss})).toString('base64url')+'.sig';
 const responseSession=(exp=Math.floor(Date.now()/1000)+3600)=>({access_token:jwt(exp)});
@@ -28,6 +29,9 @@ function makeWindow({embedded=false,stored=null,onParentMessage=null}={}){
  return {win,dispatch,parent};
 }
 describe('OLYMPIA shared ALEA session client',()=>{
+ it('cache-busts the embedded OLYMPIA document when the bridge changes',()=>{
+  expect(alea).toContain('src="./olympia-v2/?v=20261117-shared-session-v1"');
+ });
  it('requests a fresh access token from the same-origin ALEA parent',async()=>{
   const fresh=responseSession();
   const env=makeWindow({embedded:true,onParentMessage:({message,targetOrigin,dispatch,parent})=>{
