@@ -41,7 +41,8 @@ describe('OLYMPIA shared ALEA session client',()=>{
   const local={access_token:jwt(Math.floor(Date.now()/1000)+3600),refresh_token:'opaque'};
   const env=makeWindow({embedded:true,stored:local,onParentMessage:({message,dispatch})=>{
    queueMicrotask(()=>{
-    dispatch({origin:'https://attacker.example',source:env.parent,data:{type:'ALEA_OLYMPIA_SESSION_RESPONSE',requestId:message.requestId,ok:true,session:responseSession()}});\n    dispatch({origin:'https://lindkvistfoto-dot.github.io',source:{},data:{type:'ALEA_OLYMPIA_SESSION_RESPONSE',requestId:message.requestId,ok:true,session:responseSession()}});
+    dispatch({origin:'https://attacker.example',source:env.parent,data:{type:'ALEA_OLYMPIA_SESSION_RESPONSE',requestId:message.requestId,ok:true,session:responseSession()}});
+    dispatch({origin:'https://lindkvistfoto-dot.github.io',source:{},data:{type:'ALEA_OLYMPIA_SESSION_RESPONSE',requestId:message.requestId,ok:true,session:responseSession()}});
    });
   }});
   expect((await env.win.aleaOlympiaSessionClient.getSession()).access_token).toBe(local.access_token);
