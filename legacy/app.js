@@ -34,6 +34,25 @@ function projectSession(){
 }
 window.aleaEquipmentArt?.configure(SUPABASE_URL);
 let supabaseSession=null,supabaseProfile=null;
+
+/* OLYMPIA receives only the current short-lived DEV access token from ALEA's own
+   session controller. The refresh token remains inside ALEA and is never posted. */
+window.addEventListener('message',async event=>{
+ const frame=document.querySelector('.admin-olympia-frame');
+ const request=event.data;
+ if(event.origin!==window.location.origin||!frame||event.source!==frame.contentWindow||
+    request?.type!=='ALEA_OLYMPIA_SESSION_REQUEST'||typeof request.requestId!=='string'||
+    request.requestId.length>100)return;
+ const respond=(payload)=>{try{event.source.postMessage({type:'ALEA_OLYMPIA_SESSION_RESPONSE',requestId:request.requestId,...payload},event.origin)}catch(e){}};
+ try{
+  if(!supabaseSession?.refresh_token)await restoreSession();
+  if(!supabaseSession||!sessionBelongsToProject(supabaseSession))throw new Error('ALEA_SESSION_UNAVAILABLE');
+  await freshSupabaseAccessToken();
+  if(!supabaseSession||!sessionBelongsToProject(supabaseSession))throw new Error('ALEA_SESSION_UNAVAILABLE');
+  respond({ok:true,session:{access_token:supabaseSession.access_token}});
+ }catch(error){respond({ok:false,code:String(error?.message||'ALEA_SESSION_UNAVAILABLE').slice(0,80)})}
+});
+
 let ruleProjectileTypes=[],ruleProjectileTypesLoaded=false;
 let ruleSkills=[],ruleSkillsLoaded=false;let ruleMagicSchools=[],ruleMagicSchoolsLoaded=false;let ruleSpells=[],ruleSpellsLoaded=false;let ruleEffects=[],ruleEffectsLoaded=false;let ruleProfessions=[],ruleProfessionsLoaded=false;let ruleRaces=[],ruleRacesLoaded=false,ruleRaceAttributes=[],ruleRaceAttributesLoaded=false;let ruleArmorTypes=[],ruleArmorMaterials=[],ruleArmorLoaded=false;let ruleShields=[],ruleShieldsLoaded=false;let ruleWeapons=[],ruleWeaponsLoaded=false;let ruleWeaponMaterials=[],ruleWeaponMaterialsLoaded=false;let ruleCombatFumbles=[],ruleCombatFumblesLoaded=false;let ruleSocialStands=[],ruleSocialStandsLoaded=false;
 let centralCampaignId=null,centralReady=false,centralSaveTimer=null,centralCampaignRole=null,centralCharacterSnapshots=new Map(),campaignPlayerProfiles=[],campaignDayState=null,campaignErfAwards=[],campaignCharacterRestStates=[],campaignSites=[],campaignLocations=[],campaignLocationEventLinks=[],campaignEvents=[],campaignNpcs=[],campaignMonsters=[],campaignCombatScenes=[],campaignContentReady=false,currentLocationContentId=null,currentLocationAssets=[],locationAssetUrlCache=new Map();let activeCombat=null,combatants=[],combatHexes=[],combatActions=[],combatLogRows=[],combatSelectedTargetId=null,combatReturn='home';
