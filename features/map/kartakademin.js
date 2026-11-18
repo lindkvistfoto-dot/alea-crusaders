@@ -1,7 +1,7 @@
 import './kartakademin.css';
 import { createMask, findSmallSolidIslands, isFree, maskHistory, paintMask, polygonMask, prepareFreeSight, serializeMask } from './kartakademin-mask.js';
 import { FREE_SIGHT_RESET_CONFIRMATION, FREE_SIGHT_RESET_LABEL, removalConfirmation, resetFreeSight, toolsForMode } from './kartakademin-actions.js';
-import { blockers, canMove, isBlocked, visibilityPolygon } from './kartakademin-geometry.js';
+import { blockers, canMove, contains, isBlocked, visibilityPolygon } from './kartakademin-geometry.js';
 
 const types = {
   fackla: { name: 'Fackla', color: '#ffb060', motion: .18 },
@@ -12,7 +12,7 @@ const types = {
   magiskt: { name: 'Magiskt sken', color: '#c1a1ff', motion: .13 },
 };
 const svgNS = 'http://www.w3.org/2000/svg';
-const defaults = () => ({ version: 1, darkness: .7, pixelsPerMeter: 40, environment: 'indoor', lights: [], geometry: [], freeSight: null });
+const defaults = () => ({ version: 1, darkness: .7, pixelsPerMeter: 40, environment: 'indoor', lights: [], geometry: [], freeSight: null, characterTokenStyles: {} });
 const filter = id => 'map_id=eq.' + encodeURIComponent(id);
 const ignoredMissingTable = error => /PGRST202|PGRST205|42P01|schema cache|could not find the table/i.test(error.message);
 let editor, current, rendererModule;
@@ -116,7 +116,7 @@ function closeEditor() {
   editor.disposeFlood?.();
   dispose(editor.view);
   editor.root.closest('.map-area-editor')?.querySelector('[data-mask-overlay]')?.remove();
-  editor.root.closest('.map-area-editor')?.querySelector('#mapAreaSvg [data-academy-layer]')?.remove();
+  editor.root.closest('.map-area-editor')?.querySelectorAll('#mapAreaSvg :is([data-academy-layer],[data-character-token-layer])').forEach(layer => layer.remove());
   const canvas = editor.root.closest('.map-area-editor')?.querySelector('#mapAreaCanvas');
   for (const property of ['width', 'left', 'top']) canvas?.style.removeProperty(property);
   canvas?.classList.remove('kartakademin-light-only');
@@ -159,7 +159,7 @@ async function openEditor(map, areas, imageUrl) {
         </div>
         <details class="kartakademin-layers-panel" open>
           <summary>Synliga kartlager</summary>
-          <div class="kartakademin-layers" aria-label="Synliga kartlager"><label><input type="checkbox" data-layer="rooms" checked> Rumsgränser</label><label><input type="checkbox" data-player> Rummens upptäcktsstatus</label><label><input type="checkbox" data-layer="effects" checked> Effektområden</label><label><input type="checkbox" data-layer="sight" checked> Fri sikt</label><label><input type="checkbox" data-layer="solid"> Solid</label><label><input type="checkbox" data-layer="lights" checked> Ljuskällor</label><label><input type="checkbox" data-layer="objects" checked> Objekt</label></div>
+          <div class="kartakademin-layers" aria-label="Synliga kartlager"><label><input type="checkbox" data-layer="rooms" checked> Rumsgränser</label><label><input type="checkbox" data-player> Rummens upptäcktsstatus</label><label><input type="checkbox" data-layer="effects" checked> Effektområden</label><label><input type="checkbox" data-layer="sight" checked> Fri sikt</label><label><input type="checkbox" data-layer="solid"> Solid</label><label><input type="checkbox" data-layer="lights" checked> Ljuskällor</label><label><input type="checkbox" data-layer="characters" checked> Rollpersoner</label><label><input type="checkbox" data-layer="objects" checked> Objekt</label></div>
         </details>
         <label><input type="checkbox" data-light-only> Visa endast ljusresultat</label>
       </div>
@@ -174,6 +174,8 @@ async function openEditor(map, areas, imageUrl) {
       <label class="kartakademin-mode-select" hidden>Redigeringsläge<select data-mode aria-hidden="true" tabindex="-1"><option value="rooms">Rum</option><option value="effects">Områdeseffekter</option><option value="sight">Sikt och hinder</option><option value="lights">Ljuskällor</option><option value="objects">Objekt</option></select></label>
       <div class="kartakademin-controls" data-tool-controls>
         <label data-item-select>Välj<select data-items></select></label>
+        <label data-token-style-control>Visning<select data-token-style><option value="portrait">Porträtt</option><option value="battlepose">Battlepose</option></select></label>
+        <button type="button" class="btn" data-token-demo>Placera Astrid och Evalin</button>
         <div data-light-list class="kartakademin-light-list" role="listbox" aria-label="Ljuskällor" hidden></div>
         <button type="button" class="btn" data-new>Ny ljuskälla</button>
         <button type="button" class="btn" data-duplicate>Duplicera ljuskälla</button>
@@ -291,8 +293,17 @@ async function openEditor(map, areas, imageUrl) {
   get('select[name=characterId]').replaceChildren(option('', 'Fast ljuskälla'), ...roster.map(c => option(c._dbId, c.name || c.identity?.namn || c._dbId)));
   svg.setAttribute('viewBox', `0 0 ${map.width} ${map.height}`);
   document.getElementById('mapAreaImage').src = imageUrl;
-  const state = editor = { root, workspace, settings, roomToolbar: toolbar, roomNotice, roomList, mapBoard: board, view: null, config: defaults(), positions: [], changedPositions: new Set(), points: [], selected: '', saving: false, dirty: false, mode: 'rooms', tool: 'room', layers: { rooms: true, effects: true, sight: true, solid: false, lights: true, objects: true } };
+  const state = editor = { root, workspace, settings, roomToolbar: toolbar, roomNotice, roomList, mapBoard: board, view: null, config: defaults(), positions: [], changedPositions: new Set(), points: [], selected: '', saving: false, dirty: false, mode: 'rooms', tool: 'room', layers: { rooms: true, effects: true, sight: true, solid: false, lights: true, characters: true, objects: true } };
   const academyLayer = document.createElementNS(svgNS, 'g'); academyLayer.dataset.academyLayer = ''; svg.append(academyLayer);
+
+  const tokenLayer = node('g', { 'data-character-token-layer': '' });
+  academyLayer.after(tokenLayer);
+  const tokenStyles = get('[data-token-style]');
+  const characterName = character => character.name || character.identity?.namn || character._dbId;
+  const astrid = roster.find(character => /^astrid(?:\s|$)/i.test(characterName(character)));
+  const evalin = roster.find(character => /^evalin(?:\s|$)/i.test(characterName(character)));
+  const tokenStyle = id => state.config.characterTokenStyles?.[id] === 'battlepose' ? 'battlepose' : 'portrait';
+  const tokenDemo = get('[data-token-demo]');
 
   const maskOverlay = document.createElement('canvas'); maskOverlay.dataset.maskOverlay = ''; maskOverlay.hidden = true; board.append(maskOverlay);
   const viewport = board.parentElement;
@@ -468,6 +479,12 @@ async function openEditor(map, areas, imageUrl) {
     else elements = roster.map(c => option(c._dbId, c.name || c.identity?.namn || c._dbId));
     menu.replaceChildren(option('', tool.value === 'position' ? 'Välj rollperson' : 'Ny'), ...elements);
     menu.value = state.selected;
+    const editingPosition = tool.value === 'position';
+    get('[data-token-style-control]').hidden = !editingPosition;
+    tokenStyles.disabled = !state.loaded || !state.selected;
+    tokenStyles.value = tokenStyle(state.selected);
+    tokenDemo.hidden = !editingPosition || !astrid || !evalin;
+    tokenDemo.disabled = !state.loaded;
     const lightList = get('[data-light-list]');
     lightList.hidden = state.mode !== 'lights' || tool.value !== 'light';
     lightList.replaceChildren(...(state.config.lights.length ? state.config.lights.map(light => {
@@ -534,6 +551,59 @@ async function openEditor(map, areas, imageUrl) {
     areas = next;
     if (get('[data-player]').checked) draw();
   };
+  function drawCharacterTokens() {
+    tokenLayer.replaceChildren();
+    if (!state.layers.characters || get('[data-light-only]').checked) return;
+    const screenScale = svg.getScreenCTM()?.a;
+    if (!(screenScale > 0)) return;
+    const interactive = tool.value === 'position';
+    for (const { character_id: id, position: [x, y] } of state.positions) {
+      const character = roster.find(item => item._dbId === id);
+      if (!character) continue;
+      const name = characterName(character);
+      const selected = interactive && state.selected === id;
+      const marker = node('g', { transform: `translate(${x} ${y})`, 'data-character-token': id });
+      const width = .60 * state.config.pixelsPerMeter;
+      const art = tokenStyle(id) === 'battlepose' ? window.aleaCombatPaperDollMap?.renderMapToken(id, width) : '';
+      if (art) {
+        marker.innerHTML = art;
+        marker.append(node('ellipse', { rx: width / 2, ry: width / 4, fill: 'transparent',
+          stroke: selected ? '#ffe5a1' : 'none', 'vector-effect': 'non-scaling-stroke' }));
+      } else {
+        const r = 15 / screenScale;
+        const portrait = typeof getPortraitSrc === 'function' ? getPortraitSrc(character) : character.portrait;
+        const clipId = `kart-portrait-${id}`;
+        const clip = node('clipPath', { id: clipId });
+        clip.append(node('circle', { r }));
+        marker.append(clip, node('circle', { r, fill: '#27483d' }));
+        if (portrait) marker.append(node('image', { href: portrait, x: -r, y: -r, width: 2*r, height: 2*r,
+          preserveAspectRatio: 'xMidYMid slice', 'clip-path': `url(#${clipId})` }));
+        else {
+          const initial = node('text', { 'font-size': r, fill: '#fff2d4', 'text-anchor': 'middle', dy: '.35em' });
+          initial.textContent = name.charAt(0);
+          marker.append(initial);
+        }
+        marker.append(node('circle', { r, fill: 'none', stroke: selected ? '#ffe5a1' : '#bb9153',
+          'stroke-width': selected ? 3 : 2, 'vector-effect': 'non-scaling-stroke' }));
+      }
+      const title = node('title', {});
+      title.textContent = tokenStyle(id) === 'battlepose' && !art ? name + ' · Battlepose eller High Angle-bas saknas' : name;
+      marker.append(title);
+      if (interactive) {
+        marker.setAttribute('tabindex', '0');
+        marker.setAttribute('role', 'button');
+        marker.setAttribute('aria-label', name);
+        marker.addEventListener('keydown', event => {
+          if (!['Enter', ' '].includes(event.key)) return;
+          event.preventDefault();
+          select(id);
+        });
+      }
+      tokenLayer.append(marker);
+    }
+    tokenLayer.classList.toggle('kartakademin-tokens-interactive', interactive);
+  }
+
   function draw() {
     const lightOnly = get('[data-light-only]').checked;
     const discovery = get('[data-player]').checked;
@@ -544,6 +614,7 @@ async function openEditor(map, areas, imageUrl) {
     const roomGroup = svg.querySelector('#mapAreaRoomLayer');
     if (roomGroup) roomGroup.style.display = state.layers.rooms ? '' : 'none';
     academyLayer.replaceChildren();
+    drawCharacterTokens();
     if (lightOnly) return;
     if ((state.layers.sight || state.layers.solid) && tool.value === 'mask' && maskPoints.length) {
       academyLayer.append(node('polyline', { points: maskPoints.map(p => p.join(',')).join(' '), fill: 'none', stroke: '#53ffc4', 'stroke-width': 2 }));
@@ -571,7 +642,7 @@ async function openEditor(map, areas, imageUrl) {
     });
     const markers = state.layers.lights ? [...state.config.lights.filter(light => !light.characterId).map(light => ({
       id: light.id, lightIds: [light.id], position: light.position, color: light.color,
-    })), ...characterMarkers] : [];
+    })), ...(tool.value === 'position' ? [] : characterMarkers)] : [];
     for (const marker of markers) {
       const markerNode = node('circle', { cx: marker.position[0], cy: marker.position[1], r: map.width / 130,
         fill: marker.color, stroke: marker.lightIds.includes(state.selected) ? '#fff' : '#36312b', 'stroke-width': 2,
@@ -609,17 +680,68 @@ async function openEditor(map, areas, imageUrl) {
     draw();
   }
 
-  function moveLight(light, point) {
-    if (light.characterId) {
-      const origin = state.positions.find(position => position.character_id === light.characterId)?.position;
-      if (!canMove(state.config.geometry, origin, point)) return false;
-      state.positions = [...state.positions.filter(position => position.character_id !== light.characterId),
-        { character_id: light.characterId, position: point }];
-      state.changedPositions.add(light.characterId);
-    } else light.position = point;
+  function moveCharacter(id, point) {
+    const origin = state.positions.find(position => position.character_id === id)?.position;
+    if (!canMove(state.config.geometry, origin, point)) return false;
+    if (origin?.[0] === point[0] && origin?.[1] === point[1]) return true;
+    state.positions = [...state.positions.filter(position => position.character_id !== id), { character_id: id, position: point }];
+    state.changedPositions.add(id);
     markDirty();
     return true;
   }
+
+  function moveLight(light, point) {
+    if (light.characterId) return moveCharacter(light.characterId, point);
+    light.position = point;
+    markDirty();
+    return true;
+  }
+
+  function setTokenStyle(id, style) {
+    state.config.characterTokenStyles = { ...state.config.characterTokenStyles, [id]: style };
+    markDirty();
+    loadTokenArt();
+  }
+
+  function loadTokenArt() {
+    if (!Object.values(state.config.characterTokenStyles ?? {}).includes('battlepose')) return;
+    void window.aleaCombatPaperDollMap?.loadMapTokens?.().then(() => {
+      if (editor === state) drawCharacterTokens();
+    });
+  }
+
+  tokenStyles.onchange = event => {
+    event.stopPropagation();
+    if (!state.loaded || !state.selected) return;
+    setTokenStyle(state.selected, tokenStyles.value);
+    drawCharacterTokens();
+  };
+  tokenDemo.onclick = () => {
+    if (!state.loaded || !astrid || !evalin) return;
+    const hasPosition = character => state.positions.some(position => position.character_id === character._dbId);
+    const hasFreeSight = mask.cells.some(Boolean);
+    const eligible = point => !isBlocked(state.config.geometry, point, 'movement')
+      && (!hasFreeSight || isFree(mask, point));
+    const grid = Array.from({ length: 24*24 }, (_, i) => [(i%24+.5)*map.width/24, (Math.floor(i/24)+.5)*map.height/24]);
+    const available = grid.filter(eligible);
+    const inRoom = point => areas.some(area => {
+      const shape = area.shape_data;
+      return shape && (area.shape_type === 'rect'
+        ? point[0] > shape.x && point[0] < shape.x+shape.width && point[1] > shape.y && point[1] < shape.y+shape.height
+        : Array.isArray(shape.points) && contains(shape.points, point));
+    });
+    const astridPoint = available.find(inRoom);
+    const evalinPoint = available.filter(([x,y]) => x > map.width*.5 && y > map.height*.5)
+      .sort((a,b) => Math.hypot(a[0]-map.width*.85,a[1]-map.height*.85) - Math.hypot(b[0]-map.width*.85,b[1]-map.height*.85))[0];
+    if ((!hasPosition(astrid) && !astridPoint) || (!hasPosition(evalin) && !evalinPoint)) {
+      return announce('Ingen lämplig plats hittades i ett rum och nedre högra delen. Placera rollpersonerna manuellt.');
+    }
+    if (!hasPosition(astrid)) moveCharacter(astrid._dbId, astridPoint);
+    if (!hasPosition(evalin)) moveCharacter(evalin._dbId, evalinPoint);
+    setTokenStyle(astrid._dbId, 'portrait');
+    setTokenStyle(evalin._dbId, 'battlepose');
+    select(evalin._dbId);
+  };
 
   const initialize = async () => {
     if (state.initializing) return;
@@ -637,6 +759,7 @@ async function openEditor(map, areas, imageUrl) {
         maskOverlay.height = mask.height;
         state.config.freeSight ??= serializeMask(mask);
         state.loaded = true;
+        loadTokenArt();
       }
       for (const input of settings.querySelectorAll('[data-config]')) {
         const value = state.config[input.dataset.config];
@@ -799,6 +922,7 @@ async function openEditor(map, areas, imageUrl) {
     board.style.width = `${width}px`;
     board.style.left = `${(viewport.clientWidth - width) / 2 + offsetX}px`;
     board.style.top = `${(viewport.clientHeight - height) / 2 + offsetY}px`;
+    if (!pan) drawCharacterTokens();
   }
   function setZoom(value, x, y, previous = zoom.valueAsNumber) {
     const rect = viewport.getBoundingClientRect();
@@ -948,7 +1072,20 @@ async function openEditor(map, areas, imageUrl) {
   let skipLightClick = false;
   svg.onpointerdown = event => {
     if (!state.loaded || !event.isPrimary || event.button !== 0 || pan) return;
-    if (tool.value !== 'pan' && (state.mode === 'lights' && !state.layers.lights)) return;
+    if (tool.value === 'light' && !state.layers.lights) return;
+    const token = event.target.closest?.('[data-character-token]');
+    if (tool.value === 'position' && token) {
+      const id = token.dataset.characterToken;
+      const position = state.positions.find(item => item.character_id === id)?.position;
+      const point = brushPoint(event, true);
+      if (!point || !position) return;
+      select(id);
+      lightDrag = { characterId: id, pointerId: event.pointerId, moved: true,
+        offset: [position[0] - point[0], position[1] - point[1]] };
+      svg.setPointerCapture(event.pointerId);
+      event.preventDefault();
+      return;
+    }
     const marker = event.target.closest?.('[data-light-ids]');
     if (state.mode === 'lights' && tool.value === 'light' && marker) {
       const ids = marker.dataset.lightIds.split(',').filter(Boolean);
@@ -976,6 +1113,13 @@ async function openEditor(map, areas, imageUrl) {
     if (lightDrag?.pointerId === event.pointerId) {
       const point = brushPoint(event);
       if (!point) return;
+      if (lightDrag.characterId) {
+        const [dx, dy] = lightDrag.offset;
+        const destination = [Math.max(0, Math.min(map.width-.001, point[0]+dx)),
+          Math.max(0, Math.min(map.height-.001, point[1]+dy))];
+        if (moveCharacter(lightDrag.characterId, destination)) draw();
+        return;
+      }
       const light = state.config.lights.find(item => item.id === lightDrag.id);
       if (!light || !moveLight(light, point)) return;
       lightDrag.moved ||= Math.hypot(event.clientX - lightDrag.x, event.clientY - lightDrag.y) > 3;
@@ -992,7 +1136,7 @@ async function openEditor(map, areas, imageUrl) {
   svg.onpointerup = svg.onlostpointercapture = event => {
     if (lightDrag?.pointerId === event?.pointerId) {
       if (lightDrag.moved) {
-        markDirty();
+        if (!lightDrag.characterId) markDirty();
         skipLightClick = true;
         requestAnimationFrame(() => { skipLightClick = false; });
       }
@@ -1007,7 +1151,7 @@ async function openEditor(map, areas, imageUrl) {
   svg.addEventListener('click', event => {
     if (skipLightClick) { skipLightClick = false; return; }
     if (!state.loaded || ['rooms', 'effects', 'objects'].includes(state.mode) || tool.value === 'pan') return;
-    if (state.mode === 'lights' && !state.layers.lights) return;
+    if (tool.value === 'light' && !state.layers.lights) return;
     const point = brushPoint(event);
     if (!point) return;
     const clickedMarker = event.target.closest?.('[data-light-ids]');
@@ -1027,10 +1171,8 @@ async function openEditor(map, areas, imageUrl) {
     if (state.mode === 'sight' && tool.value === 'geometry') state.points.push(point);
     else if (state.mode === 'lights' && tool.value === 'position') {
       if (!state.selected) return announce('Välj en rollperson först.');
-      const origin = state.positions.find(p => p.character_id === state.selected)?.position;
-      if (!canMove(state.config.geometry, origin, point)) return announce('Platsen blockerar rörelse.');
-      state.positions = [...state.positions.filter(p => p.character_id !== state.selected), { character_id: state.selected, position: point }];
-      state.changedPositions.add(state.selected);
+      if (event.target.closest?.('[data-character-token]')) return;
+      if (!moveCharacter(state.selected, point)) return announce('Platsen blockerar rörelse.');
     } else if (state.mode === 'lights') {
       const light = state.config.lights.find(item => item.id === state.selected);
       if (light) {
@@ -1043,7 +1185,7 @@ async function openEditor(map, areas, imageUrl) {
   get('[data-save]').onclick = async () => {
     if (!state.loaded || state.saving || [...opener.querySelectorAll('input[type=number]:enabled')].filter(input => input.getClientRects().length).some(input => !input.reportValidity())) return;
     if (floodPoint) return announce('Vänta tills fyllningen har slutförts.');
-    if (state.points.length || maskPoints.length || stroke) return announce('Slutför eller ångra den påbörjade formen före sparning.');
+    if (state.points.length || maskPoints.length || stroke || lightDrag) return announce('Slutför eller ångra den påbörjade formen före sparning.');
     state.saving = true;
     const save = get('[data-save]');
     setSaveStatus('Sparar…', 'saving');

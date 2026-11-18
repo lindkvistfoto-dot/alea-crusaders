@@ -43,6 +43,7 @@ it('keeps map settings and party position changes atomic and protects access by 
     const config = {
       version: 1, darkness: .7, pixelsPerMeter: 40, north: 115,
       secretObjects: ['hidden'],
+      characterTokenStyles: { [character]: 'battlepose' },
       lights: [
         { name: 'SL notes', on: true, playerVisible: true, position: [2, 1], beam: 'parallel', beamWidth: 2, edgeSoftness: 45, type: 'solljus', direction: 10 },
         { on: true, playerVisible: true, position: [18, 1] },
@@ -74,6 +75,8 @@ it('keeps map settings and party position changes atomic and protects access by 
     expect(data).not.toHaveProperty('north');
     expect(data.lights.every(light => !('name' in light) && !('characterId' in light))).toBe(true);
     expect(data).not.toHaveProperty('secretObjects');
+    expect(data).not.toHaveProperty('characterTokenStyles');
+    expect(data).not.toHaveProperty('positions');
     expect(data.geometry).toEqual([]);
     const cells = new Set(data.freeSight.runs.flatMap(([start,len]) => Array.from({length:len}, (_, i) => start+i)));
     expect(cells.has(2)).toBe(true);

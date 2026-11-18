@@ -312,3 +312,10 @@
     min-width: 0;
   }
 }
+
+[data-character-token-layer] { pointer-events: none; }
+.kartakademin-tokens-interactive [data-character-token] :is(circle, ellipse, image):not(clipPath *, .combat-base-aura) {
+  pointer-events: all;
+  cursor: grab;
+}
+.kartakademin-panning #mapAreaSvg .kartakademin-tokens-interactive [data-character-token] :is(circle, ellipse, image) { cursor: grabbing; }
