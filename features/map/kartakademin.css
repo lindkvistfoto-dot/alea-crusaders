@@ -285,3 +285,30 @@
 }
 #mapAreaEditor .btn.kartakademin-destructive,
 #mapAreaEditor #mapAreaRemoveVertexBtn { background: #4b1f1d; border-color: #8b443d; color: #f8e9df; }
+
+/* Kartverkstaden desktop width: match the actual illustrated navigation banner. */
+@media (min-width: 1024px) {
+  /* The banner uses 1534px / viewport - 52px, not --alea-navigation-width (1280px).
+     Override every ancestor width cap, not only the editor's own grid. */
+  body main:has(#admin:not(.hidden) .kartakademin-active) {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: none;
+    padding-inline: 0;
+  }
+  body main:has(#admin:not(.hidden) .kartakademin-active) > #admin {
+    box-sizing: border-box;
+    width: min(1534px, calc(100% - 52px));
+    max-width: none;
+    margin-inline: auto;
+    padding-inline: 0;
+  }
+  #admin .adminpage:has(.kartakademin-active),
+  #admin .adminbox.kartakademin-active,
+  #admin #mapAreaEditor {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+  }
+}
