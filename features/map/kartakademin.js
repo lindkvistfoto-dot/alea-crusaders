@@ -1,5 +1,6 @@
 import './kartakademin.css';
 import { createMask, isFree, maskHistory, paintMask, polygonMask, prepareFreeSight, serializeMask } from './kartakademin-mask.js';
+import { FREE_SIGHT_RESET_CONFIRMATION, FREE_SIGHT_RESET_LABEL, removalConfirmation, resetFreeSight } from './kartakademin-actions.js';
 import { blockers, canMove, isBlocked, visibilityPolygon } from './kartakademin-geometry.js';
 
 const types = {
@@ -188,7 +189,16 @@ async function openEditor(map, areas, imageUrl) {
         <button type="button" class="btn" data-mask-finish>Slutför polygon</button>
         <button type="button" class="btn" data-mask-undo>Ångra</button>
         <button type="button" class="btn" data-mask-redo>Gör om</button>
+        <button type="button" class="btn kartakademin-destructive" data-mask-reset>Nollställ fri sikt</button>
       </div>
+      <dialog class="kartakademin-confirm" data-confirm-dialog aria-labelledby="kartakademin-confirm-title">
+        <h2 id="kartakademin-confirm-title">Bekräfta ändring</h2>
+        <p data-confirm-message></p>
+        <div class="kartakademin-confirm-actions">
+          <button type="button" class="btn" data-confirm-cancel>Avbryt</button>
+          <button type="button" class="btn kartakademin-destructive" data-confirm-accept>Bekräfta</button>
+        </div>
+      </dialog>
       <div class="kartakademin-controls"><button type="button" class="btn primary" data-save>Spara Kartakademin</button><output aria-live="polite"></output></div>
     </div>`;
   opener.querySelector('.map-area-toolbar').before(root);
@@ -197,6 +207,18 @@ async function openEditor(map, areas, imageUrl) {
   const menu = get('[data-items]'), tool = get('[data-tool]'), mode = get('[data-mode]');
   const output = get('output:not([data-flood-status])');
   const announce = message => { output.textContent = message; };
+  const askConfirmation = (message, actionLabel) => new Promise(resolve => {
+    const dialog = get('[data-confirm-dialog]');
+    const cancel = get('[data-confirm-cancel]');
+    const accept = get('[data-confirm-accept]');
+    get('[data-confirm-message]').textContent = message;
+    accept.textContent = actionLabel;
+    dialog.returnValue = 'cancel';
+    dialog.addEventListener('close', () => resolve(dialog.returnValue === 'confirm'), { once: true });
+    cancel.onclick = () => dialog.close('cancel');
+    accept.onclick = () => dialog.close('confirm');
+    dialog.showModal();
+  });
   const lightForm = get('[data-light]'), geoForm = get('[data-geometry]');
   const roster = (Array.isArray(chars) ? chars : []).filter(character => character._dbId && !character.isNpc);
   get('select[name=type]').replaceChildren(...Object.entries(types).map(([key, type]) => option(key, type.name)));
@@ -370,7 +392,16 @@ async function openEditor(map, areas, imageUrl) {
     geoForm.hidden = state.mode !== 'sight' || tool.value !== 'geometry';
     get('[data-duplicate]').disabled = !light;
     get('[data-new]').disabled = drawingMask || tool.value === 'pan' || tool.value === 'position';
-    get('[data-remove]').disabled = !state.selected;
+    const remove = get('[data-remove]');
+    const selectedGeometry = state.config.geometry.some(item => item.id === state.selected);
+    const selectedPosition = state.positions.some(item => item.character_id === state.selected);
+    const canRemoveLight = state.mode === 'lights' && tool.value === 'light' && Boolean(light);
+    const canRemoveGeometry = state.mode === 'sight' && tool.value === 'geometry' && selectedGeometry;
+    const canRemovePosition = state.mode === 'lights' && tool.value === 'position' && selectedPosition;
+    remove.hidden = !(canRemoveLight || canRemoveGeometry || canRemovePosition);
+    remove.disabled = remove.hidden;
+    remove.textContent = canRemoveLight ? 'Ta bort vald ljuskälla' : canRemoveGeometry ? 'Ta bort vald hindergeometri' : 'Ta bort kartposition';
+    remove.classList.toggle('kartakademin-destructive', !remove.hidden);
     for (const input of lightForm.querySelectorAll('[name]')) {
       input.disabled = !light;
       if (input.type === 'checkbox') input.checked = Boolean(light?.[input.name]);
@@ -533,13 +564,18 @@ async function openEditor(map, areas, imageUrl) {
     state.config.geometry = [...state.config.geometry.filter(item => item.id !== id), shape];
     select(id);
   };
-  get('[data-remove]').onclick = () => {
-    if (tool.value === 'position') {
-      state.positions = state.positions.filter(p => p.character_id !== state.selected);
+  get('[data-remove]').onclick = async () => {
+    const light = state.mode === 'lights' && tool.value === 'light' && state.config.lights.some(item => item.id === state.selected);
+    const geometry = state.mode === 'sight' && tool.value === 'geometry' && state.config.geometry.some(item => item.id === state.selected);
+    const position = state.mode === 'lights' && tool.value === 'position' && state.positions.some(item => item.character_id === state.selected);
+    const confirmation = removalConfirmation(state.mode, tool.value);
+    if ((!light && !geometry && !position) || !confirmation) return;
+    if (!await askConfirmation(confirmation.message, confirmation.actionLabel)) return;
+    if (light) state.config.lights = state.config.lights.filter(item => item.id !== state.selected);
+    else if (geometry) state.config.geometry = state.config.geometry.filter(item => item.id !== state.selected);
+    else {
+      state.positions = state.positions.filter(item => item.character_id !== state.selected);
       state.changedPositions.add(state.selected);
-    } else {
-      const key = tool.value === 'geometry' ? 'geometry' : 'lights';
-      state.config[key] = state.config[key].filter(item => item.id !== state.selected);
     }
     select('');
   };
@@ -575,6 +611,15 @@ async function openEditor(map, areas, imageUrl) {
   };
   get('[data-mask-redo]').onclick = () => {
     if (history.redo()) { state.config.freeSight = serializeMask(mask); draw(); }
+  };
+  get('[data-mask-reset]').onclick = async () => {
+    if (!state.loaded || !mask) return;
+    const accepted = await resetFreeSight(mask, history, state.config,
+      () => askConfirmation(FREE_SIGHT_RESET_CONFIRMATION, FREE_SIGHT_RESET_LABEL));
+    if (!accepted) return;
+    maskPoints.length = 0;
+    resetFlood();
+    draw();
   };
   get('[data-mask-finish]').onclick = () => {
     if (maskPoints.length < 3) return;

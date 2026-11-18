@@ -1,6 +1,7 @@
 import { expect, it } from 'vitest';
 import { contains, visibilityPolygon } from '../features/map/kartakademin-geometry.js';
-import { createMask, floodMask, paintMask, polygonMask, prepareFreeSight, serializeMask, traceFree } from '../features/map/kartakademin-mask.js';
+import { createMask, floodMask, maskHistory, paintMask, polygonMask, prepareFreeSight, serializeMask, traceFree } from '../features/map/kartakademin-mask.js';
+import { FREE_SIGHT_RESET_CONFIRMATION, FREE_SIGHT_RESET_LABEL, removalConfirmation, resetFreeSight } from '../features/map/kartakademin-actions.js';
 
 function grid(width, height, rows) {
   const mask = createMask(width, height);
@@ -93,4 +94,66 @@ it('uses the newly accepted flood, brush, and polygon mask immediately', () => {
 it('stops at real diagonal solid even when both side cells are free', () => {
   const mask = grid(2, 2, ['..', '.#']);
   expect(traceFree(mask, [.5, .5], Math.SQRT1_2, Math.SQRT1_2, 3)).toBeCloseTo(Math.SQRT1_2);
+});
+
+
+it('cancels free-sight reset without changing the mask, configuration, or history', async () => {
+  const mask = createMask(4, 3);
+  mask.cells.fill(1);
+  const config = { freeSight: serializeMask(mask), lights: [{ id: 'light-1' }], geometry: [{ id: 'wall-1' }] };
+  const original = JSON.stringify(config.freeSight);
+  const history = maskHistory(mask.cells);
+  const confirmed = await resetFreeSight(mask, history, config, async () => false);
+
+  expect(FREE_SIGHT_RESET_CONFIRMATION).toBe('Vill du ta bort all markerad fri sikt på den här kartan? Hela kartan kommer att återgå till Solid. Ljuskällor, rum och andra kartlager påverkas inte.');
+  expect(FREE_SIGHT_RESET_LABEL).toBe('Nollställ fri sikt');
+  expect(confirmed).toBe(false);
+  expect(JSON.stringify(config.freeSight)).toBe(original);
+  expect([...mask.cells]).toEqual(Array(12).fill(1));
+  expect(history.canUndo()).toBe(false);
+});
+
+it('resets only free sight, supports undo and redo, and reloads as Solid before saving', async () => {
+  const mask = createMask(4, 3);
+  mask.cells.fill(1);
+  const config = { freeSight: serializeMask(mask), lights: [{ id: 'light-1' }], geometry: [{ id: 'wall-1' }] };
+  const originalSight = JSON.stringify(config.freeSight);
+  const originalLights = JSON.stringify(config.lights);
+  const originalGeometry = JSON.stringify(config.geometry);
+  const history = maskHistory(mask.cells);
+  const persistedBeforeSave = JSON.stringify(config);
+
+  expect(await resetFreeSight(mask, history, config, async () => true)).toBe(true);
+  expect([...mask.cells]).toEqual(Array(12).fill(0));
+  expect(config.freeSight.runs).toEqual([]);
+  expect(JSON.stringify(config.lights)).toBe(originalLights);
+  expect(JSON.stringify(config.geometry)).toBe(originalGeometry);
+  expect(JSON.stringify(config)).not.toBe(persistedBeforeSave);
+
+  expect(history.undo()).toBe(true);
+  config.freeSight = serializeMask(mask);
+  expect(JSON.stringify(config.freeSight)).toBe(originalSight);
+  expect(history.redo()).toBe(true);
+  config.freeSight = serializeMask(mask);
+  expect(config.freeSight.runs).toEqual([]);
+  const reopened = createMask(4, 3, config.freeSight);
+  expect([...reopened.cells]).toEqual(Array(12).fill(0));
+  expect(JSON.stringify(config.lights)).toBe(originalLights);
+  expect(JSON.stringify(config.geometry)).toBe(originalGeometry);
+});
+
+
+it('uses independent, scoped confirmation copy for each current deletion action', () => {
+  expect(removalConfirmation('lights', 'light')).toEqual({
+    message: 'Vill du ta bort den valda ljuskällan? Fri sikt, rum och andra kartlager påverkas inte.',
+    actionLabel: 'Ta bort ljuskälla',
+  });
+  expect(removalConfirmation('sight', 'geometry')).toEqual({
+    message: 'Vill du ta bort den valda hindergeometrin? Fri sikt, ljuskällor, rum och andra kartlager påverkas inte.',
+    actionLabel: 'Ta bort hindergeometri',
+  });
+  expect(removalConfirmation('lights', 'position')?.actionLabel).toBe('Ta bort kartposition');
+  expect(removalConfirmation('rooms', 'room')).toBeNull();
+  expect(removalConfirmation('effects', 'effect')).toBeNull();
+  expect(removalConfirmation('objects', 'object')).toBeNull();
 });
