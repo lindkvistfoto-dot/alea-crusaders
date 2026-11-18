@@ -208,7 +208,7 @@
 .kartakademin-header h2 { margin: 0 auto 0 0; font-size: 1.15rem; }
 #mapAreaEditor .map-area-workspace {
   grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) minmax(0, 1fr);
-  min-height: 0; max-height: none; height: clamp(350px, calc(100dvh - 190px), 1050px);
+  min-height: 0; max-height: none; height: var(--kartakademin-space, calc(100dvh - 190px));
 }
 .kartakademin-center { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: .45rem; min-width: 0; min-height: 0; }
 .kartakademin-center .kartakademin-mode-nav {
@@ -221,18 +221,27 @@
   position: relative; overflow: clip; min-height: 0; max-height: none; padding: 0;
   border: 1px solid #a98455; box-shadow: 0 0 0 2px #31241a, inset 0 0 0 1px #20160d;
 }
-.kartakademin-center .map-area-map-stage::after {
-  position: absolute; inset: 0; z-index: 4; pointer-events: none; content: '';
-  --corner: url('../../assets/combat/frames/combat-frame-corner.svg');
-  background: var(--corner) top left / 27px no-repeat, var(--corner) bottom right / 27px no-repeat;
+.kartakademin-frame { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
+.kartakademin-frame span {
+  position: absolute; width: 25px; height: 25px;
+  background: url('../../assets/combat/frames/combat-frame-corner.svg') center / contain no-repeat;
 }
+.kartakademin-frame span:nth-child(1) { top: 0; left: 0; }
+.kartakademin-frame span:nth-child(2) { top: 0; right: 0; rotate: 90deg; }
+.kartakademin-frame span:nth-child(3) { bottom: 0; right: 0; rotate: 180deg; }
+.kartakademin-frame span:nth-child(4) { bottom: 0; left: 0; rotate: 270deg; }
+.kartakademin-can-pan, .kartakademin-can-pan #mapAreaSvg,
+.kartakademin-can-pan #mapAreaSvg * { cursor: grab; }
+.kartakademin-panning, .kartakademin-panning #mapAreaSvg,
+.kartakademin-panning #mapAreaSvg * { cursor: grabbing; }
+#mapAreaEditor [data-pan-tool][aria-pressed="true"] { border-color: #e1b96e; box-shadow: inset 0 0 0 1px #e1b96e; }
 .kartakademin-center #mapAreaCanvas { position: absolute; max-width: none; border-radius: 0; }
 .kartakademin-center .kartakademin-footer .kartakademin-view-controls { align-items: center; }
 .kartakademin-center .kartakademin-view-controls label { width: auto; }
 .kartakademin-center .kartakademin-save-row { position: static; padding: .25rem .4rem; }
 #mapAreaEditor :is(.kartakademin-navigation, .map-area-tool-panel) {
   min-width: 0; min-height: 0; overflow: auto; overflow-x: hidden;
-  background: linear-gradient(#1e150edb,#17110ef2), url('../skills/codex-assets/dark-panel.webp') center / cover;
+  background: linear-gradient(#15241de8,#0c1512f4), url('../skills/codex-assets/dark-panel.webp') center / cover;
 }
 .kartakademin-navigation .kartakademin-settings label:has(input[type="radio"]) { display: flex; align-items: center; }
 .kartakademin-navigation .kartakademin-layers { grid-template-columns: repeat(2, minmax(0, 1fr)); font-size: .86rem; }
@@ -245,7 +254,16 @@
   .kartakademin-center { order: -1; grid-template-rows: auto minmax(220px, 46dvh) auto; }
   #mapAreaEditor :is(.kartakademin-navigation, .map-area-tool-panel) { overflow: visible; }
 }
-#admin .adminpage:has(.kartakademin-active) { max-width: min(1720px, 100%); }
+#admin .adminpage:has(.kartakademin-active) { max-width: none; }
+#admin .adminbox.kartakademin-active { padding: 0; border: 0; background: none; box-shadow: none; }
+@media (min-width: 901px) {
+  main:has(#admin:not(.hidden) .kartakademin-active) {
+    max-width: none; padding-inline: var(--alea-navigation-inline-padding);
+  }
+  main:has(#admin:not(.hidden) .kartakademin-active) > #admin {
+    max-width: var(--alea-navigation-width); margin-inline: auto;
+  }
+}
 #mapAreaEditor .kartakademin-header h2::before {
   display: inline-block; width: 1.3em; height: 1.3em; vertical-align: -.25em; margin-right: .35em;
   background: url('../../assets/arcane/system/v1/icon-map.avif') center / contain no-repeat; content: '';
@@ -257,3 +275,13 @@
   border: 1px solid #725936;
 }
 #mapAreaEditor .kartakademin-settings input[type='number'] { max-width: 100%; }
+
+#mapAreaEditor .kartakademin-settings,
+#mapAreaEditor .kartakademin-layers-panel,
+#mapAreaEditor .kartakademin-mode-controls { background: #101b17e8; color: #f4e6cd; }
+#mapAreaEditor .btn:not(.primary):not(.kartakademin-destructive) {
+  background-image: linear-gradient(#21180ea0,#100d0ae0), var(--arcane-art-tab-inactive);
+  background-size: 100% 100%;
+}
+#mapAreaEditor .btn.kartakademin-destructive,
+#mapAreaEditor #mapAreaRemoveVertexBtn { background: #4b1f1d; border-color: #8b443d; color: #f8e9df; }

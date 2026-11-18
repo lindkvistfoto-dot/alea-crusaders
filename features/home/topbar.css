@@ -1,9 +1,10 @@
 /* v0.35.66: unified Alea Crusaders navigation. Keep selectors scoped to the app header. */
-.alea-app-header{padding:10px clamp(10px,2vw,24px);overflow:visible}
+:root{--alea-navigation-width:1280px;--alea-navigation-inline-padding:clamp(10px,2vw,24px)}
+.alea-app-header{padding:10px var(--alea-navigation-inline-padding);overflow:visible}
 .alea-app-header>.bar{
   display:flex!important;flex-direction:column;flex-wrap:nowrap!important;
   align-items:stretch!important;gap:10px!important;
-  width:100%;max-width:1280px;min-width:0;margin-inline:auto;
+  width:100%;max-width:var(--alea-navigation-width);min-width:0;margin-inline:auto;
 }
 .alea-app-header .alea-toolstrip{
   display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-start;

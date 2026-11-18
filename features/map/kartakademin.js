@@ -151,6 +151,7 @@ async function openEditor(map, areas, imageUrl) {
       <div class="kartakademin-controls kartakademin-mode-controls" data-mode-controls>
         <div class="kartakademin-view-controls">
           <label>Zoom<input data-zoom type="range" min="0.02" max="5" step="any" value="1"></label>
+          <button type="button" class="btn" data-pan-tool aria-pressed="false" title="Panorera med vänster musknapp"><span aria-hidden="true">✋︎</span> Panorera</button>
           <button type="button" class="btn" data-zoom-out aria-label="Zooma ut">−</button>
           <button type="button" class="btn" data-zoom-in aria-label="Zooma in">+</button>
           <button type="button" class="btn" data-fit-view>Anpassa karta</button>
@@ -273,6 +274,11 @@ async function openEditor(map, areas, imageUrl) {
   leftPanel.append(settings, get('[data-mode-controls]'));
   center.append(modeNav, mapStage, controls);
   mapStage.append(board);
+  const frame = document.createElement('div');
+  frame.className = 'kartakademin-frame';
+  frame.setAttribute('aria-hidden', 'true');
+  for (let i = 0; i < 4; i++) frame.append(document.createElement('span'));
+  mapStage.append(frame);
   toolPanel.append(toolbar, roomNotice, roomList, root);
   const output = get('[data-save-message]');
   const saveStatus = get('[data-save-status]');
@@ -429,7 +435,7 @@ async function openEditor(map, areas, imageUrl) {
   function refreshToolPicker(preferred = state.tool) {
     const options = toolsForMode(state.mode);
     const picker = get('[data-tool-picker]');
-    picker.replaceChildren(...options.map(item => {
+    picker.replaceChildren(...options.filter(item => item.value !== 'pan').map(item => {
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'btn';
@@ -817,10 +823,33 @@ async function openEditor(map, areas, imageUrl) {
   get('[data-zoom-in]').onclick = () => zoomBy(1.25);
   get('[data-zoom-out]').onclick = () => zoomBy(1 / 1.25);
   get('[data-fit-view]').onclick = get('[data-reset-view]').onclick = resetView;
-  const resize = new ResizeObserver(positionBoard);
+  const updateWorkspaceHeight = () => {
+    const pageTop = workspace.getBoundingClientRect().top + window.scrollY;
+    workspace.style.setProperty('--kartakademin-space', `${Math.max(320, window.innerHeight - pageTop - 12)}px`);
+  };
+  const header = document.querySelector('.alea-app-header');
+  const resize = new ResizeObserver(entries => {
+    if (entries.some(entry => entry.target !== viewport)) updateWorkspaceHeight();
+    positionBoard();
+  });
   resize.observe(viewport);
+  resize.observe(get('.kartakademin-header'));
+  if (header) resize.observe(header);
+  updateWorkspaceHeight();
   positionBoard();
   const viewOptions = { signal: viewEvents.signal };
+  window.addEventListener('resize', updateWorkspaceHeight, viewOptions);
+  const hand = get('[data-pan-tool]');
+  let handEnabled = false;
+  function updatePanCursor() {
+    viewport.classList.toggle('kartakademin-can-pan', handEnabled || spaceDown);
+    viewport.classList.toggle('kartakademin-panning', Boolean(pan));
+  }
+  hand.onclick = () => {
+    handEnabled = !handEnabled;
+    hand.setAttribute('aria-pressed', String(handEnabled));
+    updatePanCursor();
+  };
   viewport.addEventListener('wheel', event => {
     if (!event.target.closest('#mapAreaCanvas')) return;
     event.preventDefault();
@@ -828,24 +857,53 @@ async function openEditor(map, areas, imageUrl) {
     zoomBy(Math.exp(-delta * .002), event.clientX, event.clientY);
   }, { ...viewOptions, passive: false });
   window.addEventListener('keydown', event => {
-    if (event.code !== 'Space' || event.target.closest?.('button, input, select, textarea, summary, [contenteditable], [role="button"]')) return;
+    if (event.code !== 'Space' || event.target.closest?.('input, select, textarea, [contenteditable]')) return;
+    if (!viewport.matches(':hover') && event.target.closest?.('button, summary, [role="button"]')) return;
     spaceDown = true;
+    updatePanCursor();
     event.preventDefault();
   }, viewOptions);
-  window.addEventListener('keyup', event => { if (event.code === 'Space') spaceDown = false; }, viewOptions);
-  window.addEventListener('blur', () => { spaceDown = false; }, viewOptions);
+  function releaseSpace() {
+    spaceDown = false;
+    updatePanCursor();
+  }
+  window.addEventListener('keyup', event => { if (event.code === 'Space') releaseSpace(); }, viewOptions);
+  window.addEventListener('blur', releaseSpace, viewOptions);
   viewport.addEventListener('pointerdown', event => {
+    if (pan || !event.isPrimary) return;
     suppressPanClick = false;
-    if (!event.isPrimary || !(event.button === 1 || (event.button === 0 && (spaceDown || tool.value === 'pan')))) return;
+    if (stroke || lightDrag || (event.button === 1 && (event.buttons & 1))) return;
+    if (!(event.button === 1 || (event.button === 0 && (spaceDown || handEnabled || tool.value === 'pan')))) return;
     event.stopPropagation();
     event.preventDefault();
-    pan = { x: event.clientX, y: event.clientY, left: offsetX, top: offsetY };
+    pan = { pointerId: event.pointerId, x: event.clientX, y: event.clientY, left: offsetX, top: offsetY };
     suppressPanClick = true;
-    svg.setPointerCapture(event.pointerId);
+    viewport.setPointerCapture(event.pointerId);
+    updatePanCursor();
   }, { ...viewOptions, capture: true });
-  viewport.addEventListener('click', event => {
-    if (suppressPanClick || get('[data-light-only]').checked) event.stopPropagation();
-  }, { ...viewOptions, capture: true });
+  viewport.addEventListener('pointermove', event => {
+    if (pan?.pointerId !== event.pointerId) return;
+    event.stopPropagation();
+    offsetX = pan.left + event.clientX - pan.x;
+    offsetY = pan.top + event.clientY - pan.y;
+    positionBoard();
+  }, viewOptions);
+  function finishPan(event) {
+    if (pan?.pointerId !== event.pointerId) return;
+    event.stopPropagation();
+    pan = null;
+    updatePanCursor();
+  }
+  for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) {
+    viewport.addEventListener(type, finishPan, viewOptions);
+  }
+  for (const type of ['click', 'dblclick', 'auxclick', 'contextmenu']) {
+    viewport.addEventListener(type, event => {
+      if (!suppressPanClick && !get('[data-light-only]').checked) return;
+      event.preventDefault();
+      event.stopPropagation();
+    }, { ...viewOptions, capture: true });
+  }
   viewport.addEventListener('pointerdown', event => {
     if (get('[data-light-only]').checked) event.stopPropagation();
   }, { ...viewOptions, capture: true });
@@ -915,12 +973,6 @@ async function openEditor(map, areas, imageUrl) {
   };
   svg.onpointermove = event => {
     if (!event.isPrimary) return;
-    if (pan) {
-      offsetX = pan.left + event.clientX - pan.x;
-      offsetY = pan.top + event.clientY - pan.y;
-      positionBoard();
-      return;
-    }
     if (lightDrag?.pointerId === event.pointerId) {
       const point = brushPoint(event);
       if (!point) return;
@@ -938,7 +990,6 @@ async function openEditor(map, areas, imageUrl) {
     updateMaskOverlay();
   };
   svg.onpointerup = svg.onlostpointercapture = event => {
-    pan = null;
     if (lightDrag?.pointerId === event?.pointerId) {
       if (lightDrag.moved) {
         markDirty();
