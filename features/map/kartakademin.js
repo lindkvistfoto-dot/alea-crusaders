@@ -142,7 +142,8 @@ async function openEditor(map, areas, imageUrl) {
       </div>
       <div class="kartakademin-controls" data-tool-controls>
         <label>Verktyg<select data-tool><option value="light">Placera eller flytta ljus</option><option value="mask">Redigera fri sikt</option><option value="pan">Panorera</option><option value="geometry">Rita eller ersätt geometri</option><option value="position">Flytta rollperson</option></select></label>
-        <label>Välj<select data-items></select></label>
+        <label data-item-select>Välj<select data-items></select></label>
+        <div data-light-list class="kartakademin-light-list" role="listbox" aria-label="Ljuskällor" hidden></div>
         <button type="button" class="btn" data-new>Ny</button>
         <button type="button" class="btn" data-duplicate>Duplicera ljus</button>
         <button type="button" class="btn" data-remove>Ta bort</button>
@@ -343,6 +344,24 @@ async function openEditor(map, areas, imageUrl) {
     else elements = roster.map(c => option(c._dbId, c.name || c.identity?.namn || c._dbId));
     menu.replaceChildren(option('', tool.value === 'position' ? 'Välj rollperson' : 'Ny'), ...elements);
     menu.value = state.selected;
+    const lightList = get('[data-light-list]');
+    lightList.hidden = state.mode !== 'lights' || tool.value !== 'light';
+    get('[data-item-select]').hidden = lightList.hidden || state.config.lights.length === 0;
+    lightList.replaceChildren(...(state.config.lights.length ? state.config.lights.map(light => {
+      const row = document.createElement('button');
+      row.type = 'button';
+      row.className = 'kartakademin-light-row' + (light.id === state.selected ? ' selected' : '');
+      row.setAttribute('role', 'option');
+      row.setAttribute('aria-selected', String(light.id === state.selected));
+      row.dataset.lightId = light.id;
+      const title = document.createElement('strong');
+      title.textContent = light.name || 'Namnlös ljuskälla';
+      const detail = document.createElement('span');
+      detail.textContent = `${types[light.type]?.name || light.type || 'Okänd typ'} · ${light.on ? 'Tänd' : 'Släckt'}`;
+      row.append(title, detail);
+      row.addEventListener('click', () => select(light.id));
+      return row;
+    }) : [Object.assign(document.createElement('p'), { className: 'muted', textContent: 'Inga ljuskällor ännu.' })]));
     const drawingMask = tool.value === 'mask';
     menu.closest('label').hidden = drawingMask || tool.value === 'pan' || ['rooms', 'effects', 'objects'].includes(state.mode);
     get('[data-mask-tools]').hidden = state.mode !== 'sight' || !drawingMask;
@@ -381,11 +400,30 @@ async function openEditor(map, areas, imageUrl) {
     }
     if (showDrafts) for (const point of state.points) academyLayer.append(node('circle', { cx: point[0], cy: point[1], r: map.width / 200, fill: '#ffe897' }));
     if (showDrafts && state.points.length) academyLayer.append(node('polyline', { points: state.points.map(p => p.join(',')).join(' '), fill: 'none', stroke: '#ffe897', 'stroke-width': 2 }));
-    const markers = state.layers.lights ? [...state.config.lights.filter(light => !light.characterId).map(light => ({ id: light.id, position: light.position, color: light.color })),
-      ...state.positions.map(p => ({ id: p.character_id, position: p.position, color: '#66d8ff' }))] : [];
+    const characterMarkers = state.positions.map(position => {
+      const attached = state.config.lights.filter(light => light.characterId === position.character_id);
+      const selectedAttached = attached.find(light => light.id === state.selected);
+      return { id: position.character_id, lightIds: attached.map(light => light.id), position: position.position,
+        color: selectedAttached?.color || attached[0]?.color || '#66d8ff', character: true };
+    });
+    const markers = state.layers.lights ? [...state.config.lights.filter(light => !light.characterId).map(light => ({
+      id: light.id, lightIds: [light.id], position: light.position, color: light.color,
+    })), ...characterMarkers] : [];
     for (const marker of markers) {
-      academyLayer.append(node('circle', { cx: marker.position[0], cy: marker.position[1], r: map.width / 130,
-        fill: marker.color, stroke: marker.id === state.selected ? '#fff' : '#36312b', 'stroke-width': 2 }));
+      const markerNode = node('circle', { cx: marker.position[0], cy: marker.position[1], r: map.width / 130,
+        fill: marker.color, stroke: marker.lightIds.includes(state.selected) ? '#fff' : '#36312b', 'stroke-width': 2,
+        tabindex: 0, role: 'button', 'aria-label': marker.character ? `Rollperson med ${marker.lightIds.length} ljus` : 'Välj ljuskälla' });
+      markerNode.dataset.lightIds = marker.lightIds.join(',');
+      markerNode.dataset.characterMarker = String(Boolean(marker.character));
+      markerNode.addEventListener('keydown', event => {
+        if (!['Enter', ' '].includes(event.key)) return;
+        const id = marker.lightIds.find(lightId => state.config.lights.some(light => light.id === lightId));
+        if (!id) return;
+        event.preventDefault();
+        get('[data-player]').checked = false;
+        select(id);
+      });
+      academyLayer.append(markerNode);
     }
     const observer = state.positions.find(p => p.character_id === state.selected);
     const freeSight = prepareFreeSight(map.width, map.height, state.config.freeSight);
@@ -400,6 +438,17 @@ async function openEditor(map, areas, imageUrl) {
     state.points = [];
     refreshList();
     draw();
+  }
+
+  function moveLight(light, point) {
+    if (light.characterId) {
+      const origin = state.positions.find(position => position.character_id === light.characterId)?.position;
+      if (!canMove(state.config.geometry, origin, point)) return false;
+      state.positions = [...state.positions.filter(position => position.character_id !== light.characterId),
+        { character_id: light.characterId, position: point }];
+      state.changedPositions.add(light.characterId);
+    } else light.position = point;
+    return true;
   }
 
   const initialize = async () => {
@@ -464,7 +513,7 @@ async function openEditor(map, areas, imageUrl) {
         }
         Object.assign(light, { color: preset.color, aperture: preset.aperture ?? 360, motion: preset.motion ?? 0 });
       }
-      if (input.name === 'name' || input.name === 'type') refreshList();
+      if (input.name === 'name' || input.name === 'type' || input.name === 'on') refreshList();
     } else if (geoForm.contains(input)) {
       const shape = state.config.geometry.find(item => item.id === state.selected);
       if (shape && input.name !== 'closed') shape[input.name] = input.checked;
@@ -534,9 +583,25 @@ async function openEditor(map, areas, imageUrl) {
     maskPoints.length = 0;
     commitMask(before);
   };
+  let lightDrag = null;
+  let skipLightClick = false;
   svg.onpointerdown = event => {
     if (!state.loaded || !event.isPrimary || event.button !== 0) return;
     if ((state.mode === 'sight' && !state.layers.sight) || (state.mode === 'lights' && !state.layers.lights)) return;
+    const marker = event.target.closest?.('[data-light-ids]');
+    if (state.mode === 'lights' && tool.value === 'light' && marker) {
+      const ids = marker.dataset.lightIds.split(',').filter(Boolean);
+      if (!ids.length) return;
+      const light = ids.includes(state.selected) ? state.config.lights.find(item => item.id === state.selected) :
+        state.config.lights.find(item => item.id === ids[0]);
+      if (!light) return;
+      get('[data-player]').checked = false;
+      select(light.id);
+      lightDrag = { id: light.id, pointerId: event.pointerId, moved: false, x: event.clientX, y: event.clientY };
+      svg.setPointerCapture(event.pointerId);
+      event.preventDefault();
+      return;
+    }
     if (tool.value === 'pan' && state.mode !== 'rooms') {
       pan = { x: event.clientX, y: event.clientY, left: viewport.scrollLeft, top: viewport.scrollTop };
       svg.setPointerCapture(event.pointerId);
@@ -555,6 +620,15 @@ async function openEditor(map, areas, imageUrl) {
   svg.onpointermove = event => {
     if (!event.isPrimary) return;
     if (pan) viewport.scrollTo(pan.left + pan.x - event.clientX, pan.top + pan.y - event.clientY);
+    if (lightDrag?.pointerId === event.pointerId) {
+      const point = brushPoint(event);
+      if (!point) return;
+      const light = state.config.lights.find(item => item.id === lightDrag.id);
+      if (!light || !moveLight(light, point)) return;
+      lightDrag.moved ||= Math.hypot(event.clientX - lightDrag.x, event.clientY - lightDrag.y) > 3;
+      draw();
+      return;
+    }
     if (!stroke) return;
     const point = brushPoint(event, true);
     if (!point) return;
@@ -562,19 +636,35 @@ async function openEditor(map, areas, imageUrl) {
     stroke.point = point;
     updateMaskOverlay();
   };
-  svg.onpointerup = svg.onlostpointercapture = () => {
+  svg.onpointerup = svg.onlostpointercapture = event => {
     pan = null;
+    if (lightDrag?.pointerId === event?.pointerId) {
+      if (lightDrag.moved) {
+        skipLightClick = true;
+        requestAnimationFrame(() => { skipLightClick = false; });
+      }
+      lightDrag = null;
+      return;
+    }
     if (!stroke) return;
     const { before } = stroke;
     stroke = null;
     commitMask(before);
   };
   svg.addEventListener('click', event => {
+    if (skipLightClick) { skipLightClick = false; return; }
     if (!state.loaded || ['rooms', 'effects', 'objects'].includes(state.mode) || tool.value === 'pan') return;
     if ((state.mode === 'sight' && !state.layers.sight) || (state.mode === 'lights' && !state.layers.lights)) return;
     const point = brushPoint(event);
     if (!point) return;
     get('[data-player]').checked = false;
+    const clickedMarker = event.target.closest?.('[data-light-ids]');
+    if (state.mode === 'lights' && tool.value === 'light' && clickedMarker) {
+      const ids = clickedMarker.dataset.lightIds.split(',').filter(Boolean);
+      const selected = ids.includes(state.selected) ? state.selected : ids.find(id => state.config.lights.some(light => light.id === id));
+      if (selected) select(selected);
+      return;
+    }
     if (state.mode === 'sight' && tool.value === 'mask') {
       if (maskMode.value === 'flood') {
         floodPoint = point;
@@ -591,7 +681,9 @@ async function openEditor(map, areas, imageUrl) {
       state.changedPositions.add(state.selected);
     } else if (state.mode === 'lights') {
       const light = state.config.lights.find(item => item.id === state.selected);
-      if (light) light.position = point;
+      if (light) {
+        if (!moveLight(light, point)) return announce('Platsen blockerar förflyttningen.');
+      }
       else addLight(point);
     }
     draw();
