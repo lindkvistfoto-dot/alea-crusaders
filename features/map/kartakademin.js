@@ -114,6 +114,10 @@ function closeEditor() {
   if (!editor) return;
   editor.disposeFlood?.();
   dispose(editor.view);
+  editor.root.closest('.map-area-editor')?.querySelector('[data-mask-overlay]')?.remove();
+  editor.root.closest('.map-area-editor')?.querySelector('#mapAreaSvg [data-academy-layer]')?.remove();
+  const canvas = editor.root.closest('.map-area-editor')?.querySelector('#mapAreaCanvas');
+  canvas?.style.removeProperty('width');
   editor.root.remove();
   editor = null;
 }
@@ -124,15 +128,19 @@ async function openEditor(map, areas, imageUrl) {
   if (!canManageCampaignMaps() || !opener) return;
   const root = document.createElement('section');
   root.className = 'kartakademin-editor';
-  root.innerHTML = `<button type="button" class="btn" data-open>Kartakademin · ljus och geometri</button>
-    <div data-body hidden>
+  root.innerHTML = `<div data-body>
       <div class="kartakademin-controls">
         <label>Miljö<select data-config="environment"><option value="indoor">Inomhus</option><option value="outdoor">Utomhus</option><option value="underground">Under jord</option></select></label>
         <label>Grundmörker (%)<input data-config="darkness" type="number" min="60" max="80" step="1"></label>
         <label>Skala (px/m)<input data-config="pixelsPerMeter" type="number" min="0.01" step="0.01"></label>
         <label><input type="checkbox" data-player checked> Spelarförhandsvisning</label>
       </div>
-      <div class="kartakademin-controls">
+      <div class="kartakademin-controls kartakademin-mode-controls" data-mode-controls>
+        <label>Redigeringsläge<select data-mode><option value="rooms">Rum</option><option value="effects">Områdeseffekter</option><option value="sight">Sikt och hinder</option><option value="lights">Ljuskällor</option><option value="objects">Objekt</option></select></label>
+        <label>Gemensam zoom<input data-zoom type="range" min="1" max="5" step=".25" value="1"></label><button type="button" class="btn" data-reset-view>Återställ vy</button>
+        <div class="kartakademin-layers" aria-label="Synliga kartlager"><strong>Synliga lager</strong><label><input type="checkbox" data-layer="rooms" checked> Rumsgränser</label><label><input type="checkbox" data-layer="effects" checked> Effektområden</label><label><input type="checkbox" data-layer="sight" checked> Siktmask och Solid</label><label><input type="checkbox" data-layer="lights" checked> Ljuskällor</label><label><input type="checkbox" data-layer="objects" checked> Objekt</label></div>
+      </div>
+      <div class="kartakademin-controls" data-tool-controls>
         <label>Verktyg<select data-tool><option value="light">Placera eller flytta ljus</option><option value="mask">Redigera fri sikt</option><option value="pan">Panorera</option><option value="geometry">Rita eller ersätt geometri</option><option value="position">Flytta rollperson</option></select></label>
         <label>Välj<select data-items></select></label>
         <button type="button" class="btn" data-new>Ny</button>
@@ -180,17 +188,12 @@ async function openEditor(map, areas, imageUrl) {
         <button type="button" class="btn" data-mask-undo>Ångra</button>
         <button type="button" class="btn" data-mask-redo>Gör om</button>
       </div>
-      <div class="kartakademin-controls">
-        <label>Zoom<input data-zoom type="range" min="1" max="5" step=".25" value="1"></label>
-        <button type="button" class="btn" data-reset-view>Återställ vy</button>
-      </div>
-      <div class="kartakademin-viewport"><div class="kartakademin-board"><img alt=""><canvas data-mask-overlay hidden></canvas><svg aria-label="Redigeringsyta"></svg></div></div>
       <div class="kartakademin-controls"><button type="button" class="btn primary" data-save>Spara Kartakademin</button><output aria-live="polite"></output></div>
     </div>`;
-  opener.querySelector('.map-area-editor').append(root);
+  opener.querySelector('.map-area-toolbar').before(root);
   const get = selector => root.querySelector(selector);
-  const body = get('[data-body]'), board = get('.kartakademin-board'), svg = get('svg');
-  const menu = get('[data-items]'), tool = get('[data-tool]');
+  const body = get('[data-body]'), board = document.getElementById('mapAreaCanvas'), svg = document.getElementById('mapAreaSvg');
+  const menu = get('[data-items]'), tool = get('[data-tool]'), mode = get('[data-mode]');
   const output = get('output:not([data-flood-status])');
   const announce = message => { output.textContent = message; };
   const lightForm = get('[data-light]'), geoForm = get('[data-geometry]');
@@ -198,11 +201,12 @@ async function openEditor(map, areas, imageUrl) {
   get('select[name=type]').replaceChildren(...Object.entries(types).map(([key, type]) => option(key, type.name)));
   get('select[name=characterId]').replaceChildren(option('', 'Fast ljuskälla'), ...roster.map(c => option(c._dbId, c.name || c.identity?.namn || c._dbId)));
   svg.setAttribute('viewBox', `0 0 ${map.width} ${map.height}`);
-  get('img').src = imageUrl;
-  const state = editor = { root, view: null, config: defaults(), positions: [], changedPositions: new Set(), points: [], selected: '', saving: false };
+  document.getElementById('mapAreaImage').src = imageUrl;
+  const state = editor = { root, view: null, config: defaults(), positions: [], changedPositions: new Set(), points: [], selected: '', saving: false, mode: 'rooms', layers: { rooms: true, effects: true, sight: true, lights: true, objects: true } };
+  const academyLayer = document.createElementNS(svgNS, 'g'); academyLayer.dataset.academyLayer = ''; svg.append(academyLayer);
 
-  const maskOverlay = get('[data-mask-overlay]');
-  const viewport = get('.kartakademin-viewport');
+  const maskOverlay = document.createElement('canvas'); maskOverlay.dataset.maskOverlay = ''; maskOverlay.hidden = true; board.append(maskOverlay);
+  const viewport = board.parentElement;
   const zoom = get('[data-zoom]');
   const maskMode = get('[data-mask-mode]');
   let mask, history, rgba, stroke, pan;
@@ -281,7 +285,7 @@ async function openEditor(map, areas, imageUrl) {
   };
 
   function updateMaskOverlay() {
-    const visible = tool.value === 'mask' && !get('[data-player]').checked;
+    const visible = state.layers.sight && !!mask;
     maskOverlay.hidden = !visible;
     floodPanel.hidden = maskMode.value !== 'flood';
     get('[data-mask-undo]').disabled = !!floodPoint || (!history?.canUndo() && !maskPoints.length);
@@ -317,7 +321,7 @@ async function openEditor(map, areas, imageUrl) {
 
   function sampleMap() {
     if (rgba) return rgba;
-    const image = get('img');
+    const image = document.getElementById('mapAreaImage');
     if (!image.complete || !image.naturalWidth) throw Error('Kartbilden laddas fortfarande.');
     const canvas = document.createElement('canvas');
     canvas.width = mask.width;
@@ -329,6 +333,10 @@ async function openEditor(map, areas, imageUrl) {
   }
 
   function refreshList() {
+    const modeKey = state.mode;
+    get('[data-tool-controls]').hidden = !['sight', 'lights'].includes(modeKey);
+    get('[data-mode-note]')?.remove();
+    if (modeKey === 'effects' || modeKey === 'objects') { const note=document.createElement('p'); note.dataset.modeNote=''; note.className='muted'; note.textContent=modeKey === 'effects' ? 'Förberett läge. PR #916 innehåller ingen kartbunden effektmodell.' : 'Förberett läge. Objektfunktioner ingår inte i den här versionen.'; get('[data-mode-controls]').append(note); }
     let elements;
     if (tool.value === 'light') elements = state.config.lights.map(light => option(light.id, light.name));
     else if (tool.value === 'geometry') elements = state.config.geometry.map((shape, i) => option(shape.id, 'Form ' + (i + 1)));
@@ -336,11 +344,11 @@ async function openEditor(map, areas, imageUrl) {
     menu.replaceChildren(option('', tool.value === 'position' ? 'Välj rollperson' : 'Ny'), ...elements);
     menu.value = state.selected;
     const drawingMask = tool.value === 'mask';
-    menu.closest('label').hidden = drawingMask || tool.value === 'pan';
-    get('[data-mask-tools]').hidden = !drawingMask;
+    menu.closest('label').hidden = drawingMask || tool.value === 'pan' || ['rooms', 'effects', 'objects'].includes(state.mode);
+    get('[data-mask-tools]').hidden = state.mode !== 'sight' || !drawingMask;
     const light = state.config.lights.find(item => item.id === state.selected);
-    lightForm.hidden = tool.value !== 'light';
-    geoForm.hidden = tool.value !== 'geometry';
+    lightForm.hidden = state.mode !== 'lights' || tool.value !== 'light';
+    geoForm.hidden = state.mode !== 'sight' || tool.value !== 'geometry';
     get('[data-duplicate]').disabled = !light;
     get('[data-new]').disabled = drawingMask || tool.value === 'pan' || tool.value === 'position';
     get('[data-remove]').disabled = !state.selected;
@@ -356,33 +364,34 @@ async function openEditor(map, areas, imageUrl) {
   function draw() {
     state.view?.renderer?.update(state.config, areas, state.positions, !get('[data-player]').checked);
     updateMaskOverlay();
-    svg.replaceChildren();
-    const showTools = !get('[data-player]').checked;
-    if (!showTools) return;
-    if (tool.value === 'mask' && maskPoints.length) {
-      svg.append(node('polyline', { points: maskPoints.map(p => p.join(',')).join(' '), fill: 'none', stroke: '#53ffc4', 'stroke-width': 2 }));
-      for (const [x,y] of maskPoints) svg.append(node('circle', { cx:x, cy:y, r:map.width / 220, fill:'#53ffc4' }));
+    const roomGroup = svg.querySelector('#mapAreaRoomLayer');
+    if (roomGroup) roomGroup.style.display = state.layers.rooms ? '' : 'none';
+    academyLayer.replaceChildren();
+    const showDrafts = !get('[data-player]').checked;
+    if (showDrafts && tool.value === 'mask' && maskPoints.length) {
+      academyLayer.append(node('polyline', { points: maskPoints.map(p => p.join(',')).join(' '), fill: 'none', stroke: '#53ffc4', 'stroke-width': 2 }));
+      for (const [x,y] of maskPoints) academyLayer.append(node('circle', { cx:x, cy:y, r:map.width / 220, fill:'#53ffc4' }));
     }
-    for (const shape of state.config.geometry) {
-      svg.append(node(shape.closed ? 'polygon' : 'polyline', {
+    if (state.layers.sight) for (const shape of state.config.geometry) {
+      academyLayer.append(node(shape.closed ? 'polygon' : 'polyline', {
         points: shape.points.map(p => p.join(',')).join(' '),
         fill: shape.closed ? '#dc86452a' : 'none', stroke: shape.id === state.selected ? '#fff2ac' : '#ed9557',
         'stroke-width': 2,
       }));
     }
-    for (const point of state.points) svg.append(node('circle', { cx: point[0], cy: point[1], r: map.width / 200, fill: '#ffe897' }));
-    if (state.points.length) svg.append(node('polyline', { points: state.points.map(p => p.join(',')).join(' '), fill: 'none', stroke: '#ffe897', 'stroke-width': 2 }));
-    const markers = [...state.config.lights.filter(light => !light.characterId).map(light => ({ id: light.id, position: light.position, color: light.color })),
-      ...state.positions.map(p => ({ id: p.character_id, position: p.position, color: '#66d8ff' }))];
+    if (showDrafts) for (const point of state.points) academyLayer.append(node('circle', { cx: point[0], cy: point[1], r: map.width / 200, fill: '#ffe897' }));
+    if (showDrafts && state.points.length) academyLayer.append(node('polyline', { points: state.points.map(p => p.join(',')).join(' '), fill: 'none', stroke: '#ffe897', 'stroke-width': 2 }));
+    const markers = state.layers.lights ? [...state.config.lights.filter(light => !light.characterId).map(light => ({ id: light.id, position: light.position, color: light.color })),
+      ...state.positions.map(p => ({ id: p.character_id, position: p.position, color: '#66d8ff' }))] : [];
     for (const marker of markers) {
-      svg.append(node('circle', { cx: marker.position[0], cy: marker.position[1], r: map.width / 130,
+      academyLayer.append(node('circle', { cx: marker.position[0], cy: marker.position[1], r: map.width / 130,
         fill: marker.color, stroke: marker.id === state.selected ? '#fff' : '#36312b', 'stroke-width': 2 }));
     }
     const observer = state.positions.find(p => p.character_id === state.selected);
     const freeSight = prepareFreeSight(map.width, map.height, state.config.freeSight);
     if (tool.value === 'position' && observer && freeSight && isFree(freeSight, observer.position) && !isBlocked(state.config.geometry, observer.position, 'sight')) {
       const sight = visibilityPolygon(observer.position, Math.hypot(map.width, map.height), blockers(state.config.geometry, 'sight'), 0, 360, freeSight);
-      svg.prepend(node('polygon', { points: sight.map(p => p.join(',')).join(' '), fill: '#66d8ff22', stroke: '#66d8ff', 'stroke-width': 1 }));
+      academyLayer.prepend(node('polygon', { points: sight.map(p => p.join(',')).join(' '), fill: '#66d8ff22', stroke: '#66d8ff', 'stroke-width': 1 }));
     }
   }
 
@@ -393,15 +402,7 @@ async function openEditor(map, areas, imageUrl) {
     draw();
   }
 
-  get('[data-open]').onclick = async () => {
-    if (!body.hidden) {
-      body.hidden = true;
-      resetFlood();
-      dispose(state.view);
-      state.view = null;
-      return;
-    }
-    body.hidden = false;
+  const initialize = async () => {
     if (state.initializing) return;
     state.initializing = true;
     try {
@@ -423,6 +424,7 @@ async function openEditor(map, areas, imageUrl) {
         input.value = input.dataset.config === 'darkness' ? value * 100 : value;
       }
       refreshList();
+      window.renderMapAreaEditor?.();
       if (!body.hidden) {
         state.view = mount(board, { ...map, image_url: imageUrl });
         await state.view.ready;
@@ -438,6 +440,8 @@ async function openEditor(map, areas, imageUrl) {
   root.onchange = event => {
     const input = event.target;
     if (input === menu) return select(menu.value);
+    if (input === mode) { state.mode = mode.value; state.selected = ''; state.layers[state.mode] = true; root.querySelector(`[data-layer="${state.mode}"]`).checked = true; tool.value = state.mode === 'lights' ? 'light' : state.mode === 'sight' ? 'mask' : 'pan'; state.points = []; maskPoints.length = 0; resetFlood(); refreshList(); draw(); window.renderMapAreaEditor?.(); return; }
+    if (input.dataset.layer) { if (input.dataset.layer === state.mode && !input.checked) { input.checked = true; return; } state.layers[input.dataset.layer] = input.checked; draw(); window.renderMapAreaEditor?.(); return; }
     if (input === maskMode || input === zoom || input.dataset.flood) return;
     if (input === tool) {
       get('[data-player]').checked = false;
@@ -509,12 +513,12 @@ async function openEditor(map, areas, imageUrl) {
     const light = state.config.lights.find(item => item.id === state.selected);
     if (light) addLight(light.position.slice(), light);
   };
-  zoom.oninput = () => { board.style.width = zoom.valueAsNumber * 100 + '%'; };
-  get('[data-reset-view]').onclick = () => {
-    zoom.value = '1';
-    zoom.oninput();
-    viewport.scrollTo(0, 0);
-  };
+  const setLayer = (layer, visible) => { state.layers[layer] = visible; const input=get(`[data-layer="${layer}"]`); if(input) input.checked=visible; draw(); window.renderMapAreaEditor?.(); };
+  zoom.oninput = () => { board.style.width = `${zoom.valueAsNumber * 100}%`; };
+  zoom.oninput();
+  get('[data-reset-view]').onclick = () => { zoom.value = '1'; zoom.oninput(); viewport.scrollTo(0, 0); };
+  refreshList();
+  initialize();
   maskMode.onchange = () => { resetFlood(); maskPoints.length = 0; draw(); };
   get('[data-mask-undo]').onclick = () => {
     if (maskPoints.length) { maskPoints.pop(); draw(); }
@@ -532,12 +536,13 @@ async function openEditor(map, areas, imageUrl) {
   };
   svg.onpointerdown = event => {
     if (!state.loaded || !event.isPrimary || event.button !== 0) return;
-    if (tool.value === 'pan') {
+    if ((state.mode === 'sight' && !state.layers.sight) || (state.mode === 'lights' && !state.layers.lights)) return;
+    if (tool.value === 'pan' && state.mode !== 'rooms') {
       pan = { x: event.clientX, y: event.clientY, left: viewport.scrollLeft, top: viewport.scrollTop };
       svg.setPointerCapture(event.pointerId);
       return;
     }
-    if (tool.value !== 'mask' || !['paint', 'erase'].includes(maskMode.value)) return;
+    if (state.mode !== 'sight' || tool.value !== 'mask' || !['paint', 'erase'].includes(maskMode.value)) return;
     const point = brushPoint(event);
     const size = get('[data-radius]');
     if (!point || !size.reportValidity()) return;
@@ -564,32 +569,33 @@ async function openEditor(map, areas, imageUrl) {
     stroke = null;
     commitMask(before);
   };
-  svg.onclick = event => {
-    if (!state.loaded || tool.value === 'pan') return;
+  svg.addEventListener('click', event => {
+    if (!state.loaded || ['rooms', 'effects', 'objects'].includes(state.mode) || tool.value === 'pan') return;
+    if ((state.mode === 'sight' && !state.layers.sight) || (state.mode === 'lights' && !state.layers.lights)) return;
     const point = brushPoint(event);
     if (!point) return;
     get('[data-player]').checked = false;
-    if (tool.value === 'mask') {
+    if (state.mode === 'sight' && tool.value === 'mask') {
       if (maskMode.value === 'flood') {
         floodPoint = point;
         queueFlood();
       } else if (['add', 'subtract'].includes(maskMode.value)) { maskPoints.push(point); draw(); }
       return;
     }
-    if (tool.value === 'geometry') state.points.push(point);
-    else if (tool.value === 'position') {
+    if (state.mode === 'sight' && tool.value === 'geometry') state.points.push(point);
+    else if (state.mode === 'lights' && tool.value === 'position') {
       if (!state.selected) return announce('Välj en rollperson först.');
       const origin = state.positions.find(p => p.character_id === state.selected)?.position;
       if (!canMove(state.config.geometry, origin, point)) return announce('Platsen blockerar rörelse.');
       state.positions = [...state.positions.filter(p => p.character_id !== state.selected), { character_id: state.selected, position: point }];
       state.changedPositions.add(state.selected);
-    } else {
+    } else if (state.mode === 'lights') {
       const light = state.config.lights.find(item => item.id === state.selected);
       if (light) light.position = point;
       else addLight(point);
     }
     draw();
-  };
+  });
   get('[data-save]').onclick = async () => {
     if (!state.loaded || state.saving || [...root.querySelectorAll('input[type=number]:enabled')].some(input => !input.reportValidity())) return;
     if (floodPoint) return announce('Acceptera eller avbryt förhandsvisningen före sparning.');
@@ -622,4 +628,4 @@ async function openEditor(map, areas, imageUrl) {
   };
 }
 
-window.aleaKartakademin = { openEditor, closeEditor, syncCampaign, clearCampaign };
+window.aleaKartakademin = { openEditor, closeEditor, syncCampaign, clearCampaign, getEditMode: () => editor?.mode ?? null, isLayerVisible: name => editor?.layers?.[name] ?? true, setLayer: (name, visible) => editor?.setLayer?.(name, visible) };

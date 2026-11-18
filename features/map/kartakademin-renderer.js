@@ -70,7 +70,12 @@ export async function mountLighting(host, map) {
 
     function update(config, areas, positions, previewAll = false) {
       cancelAnimationFrame(frame);
-      lightmap.removeChildren(1).forEach(child => child.destroy({ children: true }));
+      // PixiJS 8 validates the optional end index against the current child
+      // count. Repeated updates can otherwise leave an invalid range behind.
+      while (lightmap.children.length > 1) {
+        const child = lightmap.removeChildAt(lightmap.children.length - 1);
+        child.destroy({ children: true });
+      }
       lights = [];
       discovery.clear();
       unexplored.clear();
