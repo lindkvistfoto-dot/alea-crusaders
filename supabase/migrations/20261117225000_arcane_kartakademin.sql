@@ -184,6 +184,7 @@ begin
 
   select coalesce(jsonb_agg(jsonb_build_object(
     'position',origin, 'type',item->'type', 'color',item->'color', 'intensity',item->'intensity',
+    'beam',item->'beam', 'beamWidth',item->'beamWidth', 'edgeSoftness',item->'edgeSoftness',
     'range',item->'range', 'height',item->'height', 'direction',item->'direction',
     'aperture',item->'aperture', 'inclination',item->'inclination', 'motion',item->'motion', 'on',true
   ) order by ordinal),'[]'::jsonb) into lights

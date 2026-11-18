@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { blockers, canMove, contains, directionalReach, knownAreas, resolveOrigin, visibilityPolygon } from '../features/map/kartakademin-geometry.js';
+import { blockers, canMove, contains, directionalReach, knownAreas, parallelBeamQuads, resolveOrigin, visibilityPolygon } from '../features/map/kartakademin-geometry.js';
+
+import { createMask } from '../features/map/kartakademin-mask.js';
 
 const wall = { points: [[10, 0], [10, 20]], closed: false, light: true, sight: true, movement: true };
 const pit = { points: [[2, 8], [8, 8], [8, 12], [2, 12]], closed: true, movement: true };
@@ -49,4 +51,13 @@ it('assigns separate display treatments without using lighting or room informati
   expect(['unknown', 'unexplored', 'explored', undefined].map(roomVisibility)).toEqual([
     'black', 'blur', 'sharp', 'black',
   ]);
+});
+
+it('stoppar parallella ljusstrålar vid första Solid-cellen', () => {
+  const mask = createMask(20, 20);
+  mask.cells.fill(1);
+  for (let y = 0; y < 20; y++) mask.cells[y * 20 + 10] = 0;
+  const quads = parallelBeamQuads([4, 10], 14, 6, 0, [], mask);
+  expect(quads.length).toBeGreaterThan(0);
+  expect(quads.every(quad => quad[4] === 10 && quad[6] === 10)).toBe(true);
 });

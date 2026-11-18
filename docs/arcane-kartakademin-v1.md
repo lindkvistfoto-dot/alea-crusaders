@@ -30,3 +30,13 @@ Flood fill visar markeringsförslaget i gult tills SL accepterar. Färgtolerans 
 Okända rum täcks av helsvart. Outforskade rum visas med oskärpa och lätt nedtoning. Utforskade rum återges i skärpa med separat belysning. Rumsinformation behåller sina egna behörighetsregler. För att ett ljus ska skickas till spelare måste SL slå på **Dela ljuset i utforskade rum** och ljuset måste vara tänt och placerat i ett utforskat område.
 
 Spelarnas RPC returnerar en rastermask inom utforskade rum och godkända ljusparametrar. Ett okänt eller outforskat område har företräde vid överlappning. Rå geometri, ljusnamn, rollpersons-ID och övrig konfiguration finns enbart i SL:s dataväg. Ljushinder bakas in i spelarmasken. Kartakademin använder ALEA:s befintliga åtkomst till kartbild och rumsgränser. Den som får originalkartan från det äldre kartflödet kan därför fortfarande läsa detaljer som finns inritade i själva bilden.
+
+## Kartverkstaden V1.4
+
+- Vänsterpanelen samlar lägen, zoom och synliga lager. Mushjul zoomar vid pekaren. Panorera med mittenknappen eller mellanslag och dra. Anpassa karta visar hela bilden.
+- Välj **Infoga punkt** och klicka intill en rumskant. Ett klick på ett hörn markerar det för flytt eller borttagning. Ändringar på delade kanter sparas med den befintliga atomära proceduren. **Ångra punkt** återställer senast sparad punktändring i den öppna arbetsytan. Delade hörn kan flyttas.
+- **Fyll tomrum** hittar slutna glipor. Välj en glipa, granska polygonen, välj plats och klicka på **Spara polygon** eller **Avbryt ritning**.
+- Flood fill, pensel, sudd och polygon påverkar samma arbetsmask. Varje slutförd åtgärd kan ångras. Fri sikt och Solid är två vyer av samma mask. **Granska små Solid-fläckar** lägger enbart ut markeringar. Hålstorlek bland avancerade flood fill-inställningar påverkar själva fyllningen om den anges uttryckligen.
+- Kartinställningar lagrar miljö, norr och px/m i befintlig konfiguration. Kartbredden anges i meter. **Rummens upptäcktsstatus** visar en visuell simulering för SL. **Visa endast ljusresultat** döljer redigeringsöverlägg tillfälligt.
+- Gamla sol- och månljuskällor behåller sitt befintliga riktade läge. De nya formerna använder räckvidd för längd eller diameter. Ändra bredden för en parallell remsa eller en elliptisk öppning. Fladder/puls 0 ger ett statiskt magiskt ljus utan den animerade auran.
+- Spelar-RPC:n hämtar tre extra visuella parametrar för redan tillåtna ljuskällor i den befintliga Kartakademin-migrationen. Granska migrationen innan DEV-körning. Förberedda lägen för områdeseffekter och objekt använder fortfarande PR:ens befintliga stöd.

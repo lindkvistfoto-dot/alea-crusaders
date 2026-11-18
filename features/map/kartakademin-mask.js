@@ -108,34 +108,59 @@ function smoothSelection({ width, height }, selected, seed, passes) {
   return selected;
 }
 
-function fillEnclosed({ width, height }, result, selected, rgba, walls, maximum) {
+function scanEnclosed({ width, height }, result, maximum, visit) {
   const visited = new Uint8Array(result.length);
   const queue = new Int32Array(result.length);
   for (let start = 0; start < result.length; start++) {
     if (result[start] || visited[start]) continue;
-    let cursor = 0, end = 1, exterior = false, touchesSelection = false, protectedCell = false;
+    let cursor = 0, end = 1, exterior = false;
     visited[start] = 1;
     queue[0] = start;
     while (cursor < end) {
       const index = queue[cursor++], y = Math.floor(index / width), x = index % width;
       exterior ||= x === 0 || y === 0 || x === width - 1 || y === height - 1;
-      protectedCell ||= !!walls?.[index] || rgba[index * 4 + 3] === 0;
       for (let row = Math.max(0, y - 1); row <= Math.min(height - 1, y + 1); row++) {
         for (let col = Math.max(0, x - 1); col <= Math.min(width - 1, x + 1); col++) {
           const neighbor = row * width + col;
-          if (result[neighbor]) {
-            touchesSelection ||= !!selected[neighbor];
-          } else if (!visited[neighbor]) {
+          if (!result[neighbor] && !visited[neighbor]) {
             visited[neighbor] = 1;
             queue[end++] = neighbor;
           }
         }
       }
     }
-    if (!exterior && !protectedCell && touchesSelection && end <= maximum) {
-      for (let i = 0; i < end; i++) result[queue[i]] = 1;
-    }
+    if (!exterior && end <= maximum) visit(queue.subarray(0, end));
   }
+}
+
+function fillEnclosed(mask, result, selected, rgba, walls, maximum) {
+  scanEnclosed(mask, result, maximum, cells => {
+    if (cells.some(index => walls?.[index] || rgba[index * 4 + 3] === 0)) return;
+    const touchesSelection = cells.some(index => {
+      const y = Math.floor(index / mask.width), x = index % mask.width;
+      for (let row = y - 1; row <= y + 1; row++) {
+        for (let col = x - 1; col <= x + 1; col++) {
+          if (selected[row * mask.width + col]) return true;
+        }
+      }
+      return false;
+    });
+    if (touchesSelection) for (const index of cells) result[index] = 1;
+  });
+}
+
+export function findSmallSolidIslands(mask, maximum) {
+  const islands = [];
+  scanEnclosed(mask, mask.cells, maximum, cells => {
+    let x0 = mask.width, x1 = 0, y0 = mask.height, y1 = 0;
+    for (const index of cells) {
+      const x = index % mask.width, y = Math.floor(index / mask.width);
+      x0 = Math.min(x0, x); x1 = Math.max(x1, x);
+      y0 = Math.min(y0, y); y1 = Math.max(y1, y);
+    }
+    islands.push([(x0 + x1 + 1) * mask.dx / 2, (y0 + y1 + 1) * mask.dy / 2, cells.length]);
+  });
+  return islands;
 }
 
 export function previewFlood(mask, rgba, point, options, walls) {

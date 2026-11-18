@@ -165,3 +165,34 @@
   .kartakademin-mode-nav button { font-size: .85rem; }
   .kartakademin-layers { grid-template-columns: 1fr; }
 }
+
+.kartakademin-navigation { min-width: 0; min-height: 0; overflow: auto; }
+.kartakademin-view-controls { display: flex; flex-wrap: wrap; gap: .3rem; }
+.kartakademin-view-controls label { display: grid; width: 100%; }
+.kartakademin-view-controls input { min-width: 0; width: 100%; }
+.kartakademin-view-controls .btn { padding: .35rem; }
+.map-area-map-stage { display: block; padding: 0; }
+.map-area-map-stage #mapAreaCanvas { box-sizing: border-box; }
+.map-area-tool-panel #mapAreaList { max-height: none; flex-shrink: 0; }
+.map-area-tool-panel .map-area-list-row { grid-template-columns: minmax(0, 1fr) auto; }
+.map-area-tool-panel .map-area-list-row select { grid-row: 2; }
+.map-area-tool-panel .map-area-list-row .map-status-pills { grid-column: 1; }
+.map-area-tool-panel .map-area-list-row .deletebtn { grid-column: 2; grid-row: 1; }
+.map-area-tool-panel .map-area-toolbar select { min-width: 0; }
+.map-area-workspace [hidden] { display: none !important; }
+.kartakademin-mask-picker { display: flex; flex-wrap: wrap; gap: .4rem; }
+.kartakademin-mask-picker [aria-pressed="true"] { box-shadow: inset 0 0 0 2px #e1b96e; }
+.kartakademin-light-only #mapAreaRoomLayer { display: none; }
+[data-compass] { display: inline-grid; place-items: center; border: 1px solid; border-radius: 50%; width: 2.7rem; aspect-ratio: 1; }
+@media (min-width: 901px) {
+  .map-area-workspace { grid-template-columns: minmax(138px, 10%) minmax(0, 1fr) minmax(225px, 17%); flex: 1; min-height: 0; }
+  .map-area-tool-panel { min-height: 0; }
+  #mapAreaEditor .modal:has(.map-area-workspace) { height: 96vh; }
+}
+@media (max-width: 900px) {
+  .kartakademin-mode-nav { flex-wrap: wrap; }
+  .map-area-map-stage { max-height: 60vh; }
+  .map-area-tool-panel { max-height: none; }
+}
+#mapAreaSvg .map-editor-vertex.active { fill: #ffdb63; }
+.map-area-map-stage #mapAreaCanvas { border-width: 0; }

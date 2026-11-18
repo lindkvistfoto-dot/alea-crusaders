@@ -64,6 +64,30 @@ export function visibilityPolygon(origin, radius, edges, direction = 0, aperture
   return aperture < 360 ? [origin, ...points] : points;
 }
 
+// Each strip starts on the same aperture line and terminates at the first
+// blocker encountered along the shared direction.
+export function parallelBeamQuads(origin, length, width, direction, edges, freeSight) {
+  const angle = direction * Math.PI / 180;
+  const dx = Math.cos(angle), dy = Math.sin(angle);
+  const strips = Math.min(256, Math.max(8, Math.ceil(width / Math.min(freeSight.dx, freeSight.dy))));
+  const step = width / strips;
+  const quads = [];
+  for (let i = 0; i < strips; i++) {
+    const across = (i + .5) * step - width / 2;
+    const start = [origin[0] - dy * across, origin[1] + dx * across];
+    let distance = length;
+    for (const edge of edges) distance = Math.min(distance, intersection(start, dx, dy, edge));
+    distance = traceFree(freeSight, start, dx, dy, distance);
+    if (distance <= 0) continue;
+    const offsetX = dy * step / 2, offsetY = dx * step / 2;
+    const [x, y] = start;
+    const endX = x + dx * distance, endY = y + dy * distance;
+    quads.push([x + offsetX, y - offsetY, x - offsetX, y + offsetY,
+      endX - offsetX, endY + offsetY, endX + offsetX, endY - offsetY]);
+  }
+  return quads;
+}
+
 export function resolveOrigin(light, positions) {
   return light.characterId ? positions.find(p => p.character_id === light.characterId)?.position : light.position;
 }

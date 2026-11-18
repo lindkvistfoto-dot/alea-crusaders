@@ -44,7 +44,7 @@ it('keeps map settings and party position changes atomic and protects access by 
       version: 1, darkness: .7, pixelsPerMeter: 40,
       secretObjects: ['hidden'],
       lights: [
-        { name: 'SL notes', on: true, playerVisible: true, position: [2, 1] },
+        { name: 'SL notes', on: true, playerVisible: true, position: [2, 1], beam: 'parallel', beamWidth: 2, edgeSoftness: 45 },
         { on: true, playerVisible: true, position: [18, 1] },
         { on: true, playerVisible: true, position: [5.5, 1] },
         { on: true, playerVisible: true, position: [8.5, 1] },
@@ -70,6 +70,7 @@ it('keeps map settings and party position changes atomic and protects access by 
     const render = () => db.query('select read_campaign_map_academy_player($1) as data', [map]);
     const { data } = (await render()).rows[0];
     expect(data.lights.map(light => light.position)).toEqual([[2, 1], [3, 4]]);
+    expect(data.lights[0]).toMatchObject({ beam: 'parallel', beamWidth: 2, edgeSoftness: 45 });
     expect(data.lights.every(light => !('name' in light) && !('characterId' in light))).toBe(true);
     expect(data).not.toHaveProperty('secretObjects');
     expect(data.geometry).toEqual([]);

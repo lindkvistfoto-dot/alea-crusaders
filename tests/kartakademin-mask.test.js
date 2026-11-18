@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest';
 import { contains, visibilityPolygon, canMove } from '../features/map/kartakademin-geometry.js';
-import { createMask, floodMask, isFree, previewFlood, maskHistory, paintMask, polygonMask, prepareFreeSight, serializeMask, traceFree } from '../features/map/kartakademin-mask.js';
+import { createMask, findSmallSolidIslands, floodMask, isFree, previewFlood, maskHistory, paintMask, polygonMask, prepareFreeSight, serializeMask, traceFree } from '../features/map/kartakademin-mask.js';
 
 const rect = (x, y, w, h) => [[x,y], [x+w,y], [x+w,y+h], [x,y+h]];
 
@@ -139,4 +139,14 @@ it('släpper ljus förbi en fylld falsk Solid-ö i den återlästa masken', () =
   };
   expect(contains(trace(0), [6.5,2.5])).toBe(false);
   expect(contains(trace(1), [6.5,2.5])).toBe(true);
+});
+
+it('markerar små inneslutna Solid-fläckar utan att redigera masken', () => {
+  const mask = createMask(8, 8);
+  mask.cells.fill(1);
+  for (const index of [0, 9, 21, 35, 36]) mask.cells[index] = 0;
+  const before = mask.cells.slice();
+  expect(findSmallSolidIslands(mask, 1)).toEqual([[5.5, 2.5, 1]]);
+  expect(findSmallSolidIslands(mask, 2)).toEqual([[5.5, 2.5, 1], [4, 4.5, 2]]);
+  expect(mask.cells).toEqual(before);
 });
