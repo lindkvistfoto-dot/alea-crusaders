@@ -191,14 +191,6 @@ async function openEditor(map, areas, imageUrl) {
         <button type="button" class="btn" data-mask-redo>Gör om</button>
         <button type="button" class="btn kartakademin-destructive" data-mask-reset>Nollställ fri sikt</button>
       </div>
-      <dialog class="kartakademin-confirm" data-confirm-dialog aria-labelledby="kartakademin-confirm-title">
-        <h2 id="kartakademin-confirm-title">Bekräfta ändring</h2>
-        <p data-confirm-message></p>
-        <div class="kartakademin-confirm-actions">
-          <button type="button" class="btn" data-confirm-cancel>Avbryt</button>
-          <button type="button" class="btn kartakademin-destructive" data-confirm-accept>Bekräfta</button>
-        </div>
-      </dialog>
       <div class="kartakademin-controls"><button type="button" class="btn primary" data-save>Spara Kartakademin</button><output aria-live="polite"></output></div>
     </div>`;
   opener.querySelector('.map-area-toolbar').before(root);
@@ -207,18 +199,6 @@ async function openEditor(map, areas, imageUrl) {
   const menu = get('[data-items]'), tool = get('[data-tool]'), mode = get('[data-mode]');
   const output = get('output:not([data-flood-status])');
   const announce = message => { output.textContent = message; };
-  const askConfirmation = (message, actionLabel) => new Promise(resolve => {
-    const dialog = get('[data-confirm-dialog]');
-    const cancel = get('[data-confirm-cancel]');
-    const accept = get('[data-confirm-accept]');
-    get('[data-confirm-message]').textContent = message;
-    accept.textContent = actionLabel;
-    dialog.returnValue = 'cancel';
-    dialog.addEventListener('close', () => resolve(dialog.returnValue === 'confirm'), { once: true });
-    cancel.onclick = () => dialog.close('cancel');
-    accept.onclick = () => dialog.close('confirm');
-    dialog.showModal();
-  });
   const lightForm = get('[data-light]'), geoForm = get('[data-geometry]');
   const roster = (Array.isArray(chars) ? chars : []).filter(character => character._dbId && !character.isNpc);
   get('select[name=type]').replaceChildren(...Object.entries(types).map(([key, type]) => option(key, type.name)));
@@ -570,7 +550,7 @@ async function openEditor(map, areas, imageUrl) {
     const position = state.mode === 'lights' && tool.value === 'position' && state.positions.some(item => item.character_id === state.selected);
     const confirmation = removalConfirmation(state.mode, tool.value);
     if ((!light && !geometry && !position) || !confirmation) return;
-    if (!await askConfirmation(confirmation.message, confirmation.actionLabel)) return;
+    if (!await window.askConfirm(confirmation.title, confirmation.message, confirmation.actionLabel, true)) return;
     if (light) state.config.lights = state.config.lights.filter(item => item.id !== state.selected);
     else if (geometry) state.config.geometry = state.config.geometry.filter(item => item.id !== state.selected);
     else {
@@ -615,7 +595,7 @@ async function openEditor(map, areas, imageUrl) {
   get('[data-mask-reset]').onclick = async () => {
     if (!state.loaded || !mask) return;
     const accepted = await resetFreeSight(mask, history, state.config,
-      () => askConfirmation(FREE_SIGHT_RESET_CONFIRMATION, FREE_SIGHT_RESET_LABEL));
+      () => window.askConfirm('Nollställ fri sikt', FREE_SIGHT_RESET_CONFIRMATION, FREE_SIGHT_RESET_LABEL, true));
     if (!accepted) return;
     maskPoints.length = 0;
     resetFlood();

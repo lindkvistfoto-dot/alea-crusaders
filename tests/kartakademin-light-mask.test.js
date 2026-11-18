@@ -145,10 +145,12 @@ it('resets only free sight, supports undo and redo, and reloads as Solid before 
 
 it('uses independent, scoped confirmation copy for each current deletion action', () => {
   expect(removalConfirmation('lights', 'light')).toEqual({
+    title: 'Ta bort ljuskälla',
     message: 'Vill du ta bort den valda ljuskällan? Fri sikt, rum och andra kartlager påverkas inte.',
     actionLabel: 'Ta bort ljuskälla',
   });
   expect(removalConfirmation('sight', 'geometry')).toEqual({
+    title: 'Ta bort hindergeometri',
     message: 'Vill du ta bort den valda hindergeometrin? Fri sikt, ljuskällor, rum och andra kartlager påverkas inte.',
     actionLabel: 'Ta bort hindergeometri',
   });

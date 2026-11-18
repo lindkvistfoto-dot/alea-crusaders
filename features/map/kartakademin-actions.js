@@ -14,14 +14,17 @@ export async function resetFreeSight(mask, history, config, confirm) {
 
 export function removalConfirmation(mode, tool) {
   if (mode === 'lights' && tool === 'light') return {
+    title: 'Ta bort ljuskälla',
     message: 'Vill du ta bort den valda ljuskällan? Fri sikt, rum och andra kartlager påverkas inte.',
     actionLabel: 'Ta bort ljuskälla',
   };
   if (mode === 'sight' && tool === 'geometry') return {
+    title: 'Ta bort hindergeometri',
     message: 'Vill du ta bort den valda hindergeometrin? Fri sikt, ljuskällor, rum och andra kartlager påverkas inte.',
     actionLabel: 'Ta bort hindergeometri',
   };
   if (mode === 'lights' && tool === 'position') return {
+    title: 'Ta bort kartposition',
     message: 'Vill du ta bort den valda rollpersonens kartposition? Rollpersonen och övriga kartdata påverkas inte.',
     actionLabel: 'Ta bort kartposition',
   };

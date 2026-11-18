@@ -33,11 +33,5 @@
   .kartakademin-layers { grid-column:1/-1 }
   .kartakademin-editor .kartakademin-controls { align-items:stretch }
 }
-
-.kartakademin-confirm { width:min(32rem,calc(100vw - 2rem)); max-width:none; padding:1.2rem; color:#eadcc6; background:#211a13; border:1px solid #bd654d; border-radius:10px; box-shadow:0 1rem 3rem #0009 }
-.kartakademin-confirm::backdrop { background:#090705bb }
-.kartakademin-confirm h2 { margin:0 0 .6rem; font-size:1.15rem }
-.kartakademin-confirm p { line-height:1.5 }
-.kartakademin-confirm-actions { display:flex; justify-content:flex-end; gap:.6rem; margin-top:1rem }
 .kartakademin-destructive { color:#fff; background:#7a2925; border:1px solid #d17868 }
 .kartakademin-destructive:hover { background:#96352e }
