@@ -346,7 +346,7 @@ async function openEditor(map, areas, imageUrl) {
     menu.value = state.selected;
     const lightList = get('[data-light-list]');
     lightList.hidden = state.mode !== 'lights' || tool.value !== 'light';
-    get('[data-item-select]').hidden = lightList.hidden || state.config.lights.length === 0;
+    get('[data-item-select]').hidden = lightList.hidden || tool.value === 'light';
     lightList.replaceChildren(...(state.config.lights.length ? state.config.lights.map(light => {
       const row = document.createElement('button');
       row.type = 'button';
