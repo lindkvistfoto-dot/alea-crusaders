@@ -46,7 +46,7 @@
 }
 .map-area-workspace {
   display: grid;
-  grid-template-columns: 150px minmax(0, 1fr) minmax(320px, 390px);
+  grid-template-columns: 128px minmax(0, 1fr) minmax(300px, 340px);
   gap: .8rem;
   min-height: min(74vh, 820px);
   max-height: calc(96vh - 2rem);
