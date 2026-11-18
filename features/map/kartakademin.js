@@ -162,7 +162,7 @@ async function openEditor(map, areas, imageUrl) {
         <button type="button" role="tab" data-mode-button="objects" aria-selected="false">Objekt</button>
       </nav>
       <label class="kartakademin-tool-picker" data-tool-picker>Aktivt verktyg<select data-tool></select></label>
-      <label class="kartakademin-mode-select">Redigeringsläge<select data-mode aria-hidden="true" tabindex="-1"><option value="rooms">Rum</option><option value="effects">Områdeseffekter</option><option value="sight">Sikt och hinder</option><option value="lights">Ljuskällor</option><option value="objects">Objekt</option></select></label>
+      <label class="kartakademin-mode-select" hidden>Redigeringsläge<select data-mode aria-hidden="true" tabindex="-1"><option value="rooms">Rum</option><option value="effects">Områdeseffekter</option><option value="sight">Sikt och hinder</option><option value="lights">Ljuskällor</option><option value="objects">Objekt</option></select></label>
       <div class="kartakademin-controls" data-tool-controls>
         <label data-item-select>Välj<select data-items></select></label>
         <div data-light-list class="kartakademin-light-list" role="listbox" aria-label="Ljuskällor" hidden></div>
