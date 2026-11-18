@@ -40,3 +40,9 @@ Spelarnas RPC returnerar en rastermask inom utforskade rum och godkända ljuspar
 - Kartinställningar lagrar miljö, norr och px/m i befintlig konfiguration. Kartbredden anges i meter. **Rummens upptäcktsstatus** visar en visuell simulering för SL. **Visa endast ljusresultat** döljer redigeringsöverlägg tillfälligt.
 - Gamla sol- och månljuskällor behåller sitt befintliga riktade läge. De nya formerna använder räckvidd för längd eller diameter. Ändra bredden för en parallell remsa eller en elliptisk öppning. Fladder/puls 0 ger ett statiskt magiskt ljus utan den animerade auran.
 - Spelar-RPC:n hämtar tre extra visuella parametrar för redan tillåtna ljuskällor i den befintliga Kartakademin-migrationen. Granska migrationen innan DEV-körning. Förberedda lägen för områdeseffekter och objekt använder fortfarande PR:ens befintliga stöd.
+
+## Kartverkstaden V2.0
+
+Kartverkstaden öppnas i **Admin → Platser** från platsstrukturen eller sexkantsknappen på en befintlig karta. Nivåväljaren använder kartor kopplade till samma platsstruktur. **Lägg till kartbild** och **Lägg till nivå** öppnar det befintliga flödet för att skapa en karta. Kartbildsbyte kräver ett kartmål i HERMES ALEA med dimensionskontroll före aktivering.
+
+Kartans viewport anpassas efter arbetsytans bredd och höjd. Kartbild, PixiJS, SVG och mask ligger i samma förflyttade kartyta. Kartans norr anges i grader medurs från kartans överkant. Befintliga kartor utan sparad norr behåller sina tidigare ljusriktningar. Spelar-RPC:n räknar om riktningen endast för sol- och månljus som den redan lämnar ut. ARCANE COMPASS ROSE V1.0 behöver levereras som godkänd RGBA-originalfil genom HERMES CORE.

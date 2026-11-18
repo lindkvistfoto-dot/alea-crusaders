@@ -185,7 +185,12 @@ begin
   select coalesce(jsonb_agg(jsonb_build_object(
     'position',origin, 'type',item->'type', 'color',item->'color', 'intensity',item->'intensity',
     'beam',item->'beam', 'beamWidth',item->'beamWidth', 'edgeSoftness',item->'edgeSoftness',
-    'range',item->'range', 'height',item->'height', 'direction',item->'direction',
+    'range',item->'range', 'height',item->'height', 'direction',case
+      when item->>'type' in ('solljus','manljus')
+        and jsonb_typeof(config->'north') = 'number'
+        and jsonb_typeof(item->'direction') = 'number'
+      then to_jsonb((item->>'direction')::numeric + (config->>'north')::numeric - 90)
+      else item->'direction' end,
     'aperture',item->'aperture', 'inclination',item->'inclination', 'motion',item->'motion', 'on',true
   ) order by ordinal),'[]'::jsonb) into lights
   from jsonb_array_elements(config->'lights') with ordinality g(item,ordinal)

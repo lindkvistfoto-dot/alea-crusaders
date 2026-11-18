@@ -1368,6 +1368,7 @@ async function selectSpecialImageTab(key='roundImages'){
  else await window.aleaHitFigures?.renderAdmin?.();
 }
 async function openAdminSection(key='overview'){
+ if(key!=='places'&&!$('mapAreaEditor').classList.contains('hidden')&&!await leaveMapAreaEditor())return;
  if(key==='roundImages'||key==='hitFigures'){
   activeSpecialImageTab=key;key='specialImages';
  }
@@ -1454,7 +1455,7 @@ window.aleaPaperDollWorkshopData=async function(){
 async function openAdmin(){if(!activeUser()?.admin)return;
  window.gimliMountAdmin?.();window.bilboMountLibrary?.();
  editing=false;$('view').classList.add('hidden');$('home').classList.add('hidden');$('combatPage').classList.add('hidden');$('back').classList.add('hidden');$('editBtn').classList.add('hidden');$('cancelEditBtn').classList.add('hidden');$('admin').classList.remove('hidden');await Promise.all([loadRuleSkills(),loadRuleMagicRegistry(),loadRuleEffects(),loadRuleProfessions(),loadRuleRaces(),loadRuleArmorRegistry(),loadRuleShields(),loadRuleWeapons(),loadRuleSocialStands(),loadCampaignMaps(false),loadCampaignPlaceData(),loadCampaignContentData(),loadCampaignCombatScenes()]);renderAdmin();openAdminSection('overview')}
-function closeAdmin(){activeAdminSection='overview';$('admin').classList.add('hidden');$('home').classList.remove('hidden');renderCards()}
+async function closeAdmin(){if(!$('mapAreaEditor').classList.contains('hidden')&&!await leaveMapAreaEditor())return;activeAdminSection='overview';$('admin').classList.add('hidden');$('home').classList.remove('hidden');renderCards()}
 function renderAdmin(){let ut=$('userTable');ut.innerHTML=`<div class="ahead">Namn</div><div class="ahead emailcol">E-post</div><div class="ahead">Admin</div><div class="ahead">Åtgärd</div>`+adminData.users.map(u=>`<div>${escAttr(u.name||'—')}</div><div class="emailcol">${escAttr(u.email||'—')}</div><div>${u.admin?'Ja':'Nej'}</div><div class="adminactions"><button class="smallbtn" onclick="editUser('${u.id}')">✎</button><button class="deletebtn" onclick="deleteUser('${u.id}')">×</button></div>`).join('');let ct=$('campaignTable');ct.innerHTML=`<div class="ahead">Namn</div><div class="ahead">Spelare</div><div class="ahead slcol">SL</div><div class="ahead">Åtgärd</div>`+adminData.campaigns.map(c=>`<div>${escAttr(c.name||'—')}</div><div>${(c.players||[]).map(userName).map(escAttr).join(', ')||'—'}</div><div class="slcol">${(c.gms||[]).map(userName).map(escAttr).join(', ')||'—'}</div><div class="adminactions"><button class="smallbtn" onclick="editCampaign('${c.id}')">✎</button><button class="deletebtn" onclick="deleteCampaign('${c.id}')">×</button></div>`).join('');let dd=$('currentCampaign');dd.innerHTML=`<option value="">Ingen vald</option>`+adminData.campaigns.map(c=>`<option value="${escAttr(c.id)}" ${adminData.currentCampaignId===c.id?'selected':''}>${escAttr(c.name||'Namnlös kampanj')}</option>`).join('');renderCurrentCampaignGM();renderAdminMaps();renderAdminCampaignContent();renderAdminCombatSceneList();renderAdminSkills();renderAdminSpells();renderAdminMagicSchools();renderAdminProfessions();renderAdminRaces();renderAdminSocialStands();renderAdminWeapons();renderAdminArmors();renderAdminShields();renderAdminOverviewCounts()}function renderCurrentCampaignGM(){let el=$('currentCampaignGM');if(!el)return;let c=adminData.campaigns.find(x=>x.id===adminData.currentCampaignId);el.innerHTML=c?`SL: <b>${(c.gms||[]).map(userName).map(escAttr).join(', ')||'Ingen angiven'}</b>`:''}
 function setCurrentCampaign(id){adminData.currentCampaignId=id;saveAdmin();renderCurrentCampaignGM()}
 function closeAdminEditor(){
@@ -3551,6 +3552,7 @@ async function handleMapFile(file){
   if(!r.ok){let data=await r.json().catch(()=>({}));throw new Error(data?.message||data?.error||'Uppladdningen av kartbilden misslyckades.')}
   await loadCampaignMaps(false);await loadCampaignPlaceData();renderAdminMaps();
   showBackupToast('✓ Kartan uppladdad');
+  if(!$('mapAreaEditor').classList.contains('hidden'))await openMapAreaEditor(mapId);
  }catch(e){
   console.error('Kartuppladdning misslyckades',e);
   if(rowCreated)dbJson('campaign_maps?id=eq.'+encodeURIComponent(mapId),{method:'DELETE',headers:{'Prefer':'return=minimal'}}).catch(()=>{});
@@ -3607,7 +3609,7 @@ function renderAdminMaps(){
  let directMaps=campaignMaps.filter(m=>m.site_id===site.id),directLocs=campaignLocations.filter(l=>l.site_id===site.id);
  if($('adminSiteDetailMeta'))$('adminSiteDetailMeta').textContent=(site.site_type||'struktur')+' · '+directMaps.length+' kartor · '+directLocs.length+' platser';
  if(st)st.textContent=directMaps.length?directMaps.length+' kartor i denna platsstruktur.':'Inga kartor i denna platsstruktur ännu.';
- if(mt)mt.innerHTML=directMaps.length?'<div class="ahead">Karta</div><div class="ahead">Status</div><div class="ahead">Åtgärd</div>'+directMaps.map(m=>'<div><b>'+escAttr(m.name||'Namnlös karta')+'</b><div class="muted" style="font-size:11px">'+m.width+'×'+m.height+'</div></div><div>'+(m.id===campaignActiveMapId?'<span class="admin-map-current">AKTUELL</span> ':'')+(m.player_visible?'<span class="admin-map-visible">SPELARE</span>':'<span class="admin-map-hidden">DOLD</span>')+'</div><div class="admin-map-actions"><button class="smallbtn" onclick="editCampaignMap(\''+m.id+'\')" title="Redigera karta">✎</button><button class="smallbtn" onclick="openMapAreaEditor(\''+m.id+'\')" title="Definiera polygoner">⬡</button><button class="smallbtn admin-map-toggle '+(m.id===campaignActiveMapId?'active':'')+'" onclick="activateCampaignMapById(\''+m.id+'\')" title="'+(m.id===campaignActiveMapId?'Aktuell karta':'Gör aktuell')+'">📍</button><button class="smallbtn admin-map-toggle '+(m.player_visible?'active':'')+'" onclick="toggleMapPlayerVisibility(\''+m.id+'\')" title="'+(m.player_visible?'Dölj för spelare':'Gör tillgänglig för spelare')+'">👁</button><button class="deletebtn" onclick="deleteCampaignMap(\''+m.id+'\')">×</button></div>').join(''):'<div class="admin-site-empty">Inga kartor ännu. Lägg till exempelvis Bottenvåning, Våning 2 eller Krypta.</div>';
+ if(mt)mt.innerHTML=directMaps.length?'<div class="ahead">Karta</div><div class="ahead">Status</div><div class="ahead">Åtgärd</div>'+directMaps.map(m=>'<div><b>'+escAttr(m.name||'Namnlös karta')+'</b><div class="muted" style="font-size:11px">'+m.width+'×'+m.height+'</div></div><div>'+(m.id===campaignActiveMapId?'<span class="admin-map-current">AKTUELL</span> ':'')+(m.player_visible?'<span class="admin-map-visible">SPELARE</span>':'<span class="admin-map-hidden">DOLD</span>')+'</div><div class="admin-map-actions"><button class="smallbtn" onclick="editCampaignMap(\''+m.id+'\')" title="Redigera karta">✎</button><button class="smallbtn" onclick="openMapAreaEditor(\''+m.id+'\')" title="Öppna Kartverkstad" aria-label="Öppna Kartverkstad">⬡</button><button class="smallbtn admin-map-toggle '+(m.id===campaignActiveMapId?'active':'')+'" onclick="activateCampaignMapById(\''+m.id+'\')" title="'+(m.id===campaignActiveMapId?'Aktuell karta':'Gör aktuell')+'">📍</button><button class="smallbtn admin-map-toggle '+(m.player_visible?'active':'')+'" onclick="toggleMapPlayerVisibility(\''+m.id+'\')" title="'+(m.player_visible?'Dölj för spelare':'Gör tillgänglig för spelare')+'">👁</button><button class="deletebtn" onclick="deleteCampaignMap(\''+m.id+'\')">×</button></div>').join(''):'<div class="admin-site-empty">Inga kartor ännu. Lägg till exempelvis Bottenvåning, Våning 2 eller Krypta.</div>';
  if(lt)lt.innerHTML=directLocs.length?'<div class="ahead">ID</div><div class="ahead">Namn</div><div class="ahead">Typ</div><div class="ahead">Åtgärd</div>'+directLocs.map(l=>'<div>'+escAttr(l.location_key||'—')+'</div><div>'+escAttr(l.name||'—')+(locationEventSummary(l.id)?'<div class="location-event-mini">⚡ '+escAttr(locationEventSummary(l.id))+'</div>':'')+(l.ambience_cue_key?'<div class="location-sound-mini">♫ '+escAttr(window.aleaAudio?.cues?.().find(c=>c.cue_key===l.ambience_cue_key)?.title||l.ambience_cue_key)+'</div>':'')+'</div><div>'+escAttr(l.location_type||'—')+'</div><div class="admin-map-actions">'+(l.ambience_cue_key?'<button class="smallbtn" type="button" onclick="window.aleaSoundboard?.playLocation(\''+l.id+'\')" title="Spela platsljud för alla deltagare">♫ ▶</button>':'')+'<button class="smallbtn" onclick="editCampaignLocation(\''+l.id+'\')" title="Grunddata">✎</button><button class="smallbtn" onclick="editLocationContent(\''+l.id+'\')" title="Beskrivning, bilder och kopplingar">📖</button><button class="deletebtn" onclick="deleteCampaignLocation(\''+l.id+'\')">×</button></div>').join(''):'<div class="admin-site-empty">Inga rum eller platser i strukturen ännu.</div>'
 }
 function siteOptions(selected='',allowNone=true,excludeId=''){
@@ -3871,20 +3873,67 @@ async function deleteCampaignLocation(id){
 }
 let mapAreaSelectedVertex=null,mapAreaVertexUndo=[],mapAreaGapDraft=false,mapAreaInsertMode=false;
 let mapAreaEditMap=null,mapAreaEditAreas=[],mapAreaDraft=[],mapAreaDrawing=false,mapAreaLastSnap='',mapAreaSelectedId=null,mapAreaNodeDrag=null,mapAreaHoleCandidates=[];
-function closeMapAreaEditor(){if(mapAreaNodeDrag)return;window.aleaKartakademin?.closeEditor();mapAreaDrawing=false;mapAreaDraft=[];mapAreaGapDraft=false;mapAreaInsertMode=false;mapAreaSelectedVertex=null;mapAreaVertexUndo=[];mapAreaEditMap=null;mapAreaEditAreas=[];mapAreaSelectedId=null;mapAreaHoleCandidates=[];$('mapAreaEditor').classList.add('hidden')}
+let mapAreaOpenRequest=0;
+function closeMapAreaEditor(){
+ if(mapAreaNodeDrag)return;
+ mapAreaOpenRequest++;
+ window.aleaKartakademin?.closeEditor();
+ mapAreaDrawing=false;mapAreaDraft=[];mapAreaGapDraft=false;mapAreaInsertMode=false;
+ mapAreaSelectedVertex=null;mapAreaVertexUndo=[];mapAreaEditMap=null;mapAreaEditAreas=[];
+ mapAreaSelectedId=null;mapAreaHoleCandidates=[];
+ $('mapAreaEditor').classList.add('hidden');
+ $('mapAreaEditor').parentElement.classList.remove('kartakademin-active');
+}
+async function allowMapAreaNavigation(){
+ if(mapAreaNodeDrag||window.aleaKartakademin?.isSaving?.())return false;
+ return (!mapAreaDrawing&&!window.aleaKartakademin?.hasPendingChanges?.())||
+  await askConfirm('Lämna kartan','Osparade ändringar går förlorade. Vill du fortsätta?','Lämna kartan',true);
+}
+async function leaveMapAreaEditor(){
+ if(!await allowMapAreaNavigation())return false;
+ closeMapAreaEditor();
+ return true;
+}
+async function switchMapAreaLevel(id){
+ if(id&&await allowMapAreaNavigation())await openMapAreaEditor(id);
+ if(mapAreaEditMap)$('mapAreaLevels').value=mapAreaEditMap.id;
+}
+async function chooseMapAreaImage(){
+ if(await allowMapAreaNavigation())$('mapFile').click();
+}
 async function openMapAreaEditor(mapId){
- let map=campaignMaps.find(m=>m.id===mapId);if(!map)return;
+ if(!canManageCampaignMaps())return;
+ const request=++mapAreaOpenRequest;
+ const wanted=mapId?campaignMaps.find(m=>m.id===mapId):null;
+ const siteId=wanted?.site_id??adminSelectedSiteId;
+ const levels=campaignMaps.filter(m=>m.site_id===siteId);
+ const map=wanted??levels[0];
+ if(!map&&!siteId)return;
  try{
-  mapAreaEditMap=map;mapAreaDraft=[];mapAreaDrawing=false;mapAreaSelectedVertex=null;mapAreaVertexUndo=[];mapAreaGapDraft=false;mapAreaInsertMode=false;
-  let [url,areas]=await Promise.all([getMapImageUrl(map),loadCampaignMapAreas(map.id)]);
-  mapAreaEditAreas=areas;mapAreaHoleCandidates=[];
-  $('mapAreaEditorTitle').textContent='Kartområden · '+map.name;
+  const [url,areas]=map?await Promise.all([getMapImageUrl(map),loadCampaignMapAreas(map.id)]):['',[]];
+  if(request!==mapAreaOpenRequest||activeAdminSection!=='places')return;
+  window.aleaKartakademin?.closeEditor();
+  if(siteId)adminSelectedSiteId=siteId;
+  mapAreaEditMap=map??null;mapAreaEditAreas=areas;mapAreaDraft=[];mapAreaDrawing=false;
+  mapAreaSelectedId=null;mapAreaSelectedVertex=null;mapAreaVertexUndo=[];
+  mapAreaGapDraft=false;mapAreaInsertMode=false;mapAreaHoleCandidates=[];
+  $('mapAreaEditorTitle').textContent=map?'Kartverkstad · '+map.name:'Kartverkstad · '+sitePath(siteId);
+  $('mapAreaLevels').replaceChildren(...levels.map(level=>new Option(level.name,level.id)));
+  $('mapAreaLevels').value=map?.id??'';
+  $('mapAreaLevels').closest('label').hidden=levels.length<2;
+  $('mapAreaAddImage').textContent=map?'+ Lägg till nivå':'Lägg till kartbild';
+  $('mapAreaEmpty').hidden=!!map;
+  $('mapAreaEditor').classList.toggle('kartakademin-empty',!map);
+  $('mapAreaEditor').parentElement.classList.add('kartakademin-active');
+  $('mapAreaEditor').classList.remove('hidden');
+  window.scrollTo(0,0);
+  if(!map)return;
   $('mapAreaImage').src=url;$('mapAreaImage').alt=map.name;
   $('mapAreaSvg').setAttribute('viewBox',`0 0 ${map.width} ${map.height}`);
   $('mapAreaLocation').innerHTML='<option value="">Ingen plats kopplad ännu</option>'+campaignLocations.map(l=>`<option value="${l.id}">${escAttr(sitePath(l.site_id)+' › '+l.location_key+'. '+l.name)}</option>`).join('');
-  $('mapAreaEditor').classList.remove('hidden');renderMapAreaEditor();
-  window.aleaKartakademin?.openEditor(map, areas, url);
- }catch(e){alert('Kunde inte öppna polygoneditorn: '+e.message)}
+  window.aleaKartakademin?.openEditor(map,areas,url);
+  renderMapAreaEditor();
+ }catch(e){alert('Kunde inte öppna Kartverkstaden: '+e.message)}
 }
 function areaShapePoints(a){
  if(a?.shape_type==='rect'){let d=a.shape_data||{},x=Number(d.x)||0,y=Number(d.y)||0,w=Number(d.width)||0,h=Number(d.height)||0;return[[x,y],[x+w,y],[x+w,y+h],[x,y+h]]}
@@ -4875,3 +4924,7 @@ initLogin();
 
 window.removeMapAreaVertex=removeMapAreaVertex;
 window.toggleMapAreaInsertVertex=toggleMapAreaInsertVertex;
+
+window.leaveMapAreaEditor=leaveMapAreaEditor;
+window.switchMapAreaLevel=switchMapAreaLevel;
+window.chooseMapAreaImage=chooseMapAreaImage;

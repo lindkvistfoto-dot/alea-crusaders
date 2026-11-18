@@ -131,6 +131,9 @@ export async function mountLighting(host, map) {
         if (!light.on || !origin || !freeSight || !isFree(freeSight, origin) || isBlocked(config.geometry, origin, 'light')) continue;
         const directional = ['solljus', 'manljus'].includes(light.type);
         const beam = directional ? light.beam : '';
+        const direction = directional && Number.isFinite(config.north)
+          ? light.direction + config.north - 90
+          : light.direction;
         const range = (beam ? light.range : directionalReach(light)) * config.pixelsPerMeter;
         if (!(range >= .01) || !(light.intensity > 0)) continue;
         const width = (light.beamWidth ?? light.range) * config.pixelsPerMeter;
@@ -138,13 +141,13 @@ export async function mountLighting(host, map) {
         const layer = new Container();
         const mask = new Graphics();
         if (beam === 'parallel') {
-          const quads = parallelBeamQuads(origin, range, width, light.direction, edges, freeSight);
+          const quads = parallelBeamQuads(origin, range, width, direction, edges, freeSight);
           if (!quads.length) { mask.destroy(); layer.destroy(); continue; }
           for (const quad of quads) mask.poly(quad).fill(0xffffff);
         } else {
           const overhead = beam === 'overhead';
           const radius = overhead ? Math.max(range, width) : range;
-          mask.poly(visibilityPolygon(origin, radius, edges, light.direction, overhead ? 360 : light.aperture, freeSight).flat()).fill(0xffffff);
+          mask.poly(visibilityPolygon(origin, radius, edges, direction, overhead ? 360 : light.aperture, freeSight).flat()).fill(0xffffff);
         }
         const sprites = [];
         const magic = light.type === 'magiskt';
@@ -154,7 +157,7 @@ export async function mountLighting(host, map) {
           sprite.position.set(...origin);
           sprite.width = beam === 'parallel' ? range : range * 2;
           sprite.height = beam === 'parallel' || beam === 'overhead' ? width : range * 2;
-          if (beam === 'parallel' || beam === 'overhead') sprite.angle = light.direction;
+          if (beam === 'parallel' || beam === 'overhead') sprite.angle = direction;
           sprite.tint = light.color;
           sprite.blendMode = 'add';
           layer.addChild(sprite);
