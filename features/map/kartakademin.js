@@ -1,7 +1,7 @@
 import './kartakademin.css';
 import { createMask, findSmallSolidIslands, isFree, maskHistory, paintMask, polygonMask, prepareFreeSight, serializeMask } from './kartakademin-mask.js';
 import { FREE_SIGHT_RESET_CONFIRMATION, FREE_SIGHT_RESET_LABEL, removalConfirmation, resetFreeSight, toolsForMode } from './kartakademin-actions.js';
-import { blockers, canMove, contains, isBlocked, visibilityPolygon } from './kartakademin-geometry.js';
+import { blockers, canMove, contains, isBlocked, mapDistanceMeters, visibilityPolygon } from './kartakademin-geometry.js';
 
 const types = {
   fackla: { name: 'Fackla', color: '#ffb060', motion: .18 },
@@ -116,7 +116,7 @@ function closeEditor() {
   editor.disposeFlood?.();
   dispose(editor.view);
   editor.root.closest('.map-area-editor')?.querySelector('[data-mask-overlay]')?.remove();
-  editor.root.closest('.map-area-editor')?.querySelectorAll('#mapAreaSvg :is([data-academy-layer],[data-character-token-layer])').forEach(layer => layer.remove());
+  editor.root.closest('.map-area-editor')?.querySelectorAll('#mapAreaSvg :is([data-academy-layer],[data-character-token-layer],[data-ruler-layer])').forEach(layer => layer.remove());
   const canvas = editor.root.closest('.map-area-editor')?.querySelector('#mapAreaCanvas');
   for (const property of ['width', 'left', 'top']) canvas?.style.removeProperty(property);
   canvas?.classList.remove('kartakademin-light-only');
@@ -152,6 +152,8 @@ async function openEditor(map, areas, imageUrl) {
         <div class="kartakademin-view-controls">
           <label>Zoom<input data-zoom type="range" min="0.02" max="5" step="any" value="1"></label>
           <button type="button" class="btn" data-pan-tool aria-pressed="false" title="Panorera med vänster musknapp"><span aria-hidden="true">✋︎</span> Panorera</button>
+          <button type="button" class="btn" data-ruler-tool aria-pressed="false"><span aria-hidden="true">📏</span> Linjal</button>
+          <output data-measurement aria-label="Uppmätt avstånd" hidden></output>
           <button type="button" class="btn" data-zoom-out aria-label="Zooma ut">−</button>
           <button type="button" class="btn" data-zoom-in aria-label="Zooma in">+</button>
           <button type="button" class="btn" data-fit-view>Anpassa karta</button>
@@ -175,6 +177,7 @@ async function openEditor(map, areas, imageUrl) {
       <div class="kartakademin-controls" data-tool-controls>
         <label data-item-select>Välj<select data-items></select></label>
         <label data-token-style-control>Visning<select data-token-style><option value="portrait">Porträtt</option><option value="battlepose">Battlepose</option></select></label>
+        <details data-token-preview hidden><summary>Förstora figur</summary><svg viewBox="-80 -180 160 240" role="img" aria-label="Förstorad battlepose"></svg></details>
         <button type="button" class="btn" data-token-demo>Placera Astrid och Evalin</button>
         <div data-light-list class="kartakademin-light-list" role="listbox" aria-label="Ljuskällor" hidden></div>
         <button type="button" class="btn" data-new>Ny ljuskälla</button>
@@ -297,7 +300,12 @@ async function openEditor(map, areas, imageUrl) {
   const academyLayer = document.createElementNS(svgNS, 'g'); academyLayer.dataset.academyLayer = ''; svg.append(academyLayer);
 
   const tokenLayer = node('g', { 'data-character-token-layer': '' });
-  academyLayer.after(tokenLayer);
+  const rulerLayer = node('g', { 'data-ruler-layer': '', 'aria-hidden': 'true' });
+  academyLayer.after(tokenLayer, rulerLayer);
+  const measurementOutput = get('[data-measurement]');
+  let rulerEnabled = false, measurement;
+  const tokenPreview = get('[data-token-preview]');
+  const ruler = get('[data-ruler-tool]');
   const tokenStyles = get('[data-token-style]');
   const characterName = character => character.name || character.identity?.namn || character._dbId;
   const astrid = roster.find(character => /^astrid(?:\s|$)/i.test(characterName(character)));
@@ -553,6 +561,10 @@ async function openEditor(map, areas, imageUrl) {
   };
   function drawCharacterTokens() {
     tokenLayer.replaceChildren();
+    const previewArt = tool.value === 'position' && tokenStyle(state.selected) === 'battlepose'
+      ? window.aleaCombatPaperDollMap?.renderMapToken(state.selected, 100) : '';
+    tokenPreview.hidden = !previewArt;
+    tokenPreview.querySelector('svg').innerHTML = previewArt || '';
     if (!state.layers.characters || get('[data-light-only]').checked) return;
     const screenScale = svg.getScreenCTM()?.a;
     if (!(screenScale > 0)) return;
@@ -615,6 +627,7 @@ async function openEditor(map, areas, imageUrl) {
     if (roomGroup) roomGroup.style.display = state.layers.rooms ? '' : 'none';
     academyLayer.replaceChildren();
     drawCharacterTokens();
+    drawMeasurement();
     if (lightOnly) return;
     if ((state.layers.sight || state.layers.solid) && tool.value === 'mask' && maskPoints.length) {
       academyLayer.append(node('polyline', { points: maskPoints.map(p => p.join(',')).join(' '), fill: 'none', stroke: '#53ffc4', 'stroke-width': 2 }));
@@ -705,7 +718,13 @@ async function openEditor(map, areas, imageUrl) {
 
   function loadTokenArt() {
     if (!Object.values(state.config.characterTokenStyles ?? {}).includes('battlepose')) return;
-    void window.aleaCombatPaperDollMap?.loadMapTokens?.().then(() => {
+    const paperDoll = window.aleaCombatPaperDollMap;
+    if (!paperDoll) return;
+    void paperDoll.loadMapTokens().then(() => Promise.all(
+      Object.entries(state.config.characterTokenStyles ?? {})
+        .filter(([, style]) => style === 'battlepose')
+        .map(([id]) => paperDoll.prepareMapToken(id))
+    )).then(() => {
       if (editor === state) drawCharacterTokens();
     });
   }
@@ -969,9 +988,33 @@ async function openEditor(map, areas, imageUrl) {
     viewport.classList.toggle('kartakademin-can-pan', handEnabled || spaceDown);
     viewport.classList.toggle('kartakademin-panning', Boolean(pan));
   }
+  function drawMeasurement() {
+    rulerLayer.replaceChildren();
+    measurementOutput.hidden = !measurement;
+    if (!measurement) return;
+    const { start, end } = measurement;
+    rulerLayer.append(node('line', { x1:start[0], y1:start[1], x2:end[0], y2:end[1],
+      stroke:'#ffe09c', 'stroke-width':3, 'vector-effect':'non-scaling-stroke' }));
+    measurementOutput.textContent = new Intl.NumberFormat('sv-SE',{ maximumFractionDigits:2 }).format(
+      mapDistanceMeters(start,end,state.config.pixelsPerMeter)) + ' m';
+  }
+  function setRuler(enabled) {
+    rulerEnabled = enabled;
+    ruler.setAttribute('aria-pressed', String(enabled));
+    viewport.classList.toggle('kartakademin-ruler-active', enabled);
+    if (!enabled) measurement = null;
+    drawMeasurement();
+  }
   hand.onclick = () => {
     handEnabled = !handEnabled;
+    if (handEnabled) setRuler(false);
     hand.setAttribute('aria-pressed', String(handEnabled));
+    updatePanCursor();
+  };
+  ruler.onclick = () => {
+    handEnabled = false;
+    hand.setAttribute('aria-pressed','false');
+    setRuler(!rulerEnabled);
     updatePanCursor();
   };
   viewport.addEventListener('wheel', event => {
@@ -981,6 +1024,11 @@ async function openEditor(map, areas, imageUrl) {
     zoomBy(Math.exp(-delta * .002), event.clientX, event.clientY);
   }, { ...viewOptions, passive: false });
   window.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && rulerEnabled) {
+      setRuler(false);
+      event.preventDefault();
+      return;
+    }
     if (event.code !== 'Space' || event.target.closest?.('input, select, textarea, [contenteditable]')) return;
     if (!viewport.matches(':hover') && event.target.closest?.('button, summary, [role="button"]')) return;
     spaceDown = true;
@@ -997,7 +1045,20 @@ async function openEditor(map, areas, imageUrl) {
     if (pan || !event.isPrimary) return;
     suppressPanClick = false;
     if (stroke || lightDrag || (event.button === 1 && (event.buttons & 1))) return;
-    if (!(event.button === 1 || (event.button === 0 && (spaceDown || handEnabled || tool.value === 'pan')))) return;
+    const wantsPan = event.button === 1 ||
+      (event.button === 0 && (spaceDown || handEnabled || (!rulerEnabled && tool.value === 'pan')));
+    if (!wantsPan) {
+      if (!rulerEnabled || event.button !== 0) return;
+      event.stopPropagation();
+      event.preventDefault();
+      suppressPanClick = true;
+      const start = brushPoint(event);
+      if (!start) return;
+      measurement = { start, end:start, pointerId:event.pointerId };
+      viewport.setPointerCapture(event.pointerId);
+      drawMeasurement();
+      return;
+    }
     event.stopPropagation();
     event.preventDefault();
     pan = { pointerId: event.pointerId, x: event.clientX, y: event.clientY, left: offsetX, top: offsetY };
@@ -1006,6 +1067,11 @@ async function openEditor(map, areas, imageUrl) {
     updatePanCursor();
   }, { ...viewOptions, capture: true });
   viewport.addEventListener('pointermove', event => {
+    if (measurement?.pointerId === event.pointerId) {
+      const end = brushPoint(event,true);
+      if (end) { measurement.end = end; drawMeasurement(); }
+      return;
+    }
     if (pan?.pointerId !== event.pointerId) return;
     event.stopPropagation();
     offsetX = pan.left + event.clientX - pan.x;
@@ -1013,6 +1079,15 @@ async function openEditor(map, areas, imageUrl) {
     positionBoard();
   }, viewOptions);
   function finishPan(event) {
+    if (measurement?.pointerId === event.pointerId) {
+      if (event.type === 'pointercancel') measurement = null;
+      else {
+        if (event.type === 'pointerup') measurement.end = brushPoint(event,true) ?? measurement.end;
+        measurement.pointerId = null;
+      }
+      drawMeasurement();
+      return;
+    }
     if (pan?.pointerId !== event.pointerId) return;
     event.stopPropagation();
     pan = null;
@@ -1023,7 +1098,7 @@ async function openEditor(map, areas, imageUrl) {
   }
   for (const type of ['click', 'dblclick', 'auxclick', 'contextmenu']) {
     viewport.addEventListener(type, event => {
-      if (!suppressPanClick && !get('[data-light-only]').checked) return;
+      if (!suppressPanClick && !rulerEnabled && !get('[data-light-only]').checked) return;
       event.preventDefault();
       event.stopPropagation();
     }, { ...viewOptions, capture: true });

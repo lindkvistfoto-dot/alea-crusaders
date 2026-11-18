@@ -319,3 +319,12 @@
   cursor: grab;
 }
 .kartakademin-panning #mapAreaSvg .kartakademin-tokens-interactive [data-character-token] :is(circle, ellipse, image) { cursor: grabbing; }
+
+[data-ruler-layer] { pointer-events: none; }
+.kartakademin-ruler-active:not(.kartakademin-can-pan):not(.kartakademin-panning) #mapAreaSvg,
+.kartakademin-ruler-active:not(.kartakademin-can-pan):not(.kartakademin-panning) #mapAreaSvg * { cursor: crosshair; }
+[data-ruler-tool][aria-pressed="true"] { border-color: #e1b96e; }
+[data-measurement] { color: #ffe09c; font-variant-numeric: tabular-nums; }
+[data-token-preview] { flex-basis: 100%; }
+[data-token-preview] svg { display: block; width: 100%; height: 160px; }
+.kartakademin-ruler-active { touch-action: none; }

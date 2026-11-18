@@ -116,3 +116,7 @@ export function directionalReach(light) {
   if (!light.height || !light.inclination) return light.range;
   return Math.min(light.range, light.height / Math.tan(light.inclination * Math.PI / 180));
 }
+
+export function mapDistanceMeters(start, end, pixelsPerMeter) {
+  return Math.hypot(end[0]-start[0], end[1]-start[1]) / pixelsPerMeter;
+}
