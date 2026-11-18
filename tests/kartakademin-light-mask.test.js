@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest';
 import { contains, visibilityPolygon } from '../features/map/kartakademin-geometry.js';
 import { createMask, floodMask, maskHistory, paintMask, polygonMask, prepareFreeSight, serializeMask, traceFree } from '../features/map/kartakademin-mask.js';
-import { FREE_SIGHT_RESET_CONFIRMATION, FREE_SIGHT_RESET_LABEL, removalConfirmation, resetFreeSight } from '../features/map/kartakademin-actions.js';
+import { FREE_SIGHT_RESET_CONFIRMATION, FREE_SIGHT_RESET_LABEL, removalConfirmation, resetFreeSight, toolsForMode } from '../features/map/kartakademin-actions.js';
 
 function grid(width, height, rows) {
   const mask = createMask(width, height);
@@ -158,4 +158,12 @@ it('uses independent, scoped confirmation copy for each current deletion action'
   expect(removalConfirmation('rooms', 'room')).toBeNull();
   expect(removalConfirmation('effects', 'effect')).toBeNull();
   expect(removalConfirmation('objects', 'object')).toBeNull();
+});
+
+it('keeps editor tools specific to their active mode', () => {
+  expect(toolsForMode('sight').map(tool => tool.value)).toEqual(['mask', 'geometry', 'pan']);
+  expect(toolsForMode('lights').map(tool => tool.value)).toEqual(['light', 'position', 'pan']);
+  expect(toolsForMode('rooms').map(tool => tool.value)).toEqual(['room', 'pan']);
+  expect(toolsForMode('effects')).toEqual([]);
+  expect(toolsForMode('objects')).toEqual([]);
 });

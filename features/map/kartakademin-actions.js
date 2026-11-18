@@ -30,3 +30,26 @@ export function removalConfirmation(mode, tool) {
   };
   return null;
 }
+
+const modeTools = {
+  rooms: [
+    { value: 'room', label: 'Redigera rumspolygoner' },
+    { value: 'pan', label: 'Panorera' },
+  ],
+  sight: [
+    { value: 'mask', label: 'Redigera fri sikt' },
+    { value: 'geometry', label: 'Hindergeometri' },
+    { value: 'pan', label: 'Panorera' },
+  ],
+  lights: [
+    { value: 'light', label: 'Ljuskällor' },
+    { value: 'position', label: 'Flytta rollperson' },
+    { value: 'pan', label: 'Panorera' },
+  ],
+  effects: [],
+  objects: [],
+};
+
+export function toolsForMode(mode) {
+  return (modeTools[mode] || []).map(tool => ({ ...tool }));
+}

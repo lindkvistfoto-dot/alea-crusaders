@@ -1,6 +1,6 @@
 import './kartakademin.css';
 import { createMask, isFree, maskHistory, paintMask, polygonMask, prepareFreeSight, serializeMask } from './kartakademin-mask.js';
-import { FREE_SIGHT_RESET_CONFIRMATION, FREE_SIGHT_RESET_LABEL, removalConfirmation, resetFreeSight } from './kartakademin-actions.js';
+import { FREE_SIGHT_RESET_CONFIRMATION, FREE_SIGHT_RESET_LABEL, removalConfirmation, resetFreeSight, toolsForMode } from './kartakademin-actions.js';
 import { blockers, canMove, isBlocked, visibilityPolygon } from './kartakademin-geometry.js';
 
 const types = {
@@ -119,7 +119,12 @@ function closeEditor() {
   editor.root.closest('.map-area-editor')?.querySelector('#mapAreaSvg [data-academy-layer]')?.remove();
   const canvas = editor.root.closest('.map-area-editor')?.querySelector('#mapAreaCanvas');
   canvas?.style.removeProperty('width');
+  if (editor.workspace?.parentElement) {
+    const parent = editor.workspace.parentElement;
+    for (const node of [editor.roomToolbar, editor.roomNotice, editor.mapBoard, editor.roomList]) parent.insertBefore(node, editor.workspace);
+  }
   editor.root.remove();
+  editor.workspace?.remove();
   editor = null;
 }
 
@@ -130,26 +135,43 @@ async function openEditor(map, areas, imageUrl) {
   const root = document.createElement('section');
   root.className = 'kartakademin-editor';
   root.innerHTML = `<div data-body>
-      <div class="kartakademin-controls">
-        <label>Miljö<select data-config="environment"><option value="indoor">Inomhus</option><option value="outdoor">Utomhus</option><option value="underground">Under jord</option></select></label>
-        <label>Grundmörker (%)<input data-config="darkness" type="number" min="60" max="80" step="1"></label>
-        <label>Skala (px/m)<input data-config="pixelsPerMeter" type="number" min="0.01" step="0.01"></label>
-        <label><input type="checkbox" data-player checked> Spelarförhandsvisning</label>
-      </div>
+      <details class="kartakademin-settings" data-settings-panel>
+        <summary>Kartinställningar och spelarförhandsvisning</summary>
+        <div class="kartakademin-controls">
+          <label>Miljö<select data-config="environment"><option value="indoor">Inomhus</option><option value="outdoor">Utomhus</option><option value="underground">Under jord</option></select></label>
+          <label>Grundmörker (%)<input data-config="darkness" type="number" min="60" max="80" step="1"></label>
+          <label>Skala (px/m)<input data-config="pixelsPerMeter" type="number" min="0.01" step="0.01"></label>
+          <label><input type="checkbox" data-player checked> Spelarförhandsvisning</label>
+        </div>
+      </details>
       <div class="kartakademin-controls kartakademin-mode-controls" data-mode-controls>
-        <label>Redigeringsläge<select data-mode><option value="rooms">Rum</option><option value="effects">Områdeseffekter</option><option value="sight">Sikt och hinder</option><option value="lights">Ljuskällor</option><option value="objects">Objekt</option></select></label>
-        <label>Gemensam zoom<input data-zoom type="range" min="1" max="5" step=".25" value="1"></label><button type="button" class="btn" data-reset-view>Återställ vy</button>
-        <div class="kartakademin-layers" aria-label="Synliga kartlager"><strong>Synliga lager</strong><label><input type="checkbox" data-layer="rooms" checked> Rumsgränser</label><label><input type="checkbox" data-layer="effects" checked> Effektområden</label><label><input type="checkbox" data-layer="sight" checked> Siktmask och Solid</label><label><input type="checkbox" data-layer="lights" checked> Ljuskällor</label><label><input type="checkbox" data-layer="objects" checked> Objekt</label></div>
+        <div class="kartakademin-view-controls">
+          <label>Gemensam zoom<input data-zoom type="range" min="1" max="5" step=".25" value="1"></label>
+          <button type="button" class="btn" data-reset-view>Återställ vy</button>
+        </div>
+        <details class="kartakademin-layers-panel">
+          <summary>Synliga kartlager</summary>
+          <div class="kartakademin-layers" aria-label="Synliga kartlager"><label><input type="checkbox" data-layer="rooms" checked> Rumsgränser</label><label><input type="checkbox" data-layer="effects" checked> Effektområden</label><label><input type="checkbox" data-layer="sight" checked> Fri-sikt-mask och Solid</label><label><input type="checkbox" data-layer="lights" checked> Ljuskällor</label><label><input type="checkbox" data-layer="objects" checked> Objekt</label></div>
+        </details>
       </div>
+      <nav class="kartakademin-mode-nav" data-mode-nav aria-label="Kartverkstadens redigeringslägen" role="tablist">
+        <button type="button" role="tab" data-mode-button="rooms" aria-selected="true">Rum</button>
+        <button type="button" role="tab" data-mode-button="sight" aria-selected="false">Sikt och hinder</button>
+        <button type="button" role="tab" data-mode-button="lights" aria-selected="false">Ljuskällor</button>
+        <button type="button" role="tab" data-mode-button="effects" aria-selected="false">Områdeseffekter</button>
+        <button type="button" role="tab" data-mode-button="objects" aria-selected="false">Objekt</button>
+      </nav>
+      <label class="kartakademin-tool-picker" data-tool-picker>Aktivt verktyg<select data-tool></select></label>
+      <label class="kartakademin-mode-select">Redigeringsläge<select data-mode aria-hidden="true" tabindex="-1"><option value="rooms">Rum</option><option value="effects">Områdeseffekter</option><option value="sight">Sikt och hinder</option><option value="lights">Ljuskällor</option><option value="objects">Objekt</option></select></label>
       <div class="kartakademin-controls" data-tool-controls>
-        <label>Verktyg<select data-tool><option value="light">Placera eller flytta ljus</option><option value="mask">Redigera fri sikt</option><option value="pan">Panorera</option><option value="geometry">Rita eller ersätt geometri</option><option value="position">Flytta rollperson</option></select></label>
         <label data-item-select>Välj<select data-items></select></label>
         <div data-light-list class="kartakademin-light-list" role="listbox" aria-label="Ljuskällor" hidden></div>
-        <button type="button" class="btn" data-new>Ny</button>
-        <button type="button" class="btn" data-duplicate>Duplicera ljus</button>
-        <button type="button" class="btn" data-remove>Ta bort</button>
+        <button type="button" class="btn" data-new>Ny ljuskälla</button>
+        <button type="button" class="btn" data-duplicate>Duplicera ljuskälla</button>
+        <button type="button" class="btn kartakademin-destructive" data-remove>Ta bort</button>
       </div>
       <div data-light class="kartakademin-controls">
+        <h3>Inställningar för vald ljuskälla</h3>
         <label>Typ<select name="type"></select></label>
         <label>Namn<input name="name" maxlength="80"></label>
         <label>Färg<input name="color" type="color"></label>
@@ -165,6 +187,7 @@ async function openEditor(map, areas, imageUrl) {
         <label><input name="playerVisible" type="checkbox"> Dela ljuset i utforskade rum</label>
       </div>
       <div data-geometry class="kartakademin-controls" hidden>
+        <h3>Hindergeometri</h3>
         <label><input name="closed" type="checkbox" checked> Sluten polygon</label>
         <label><input name="light" type="checkbox" checked> Blockerar ljus</label>
         <label><input name="sight" type="checkbox" checked> Blockerar sikt</label>
@@ -173,39 +196,67 @@ async function openEditor(map, areas, imageUrl) {
         <button type="button" class="btn" data-finish>Slutför form</button>
       </div>
       <div data-mask-tools class="kartakademin-controls" hidden>
-        <label>Fri sikt<select data-mask-mode><option value="flood">Flood fill</option><option value="paint">Pensel</option><option value="erase">Sudd</option><option value="add">Lägg till polygon</option><option value="subtract">Ta bort polygon</option></select></label>
+        <label>Fri sikt<select data-mask-mode><option value="flood">Flood fill</option><option value="paint">Pensel</option><option value="erase">Sudd</option><option value="add">Polygon – lägg till</option><option value="subtract">Polygon – ta bort</option></select></label>
         <div data-flood-panel class="kartakademin-controls">
-          <label>Färgtolerans (%)<input data-flood="colorTolerance" type="number" min="0" max="100" value="12" required></label>
-          <label>Kanttolerans (%)<input data-flood="edgeTolerance" type="number" min="0" max="100" value="100" required></label>
-          <label><input data-flood="detectWalls" type="checkbox">Väggdetektering</label>
-          <label>Väggkänslighet (%)<input data-flood="wallSensitivity" type="number" min="0" max="100" value="50" required disabled></label>
-          <label>Kantutjämning (pass)<input data-flood="smoothing" type="number" min="0" max="4" value="0" required></label>
-          <label>Max hålstorlek (maskpixlar)<input data-flood="maxHoleSize" type="number" min="0" max="2359296" value="0" required></label>
-          <button type="button" class="btn" data-flood-accept disabled>Acceptera fyllning</button>
-          <button type="button" class="btn" data-flood-cancel disabled>Avbryt fyllning</button>
+          <div class="kartakademin-flood-basic">
+            <label>Färgtolerans (%)<input data-flood="colorTolerance" type="number" min="0" max="100" value="12" required></label>
+            <label>Kanttolerans (%)<input data-flood="edgeTolerance" type="number" min="0" max="100" value="100" required></label>
+            <label><input data-flood="detectWalls" type="checkbox">Väggdetektering</label>
+          </div>
+          <details class="kartakademin-advanced-flood">
+            <summary>Avancerade inställningar</summary>
+            <label>Väggkänslighet (%)<input data-flood="wallSensitivity" type="number" min="0" max="100" value="50" required disabled></label>
+            <label>Kantutjämning (pass)<input data-flood="smoothing" type="number" min="0" max="4" value="0" required></label>
+            <label>Max hålstorlek (maskpixlar)<input data-flood="maxHoleSize" type="number" min="0" max="2359296" value="0" required></label>
+          </details>
+          <div class="kartakademin-flood-actions">
+            <button type="button" class="btn" data-flood-accept disabled>Acceptera fyllning</button>
+            <button type="button" class="btn" data-flood-cancel disabled>Avbryt fyllning</button>
+          </div>
           <output data-flood-status aria-live="polite">Klicka i området du vill fylla.</output>
         </div>
-        <label>Penselradie (kartpixlar)<input data-radius type="number" min="1" max="1000" value="12" required></label>
+        <label data-brush-size>Penselradie (kartpixlar)<input data-radius type="number" min="1" max="1000" value="12" required></label>
         <button type="button" class="btn" data-mask-finish>Slutför polygon</button>
-        <button type="button" class="btn" data-mask-undo>Ångra</button>
-        <button type="button" class="btn" data-mask-redo>Gör om</button>
+        <div class="kartakademin-mask-history">
+          <button type="button" class="btn" data-mask-undo>Ångra</button>
+          <button type="button" class="btn" data-mask-redo>Gör om</button>
+        </div>
         <button type="button" class="btn kartakademin-destructive" data-mask-reset>Nollställ fri sikt</button>
       </div>
-      <div class="kartakademin-controls"><button type="button" class="btn primary" data-save>Spara Kartakademin</button><output aria-live="polite"></output></div>
+      <div class="kartakademin-controls kartakademin-save-row" data-save-row>
+        <output data-save-status data-status="clean" aria-live="polite">Inga ändringar</output>
+        <button type="button" class="btn primary" data-save>Spara ändringar</button>
+        <output data-save-message aria-live="polite"></output>
+      </div>
     </div>`;
-  opener.querySelector('.map-area-toolbar').before(root);
+  const toolbar = opener.querySelector('.map-area-toolbar');
+  const modal = opener.querySelector('.modal');
+  toolbar.before(root);
   const get = selector => root.querySelector(selector);
   const body = get('[data-body]'), board = document.getElementById('mapAreaCanvas'), svg = document.getElementById('mapAreaSvg');
   const menu = get('[data-items]'), tool = get('[data-tool]'), mode = get('[data-mode]');
-  const output = get('output:not([data-flood-status])');
+  const modeNav = get('[data-mode-nav]');
+  const modeButtons = [...modeNav.querySelectorAll('[data-mode-button]')];
+  const roomNotice = document.getElementById('mapAreaNotice'), roomList = document.getElementById('mapAreaList');
+  const workspace = document.createElement('div'); workspace.className = 'map-area-workspace';
+  const mapStage = document.createElement('div'); mapStage.className = 'map-area-map-stage';
+  const toolPanel = document.createElement('aside'); toolPanel.className = 'map-area-tool-panel';
+  modal.insertBefore(workspace, root);
+  workspace.append(modeNav, mapStage, toolPanel);
+  mapStage.append(board);
+  toolPanel.append(toolbar, roomNotice, roomList, root);
+  const output = get('[data-save-message]');
+  const saveStatus = get('[data-save-status]');
   const announce = message => { output.textContent = message; };
+  const setSaveStatus = (text, status) => { saveStatus.textContent = text; saveStatus.dataset.status = status; };
+  const markDirty = () => { state.dirty = true; setSaveStatus('Osparade ändringar', 'dirty'); };
   const lightForm = get('[data-light]'), geoForm = get('[data-geometry]');
   const roster = (Array.isArray(chars) ? chars : []).filter(character => character._dbId && !character.isNpc);
   get('select[name=type]').replaceChildren(...Object.entries(types).map(([key, type]) => option(key, type.name)));
   get('select[name=characterId]').replaceChildren(option('', 'Fast ljuskälla'), ...roster.map(c => option(c._dbId, c.name || c.identity?.namn || c._dbId)));
   svg.setAttribute('viewBox', `0 0 ${map.width} ${map.height}`);
   document.getElementById('mapAreaImage').src = imageUrl;
-  const state = editor = { root, view: null, config: defaults(), positions: [], changedPositions: new Set(), points: [], selected: '', saving: false, mode: 'rooms', layers: { rooms: true, effects: true, sight: true, lights: true, objects: true } };
+  const state = editor = { root, workspace, roomToolbar: toolbar, roomNotice, roomList, mapBoard: board, view: null, config: defaults(), positions: [], changedPositions: new Set(), points: [], selected: '', saving: false, dirty: false, mode: 'rooms', tool: 'room', layers: { rooms: true, effects: true, sight: true, lights: true, objects: true } };
   const academyLayer = document.createElementNS(svgNS, 'g'); academyLayer.dataset.academyLayer = ''; svg.append(academyLayer);
 
   const maskOverlay = document.createElement('canvas'); maskOverlay.dataset.maskOverlay = ''; maskOverlay.hidden = true; board.append(maskOverlay);
@@ -311,6 +362,7 @@ async function openEditor(map, areas, imageUrl) {
   function commitMask(before) {
     history.record(before);
     state.config.freeSight = serializeMask(mask);
+    markDirty();
     draw();
   }
 
@@ -335,9 +387,22 @@ async function openEditor(map, areas, imageUrl) {
     return rgba;
   }
 
+  function refreshToolPicker(preferred = state.tool) {
+    const options = toolsForMode(state.mode);
+    get('[data-tool-picker]').hidden = options.length === 0;
+    tool.replaceChildren(...options.map(({ value, label }) => option(value, label)));
+    state.tool = options.some(item => item.value === preferred) ? preferred : options[0]?.value ?? 'pan';
+    tool.value = state.tool;
+  }
+
   function refreshList() {
     const modeKey = state.mode;
-    get('[data-tool-controls]').hidden = !['sight', 'lights'].includes(modeKey);
+    const maskModeKey = maskMode.value;
+    const drawingMask = modeKey === 'sight' && state.tool === 'mask';
+    const polygonMaskMode = drawingMask && ['add', 'subtract'].includes(maskModeKey);
+    const brushMaskMode = drawingMask && ['paint', 'erase'].includes(maskModeKey);
+    get('[data-tool-picker]').hidden = toolsForMode(modeKey).length === 0;
+    get('[data-tool-controls]').hidden = !['sight', 'lights'].includes(modeKey) || state.tool === 'pan' || drawingMask;
     get('[data-mode-note]')?.remove();
     if (modeKey === 'effects' || modeKey === 'objects') { const note=document.createElement('p'); note.dataset.modeNote=''; note.className='muted'; note.textContent=modeKey === 'effects' ? 'Förberett läge. PR #916 innehåller ingen kartbunden effektmodell.' : 'Förberett läge. Objektfunktioner ingår inte i den här versionen.'; get('[data-mode-controls]').append(note); }
     let elements;
@@ -364,14 +429,21 @@ async function openEditor(map, areas, imageUrl) {
       row.addEventListener('click', () => select(light.id));
       return row;
     }) : [Object.assign(document.createElement('p'), { className: 'muted', textContent: 'Inga ljuskällor ännu.' })]));
-    const drawingMask = tool.value === 'mask';
-    menu.closest('label').hidden = drawingMask || tool.value === 'pan' || ['rooms', 'effects', 'objects'].includes(state.mode);
-    get('[data-mask-tools]').hidden = state.mode !== 'sight' || !drawingMask;
+    menu.closest('label').hidden = drawingMask || state.tool === 'pan' || ['rooms', 'effects', 'objects'].includes(state.mode);
+    get('[data-mask-tools]').hidden = !drawingMask;
+    get('[data-flood-panel]').hidden = !drawingMask || maskModeKey !== 'flood';
+    get('[data-brush-size]').hidden = !brushMaskMode;
+    get('[data-mask-finish]').hidden = !polygonMaskMode;
+    get('[data-mask-finish]').textContent = maskModeKey === 'subtract' ? 'Slutför borttagningspolygon' : 'Slutför polygon';
+    get('[data-mask-undo]').textContent = polygonMaskMode && maskPoints.length ? 'Ångra polygonpunkt' : 'Ångra maskändring';
     const light = state.config.lights.find(item => item.id === state.selected);
     lightForm.hidden = state.mode !== 'lights' || tool.value !== 'light';
     geoForm.hidden = state.mode !== 'sight' || tool.value !== 'geometry';
+    const lightToolActive = state.mode === 'lights' && state.tool === 'light';
+    get('[data-duplicate]').hidden = !lightToolActive;
     get('[data-duplicate]').disabled = !light;
-    get('[data-new]').disabled = drawingMask || tool.value === 'pan' || tool.value === 'position';
+    get('[data-new]').hidden = !lightToolActive;
+    get('[data-new]').disabled = !lightToolActive;
     const remove = get('[data-remove]');
     const selectedGeometry = state.config.geometry.some(item => item.id === state.selected);
     const selectedPosition = state.positions.some(item => item.character_id === state.selected);
@@ -459,6 +531,7 @@ async function openEditor(map, areas, imageUrl) {
         { character_id: light.characterId, position: point }];
       state.changedPositions.add(light.characterId);
     } else light.position = point;
+    markDirty();
     return true;
   }
 
@@ -500,19 +573,33 @@ async function openEditor(map, areas, imageUrl) {
   root.onchange = event => {
     const input = event.target;
     if (input === menu) return select(menu.value);
-    if (input === mode) { state.mode = mode.value; state.selected = ''; state.layers[state.mode] = true; root.querySelector(`[data-layer="${state.mode}"]`).checked = true; tool.value = state.mode === 'lights' ? 'light' : state.mode === 'sight' ? 'mask' : 'pan'; state.points = []; maskPoints.length = 0; resetFlood(); refreshList(); draw(); window.renderMapAreaEditor?.(); return; }
+    if (input === mode) {
+      state.mode = mode.value;
+      state.selected = '';
+      state.layers[state.mode] = true;
+      root.querySelector(`[data-layer="${state.mode}"]`).checked = true;
+      for (const button of modeButtons) button.setAttribute('aria-selected', String(button.dataset.modeButton === state.mode));
+      refreshToolPicker(state.mode === 'rooms' ? 'room' : state.mode === 'sight' ? 'mask' : state.mode === 'lights' ? 'light' : 'pan');
+      state.points = [];
+      maskPoints.length = 0;
+      resetFlood();
+      refreshList(); draw(); window.renderMapAreaEditor?.(); return;
+    }
     if (input.dataset.layer) { if (input.dataset.layer === state.mode && !input.checked) { input.checked = true; return; } state.layers[input.dataset.layer] = input.checked; draw(); window.renderMapAreaEditor?.(); return; }
     if (input === maskMode || input === zoom || input.dataset.flood) return;
     if (input === tool) {
+      state.tool = tool.value;
       get('[data-player]').checked = false;
       if (tool.value !== 'pan' && tool.value !== 'mask') resetFlood();
       maskPoints.length = 0;
+      refreshList(); draw(); window.renderMapAreaEditor?.();
       return select('');
     }
     const key = input.dataset.config;
     if (key) {
       if (!input.reportValidity()) return;
       state.config[key] = key === 'environment' ? input.value : input.valueAsNumber / (key === 'darkness' ? 100 : 1);
+      markDirty();
     } else if (lightForm.contains(input)) {
       const light = state.config.lights.find(item => item.id === state.selected);
       if (!light || !input.reportValidity()) return;
@@ -524,10 +611,11 @@ async function openEditor(map, areas, imageUrl) {
         }
         Object.assign(light, { color: preset.color, aperture: preset.aperture ?? 360, motion: preset.motion ?? 0 });
       }
+      markDirty();
       if (input.name === 'name' || input.name === 'type' || input.name === 'on') refreshList();
     } else if (geoForm.contains(input)) {
       const shape = state.config.geometry.find(item => item.id === state.selected);
-      if (shape && input.name !== 'closed') shape[input.name] = input.checked;
+      if (shape && input.name !== 'closed') { shape[input.name] = input.checked; markDirty(); }
     }
     draw();
   };
@@ -542,6 +630,7 @@ async function openEditor(map, areas, imageUrl) {
     const id = state.selected || crypto.randomUUID();
     const shape = { id, points: state.points, ...flags };
     state.config.geometry = [...state.config.geometry.filter(item => item.id !== id), shape];
+    markDirty();
     select(id);
   };
   get('[data-remove]').onclick = async () => {
@@ -557,6 +646,7 @@ async function openEditor(map, areas, imageUrl) {
       state.positions = state.positions.filter(item => item.character_id !== state.selected);
       state.changedPositions.add(state.selected);
     }
+    markDirty();
     select('');
   };
   function nextName(preset, except) {
@@ -572,25 +662,32 @@ async function openEditor(map, areas, imageUrl) {
       inclination: 45, motion: preset.motion ?? 0, color: preset.color, on: true, characterId: '',
       ...source, id, name: nextName(preset), position,
     });
+    markDirty();
     select(id);
   }
   get('[data-duplicate]').onclick = () => {
     const light = state.config.lights.find(item => item.id === state.selected);
     if (light) addLight(light.position.slice(), light);
   };
+  modeButtons.forEach(button => button.addEventListener('click', () => {
+    mode.value = button.dataset.modeButton;
+    mode.dispatchEvent(new Event('change', { bubbles: true }));
+  }));
   const setLayer = (layer, visible) => { state.layers[layer] = visible; const input=get(`[data-layer="${layer}"]`); if(input) input.checked=visible; draw(); window.renderMapAreaEditor?.(); };
   zoom.oninput = () => { board.style.width = `${zoom.valueAsNumber * 100}%`; };
   zoom.oninput();
   get('[data-reset-view]').onclick = () => { zoom.value = '1'; zoom.oninput(); viewport.scrollTo(0, 0); };
+  refreshToolPicker('room');
+  for (const button of modeButtons) button.setAttribute('aria-selected', String(button.dataset.modeButton === state.mode));
   refreshList();
   initialize();
-  maskMode.onchange = () => { resetFlood(); maskPoints.length = 0; draw(); };
+  maskMode.onchange = () => { resetFlood(); maskPoints.length = 0; refreshList(); draw(); };
   get('[data-mask-undo]').onclick = () => {
-    if (maskPoints.length) { maskPoints.pop(); draw(); }
-    else if (history.undo()) { state.config.freeSight = serializeMask(mask); draw(); }
+    if (maskPoints.length) { maskPoints.pop(); refreshList(); draw(); }
+    else if (history.undo()) { state.config.freeSight = serializeMask(mask); markDirty(); draw(); }
   };
   get('[data-mask-redo]').onclick = () => {
-    if (history.redo()) { state.config.freeSight = serializeMask(mask); draw(); }
+    if (history.redo()) { state.config.freeSight = serializeMask(mask); markDirty(); draw(); }
   };
   get('[data-mask-reset]').onclick = async () => {
     if (!state.loaded || !mask) return;
@@ -599,6 +696,7 @@ async function openEditor(map, areas, imageUrl) {
     if (!accepted) return;
     maskPoints.length = 0;
     resetFlood();
+    markDirty();
     draw();
   };
   get('[data-mask-finish]').onclick = () => {
@@ -612,7 +710,7 @@ async function openEditor(map, areas, imageUrl) {
   let skipLightClick = false;
   svg.onpointerdown = event => {
     if (!state.loaded || !event.isPrimary || event.button !== 0) return;
-    if ((state.mode === 'sight' && !state.layers.sight) || (state.mode === 'lights' && !state.layers.lights)) return;
+    if (tool.value !== 'pan' && ((state.mode === 'sight' && !state.layers.sight) || (state.mode === 'lights' && !state.layers.lights))) return;
     const marker = event.target.closest?.('[data-light-ids]');
     if (state.mode === 'lights' && tool.value === 'light' && marker) {
       const ids = marker.dataset.lightIds.split(',').filter(Boolean);
@@ -627,7 +725,7 @@ async function openEditor(map, areas, imageUrl) {
       event.preventDefault();
       return;
     }
-    if (tool.value === 'pan' && state.mode !== 'rooms') {
+    if (tool.value === 'pan') {
       pan = { x: event.clientX, y: event.clientY, left: viewport.scrollLeft, top: viewport.scrollTop };
       svg.setPointerCapture(event.pointerId);
       return;
@@ -665,6 +763,7 @@ async function openEditor(map, areas, imageUrl) {
     pan = null;
     if (lightDrag?.pointerId === event?.pointerId) {
       if (lightDrag.moved) {
+        markDirty();
         skipLightClick = true;
         requestAnimationFrame(() => { skipLightClick = false; });
       }
@@ -719,6 +818,7 @@ async function openEditor(map, areas, imageUrl) {
     if (state.points.length || maskPoints.length || stroke) return announce('Slutför eller ångra den påbörjade formen före sparning.');
     state.saving = true;
     const save = get('[data-save]');
+    setSaveStatus('Sparar…', 'saving');
     save.disabled = true;
     const changes = [...state.changedPositions].map(character_id => ({
       character_id,
@@ -734,8 +834,11 @@ async function openEditor(map, areas, imageUrl) {
         }),
       });
       state.changedPositions.clear();
+      state.dirty = false;
+      setSaveStatus('Sparat', 'saved');
       announce('Kartakademin sparad.');
     } catch (error) {
+      setSaveStatus('Fel vid sparning', 'error');
       announce('Sparningen avbröts: ' + error.message);
     } finally {
       state.saving = false;
@@ -745,4 +848,4 @@ async function openEditor(map, areas, imageUrl) {
   };
 }
 
-window.aleaKartakademin = { openEditor, closeEditor, syncCampaign, clearCampaign, getEditMode: () => editor?.mode ?? null, isLayerVisible: name => editor?.layers?.[name] ?? true, setLayer: (name, visible) => editor?.setLayer?.(name, visible) };
+window.aleaKartakademin = { openEditor, closeEditor, syncCampaign, clearCampaign, getEditMode: () => editor?.mode ?? null, getTool: () => editor?.tool ?? null, isLayerVisible: name => editor?.layers?.[name] ?? true, setLayer: (name, visible) => editor?.setLayer?.(name, visible) };

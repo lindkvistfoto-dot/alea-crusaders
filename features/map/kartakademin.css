@@ -35,3 +35,133 @@
 }
 .kartakademin-destructive { color:#fff; background:#7a2925; border:1px solid #d17868 }
 .kartakademin-destructive:hover { background:#96352e }
+
+/* Desktop-first shared map workspace */
+#mapAreaEditor .modal:has(.map-area-workspace) {
+  width: min(98vw, 1720px);
+  max-width: none;
+  max-height: 96vh;
+  display: flex;
+  flex-direction: column;
+}
+.map-area-workspace {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr) minmax(320px, 390px);
+  gap: .8rem;
+  min-height: min(74vh, 820px);
+  max-height: calc(96vh - 2rem);
+  align-items: stretch;
+  color: #f4ead9;
+}
+.kartakademin-mode-nav {
+  display: flex;
+  flex-direction: column;
+  gap: .45rem;
+  padding: .65rem;
+  border: 1px solid #725936;
+  border-radius: 9px;
+  background: #211a13;
+}
+.kartakademin-mode-nav button {
+  min-height: 42px;
+  padding: .55rem .7rem;
+  color: #e8d8c0;
+  text-align: left;
+  background: #30261b;
+  border: 1px solid #765d3c;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.kartakademin-mode-nav button[aria-selected="true"] {
+  color: #fff4da;
+  background: #594123;
+  border-color: #e1b96e;
+  box-shadow: inset 3px 0 #e1b96e;
+}
+.map-area-map-stage {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: .65rem;
+  background: #17130f;
+  border: 1px solid #614b32;
+  border-radius: 9px;
+}
+.map-area-map-stage .kartakademin-viewport { width: 100%; max-height: 100%; }
+.map-area-tool-panel {
+  min-width: 0;
+  max-height: 100%;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: .7rem;
+  padding: .75rem;
+  background: #211a13;
+  border: 1px solid #725936;
+  border-radius: 9px;
+}
+.map-area-tool-panel > * { min-width: 0; }
+.kartakademin-editor { margin: 0; }
+.kartakademin-editor [data-body] { display: grid; gap: .7rem; }
+.kartakademin-editor h3 { margin: .2rem 0; color: #f0d8ad; font-size: 1rem; }
+.kartakademin-editor label { color: #e8d8c0; }
+.kartakademin-editor button, .map-area-tool-panel .map-area-toolbar button {
+  min-height: 38px;
+  padding: .5rem .7rem;
+}
+.kartakademin-tool-picker { font-weight: 600; }
+.kartakademin-tool-picker select { min-width: 0; width: 100%; }
+.kartakademin-save-row {
+  position: sticky;
+  bottom: 0;
+  z-index: 4;
+  align-items: center;
+  padding: .65rem;
+  color: #f2e5d0;
+  background: #17130f;
+  border: 1px solid #806747;
+  border-radius: 7px;
+}
+.kartakademin-save-row [data-status="dirty"] { color: #ffd18a; font-weight: 700; }
+.kartakademin-save-row [data-status="saving"] { color: #b8d6ff; }
+.kartakademin-save-row [data-status="saved"] { color: #a9e7b2; }
+.kartakademin-save-row [data-status="error"] { color: #ffaaa0; font-weight: 700; }
+.kartakademin-settings, .kartakademin-layers-panel {
+  padding: .55rem .65rem;
+  border: 1px solid #725936;
+  border-radius: 7px;
+  background: #211a13;
+}
+.kartakademin-settings summary, .kartakademin-layers-panel summary { cursor: pointer; color: #f0d8ad; font-weight: 600; }
+.kartakademin-settings .kartakademin-controls { margin-top: .65rem; }
+.kartakademin-layers { display: grid; grid-template-columns: 1fr; gap: .5rem; padding-top: .6rem; }
+.kartakademin-layers label { display: flex; align-items: center; gap: .45rem; }
+.kartakademin-layers input { flex: 0 0 auto; }
+.kartakademin-mask-advanced { width: 100%; margin-top: .5rem; }
+.kartakademin-mask-advanced summary { cursor: pointer; color: #e5cda7; }
+.kartakademin-mask-advanced .kartakademin-controls { padding-top: .5rem; }
+.map-area-tool-panel .map-area-toolbar { display: flex; flex-wrap: wrap; gap: .45rem; }
+.map-area-tool-panel #mapAreaList { max-height: 25vh; overflow: auto; }
+#mapAreaSvg .map-editor-zone.reference { fill: none; stroke: #8fc7d0; stroke-width: 2; stroke-dasharray: 5 4; pointer-events: none; }
+@media (max-width: 900px) {
+  #mapAreaEditor .modal:has(.map-area-workspace) { width: min(98vw, 760px); max-height: 96vh; }
+  .map-area-workspace {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(35vh, 1fr) auto;
+    min-height: 0;
+    max-height: none;
+    gap: .55rem;
+  }
+  .kartakademin-mode-nav { flex-direction: row; overflow-x: auto; }
+  .kartakademin-mode-nav button { flex: 0 0 auto; text-align: center; }
+  .map-area-map-stage { min-height: 35vh; }
+  .map-area-tool-panel { max-height: 38vh; }
+  .kartakademin-layers { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 560px) {
+  .kartakademin-mode-nav button { font-size: .85rem; }
+  .kartakademin-layers { grid-template-columns: 1fr; }
+}

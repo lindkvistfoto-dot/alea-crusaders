@@ -3915,14 +3915,15 @@ function draftOverlapsExisting(){return mapAreaDraft.length>=3&&mapAreaEditAreas
 function renderMapAreaEditor(){
  if(!mapAreaEditMap)return;
  let svg=$('mapAreaSvg'),overlap=draftOverlapsExisting();
- let roomEditing=window.aleaKartakademin?.getEditMode?.()==='rooms';
- let existing=mapAreaEditAreas.map(a=>{let pts=areaShapePoints(a).map(p=>p.join(',')).join(' ');return`<polygon class="map-editor-zone ${a.id===mapAreaSelectedId?'selected':''}" data-area-id="${escAttr(a.id)}" points="${escAttr(pts)}" onclick="mapAreaExistingClick(event,'${a.id}')"><title>${escAttr(a.name||'Plats')}</title></polygon>`}).join('');
+ let roomMode=window.aleaKartakademin?.getEditMode?.()==='rooms';
+ let roomEditing=roomMode&&window.aleaKartakademin?.getTool?.()==='room';
+ let existing=mapAreaEditAreas.map(a=>{let pts=areaShapePoints(a).map(p=>p.join(',')).join(' ');return`<polygon class="map-editor-zone ${roomEditing&&a.id===mapAreaSelectedId?'selected':''} ${roomEditing?'':'reference'}" data-area-id="${escAttr(a.id)}" points="${escAttr(pts)}" ${roomEditing?`onclick="mapAreaExistingClick(event,'${a.id}')"`:''}><title>${escAttr(a.name||'Plats')}</title></polygon>`}).join('');
  let vertexRadius=6*(mapAreaEditMap.width/Math.max(1,svg.getBoundingClientRect().width));
  let nodes=roomEditing&&!mapAreaDrawing?mapAreaEditAreas.flatMap(a=>areaShapePoints(a).map((p,i)=>({p,i,id:a.id}))).map(n=>{let shared=mapAreaEditAreas.reduce((count,a)=>count+Number(areaShapePoints(a).some(p=>Math.hypot(p[0]-n.p[0],p[1]-n.p[1])<.01)),0)>1;return`<circle class="map-editor-vertex ${shared?'shared':''}" cx="${n.p[0]}" cy="${n.p[1]}" r="${vertexRadius}" vector-effect="non-scaling-stroke" onpointerdown="mapAreaNodeStart(event,'${n.id}',${n.i})"><title>Dra hörnpunkt${shared?' (delad)':''}</title></circle>`}).join(''):'';
- let draft=mapAreaDraft.length?`<polygon class="map-editor-draft ${overlap?'overlap':''}" points="${mapAreaDraft.map(p=>p.join(',')).join(' ')}"></polygon>${mapAreaDraft.map(p=>`<circle class="map-editor-point" cx="${p[0]}" cy="${p[1]}" r="5"></circle>`).join('')}`:'';
- let gaps=mapAreaHoleCandidates.map((h,i)=>`<polygon class="map-editor-hole" points="${h.points.map(p=>p.join(',')).join(' ')}" onclick="fillMapAreaHole(event,${i})"><title>Fyll tomrum ${i+1} (${Math.round(h.area)} kvadratenheter)</title></polygon>`).join('');
+ let draft=roomEditing&&mapAreaDraft.length?`<polygon class="map-editor-draft ${overlap?'overlap':''}" points="${mapAreaDraft.map(p=>p.join(',')).join(' ')}"></polygon>${mapAreaDraft.map(p=>`<circle class="map-editor-point" cx="${p[0]}" cy="${p[1]}" r="5"></circle>`).join('')}`:'';
+ let gaps=roomEditing?mapAreaHoleCandidates.map((h,i)=>`<polygon class="map-editor-hole" points="${h.points.map(p=>p.join(',')).join(' ')}" onclick="fillMapAreaHole(event,${i})"><title>Fyll tomrum ${i+1} (${Math.round(h.area)} kvadratenheter)</title></polygon>`).join(''):'';
  let roomLayer=svg.querySelector('#mapAreaRoomLayer');if(!roomLayer){roomLayer=document.createElementNS('http://www.w3.org/2000/svg','g');roomLayer.id='mapAreaRoomLayer';svg.prepend(roomLayer)}roomLayer.innerHTML=existing+draft+gaps+nodes;roomLayer.style.display=window.aleaKartakademin?.isLayerVisible?.('rooms')===false?'none':'';roomLayer.style.pointerEvents=roomEditing?'auto':'none';
- $('mapAreaToolbar').hidden=!roomEditing;$('mapAreaNotice').hidden=!roomEditing;$('mapAreaList').hidden=!roomEditing;
+ $('mapAreaToolbar').hidden=!roomEditing;$('mapAreaNotice').hidden=!roomMode;$('mapAreaList').hidden=!roomMode;
  let fillBtn=$('mapAreaFillBtn');if(fillBtn){fillBtn.disabled=mapAreaDrawing||!!mapAreaNodeDrag;fillBtn.textContent=mapAreaHoleCandidates.length?'Fyll tomrum ('+mapAreaHoleCandidates.length+')':'Fyll tomrum'}
  let locMap=new Map(campaignLocations.map(l=>[l.id,l]));
  $('mapAreaList').innerHTML=mapAreaEditAreas.length?mapAreaEditAreas.map((a,i)=>{let l=locMap.get(a.location_id);let options='<option value="">Ingen plats</option>'+campaignLocations.map(x=>`<option value="${x.id}" ${a.location_id===x.id?'selected':''}>${escAttr(sitePath(x.site_id)+' › '+x.location_key+'. '+x.name)}</option>`).join('');let pills=mapStatusPillsHtml(a);return`<div class="map-area-list-row"><div><b>Polygon ${i+1}</b><div class="muted">${l?'Kopplad':'Ej kopplad'}</div></div><select onchange="assignMapAreaLocation('${a.id}',this.value)" aria-label="Koppla polygon ${i+1} till plats">${options}</select><div class="map-status-pills">${pills}</div><button class="deletebtn" title="Ta bort vald rumspolygon" aria-label="Ta bort vald rumspolygon" onclick="deleteMapArea('${a.id}')">×</button></div>`}).join(''):'<div class="map-area-empty">Inga polygoner definierade ännu.</div>';
@@ -3936,7 +3937,7 @@ function mapStatusPillsHtml(a){
  return ['unknown','unexplored','explored'].map(s=>`<button type="button" class="map-status-pill ${a.status===s?'active':''}" ${disabled} onclick="setMapLocationStatus('${a.location_id||''}','${s}')" title="${statusLabel(s)}">${s==='unknown'?'●':s==='unexplored'?'◐':'○'}</button>`).join('');
 }
 function mapAreaExistingClick(e,id){
- if(mapAreaDrawing||window.aleaKartakademin?.getEditMode?.()!=='rooms'||window.aleaKartakademin?.isLayerVisible?.('rooms')===false)return;
+ if(mapAreaDrawing||window.aleaKartakademin?.getEditMode?.()!=='rooms'||window.aleaKartakademin?.getTool?.()!=='room'||window.aleaKartakademin?.isLayerVisible?.('rooms')===false)return;
  mapAreaSelectedId=id;renderMapAreaEditor();
  e.stopPropagation();
  let a=mapAreaEditAreas.find(x=>x.id===id);if(a)openMapStatusMenu(e,a);
@@ -3951,7 +3952,7 @@ function mapAreaInsertNodeOnEdge(poly,origin){
  return result;
 }
 function mapAreaNodeStart(e,id,index){
- if(mapAreaDrawing||mapAreaNodeDrag||!mapAreaEditMap||window.aleaKartakademin?.getEditMode?.()!=='rooms'||window.aleaKartakademin?.isLayerVisible?.('rooms')===false)return;
+ if(mapAreaDrawing||mapAreaNodeDrag||!mapAreaEditMap||window.aleaKartakademin?.getEditMode?.()!=='rooms'||window.aleaKartakademin?.getTool?.()!=='room'||window.aleaKartakademin?.isLayerVisible?.('rooms')===false)return;
  e.preventDefault();e.stopPropagation();
  let a=mapAreaEditAreas.find(a=>a.id===id),origin=areaShapePoints(a)[index];if(!origin)return;
  mapAreaSelectedId=id;
@@ -4126,7 +4127,7 @@ function mapAreaSnapPoint(p,rect){
  return best||p;
 }
 function mapAreaCanvasClick(e){
- if(!mapAreaDrawing||!mapAreaEditMap||window.aleaKartakademin?.getEditMode?.()!=='rooms'||window.aleaKartakademin?.isLayerVisible?.('rooms')===false)return;
+ if(!mapAreaDrawing||!mapAreaEditMap||window.aleaKartakademin?.getEditMode?.()!=='rooms'||window.aleaKartakademin?.getTool?.()!=='room'||window.aleaKartakademin?.isLayerVisible?.('rooms')===false)return;
  let rect=$('mapAreaSvg').getBoundingClientRect(),x=(e.clientX-rect.left)/rect.width*mapAreaEditMap.width,y=(e.clientY-rect.top)/rect.height*mapAreaEditMap.height;
  if(x<0||y<0||x>mapAreaEditMap.width||y>mapAreaEditMap.height)return;
  mapAreaLastSnap='';let p=mapAreaSnapPoint([x,y],rect);mapAreaDraft.push([Math.round(p[0]*10)/10,Math.round(p[1]*10)/10]);renderMapAreaEditor();
