@@ -54,3 +54,10 @@ Upstream repository: https://github.com/game-icons/icons
 License: https://creativecommons.org/licenses/by/3.0/
 
 Changes made for Alea Crusaders: removed the upstream black background where present, recolored the foreground to Alea's UI gold tone, and added SVG metadata.
+
+## PixiJS
+
+PixiJS 8.15.0 is used for WebGL rendering in Kartakademin.
+
+Project: https://github.com/pixijs/pixijs
+License: MIT, distributed with the package.
