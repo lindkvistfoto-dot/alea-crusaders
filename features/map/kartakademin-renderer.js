@@ -1,5 +1,5 @@
 import { Application, BlurFilter, Container, Graphics, RenderTexture, Sprite, Texture } from 'pixi.js';
-import { bakeFlameSample, flameOrigins, flames, flameWeights } from './kartakademin-flame.js';
+import { bakeFlameParts, flames, flameWeights } from './kartakademin-flame.js';
 import { isFree, prepareFreeSight } from './kartakademin-mask.js';
 import { blockers, directionalReach, isBlocked, parallelBeamQuads, resolveOrigin, roomVisibility, visibilityPolygon } from './kartakademin-geometry.js';
 
@@ -109,7 +109,7 @@ export async function mountLighting(host, map) {
       app.render();
     }
 
-    function update(config, areas, positions, previewAll = false) {
+    function update(config, areas, positions, previewAll = false, moving = null) {
       cancelAnimationFrame(frame);
       // PixiJS 8 validates the optional end index against the current child
       // count. Repeated updates can otherwise leave an invalid range behind.
@@ -151,18 +151,19 @@ export async function mountLighting(host, map) {
         const width = (light.beamWidth ?? light.range) * config.pixelsPerMeter;
         const softness = (light.edgeSoftness ?? (light.type === 'manljus' ? 45 : 25)) / 100;
         const layer = new Container();
-        const flame = flames[light.type];
+        // During a drag the existing single projection follows the pointer.
+        // Bake the final penumbra once on drop; other flames keep their shading.
+        const beingMoved = moving && ((moving.id && light.id === moving.id) ||
+          (moving.characterId && light.characterId === moving.characterId));
+        const flame = !beingMoved && flames[light.type];
         const sprites = [];
         if (flame) {
           const key = JSON.stringify([light.type, origin, range, light.direction, light.aperture, config.pixelsPerMeter]);
           let entry = projections.get(slot);
           if (!entry || entry.key !== key || entry.mask !== freeSight || entry.wallKey !== wallKey) {
             if (entry) releaseProjection(entry);
-            const feather = Math.min(.04 * range, 1.4 * flame.swing * config.pixelsPerMeter);
-            const parts = flameOrigins(origin, config.pixelsPerMeter, flame, edges, freeSight).map(sample => {
-              const { canvas, x, y } = bakeFlameSample(sample, origin, range, light, edges, freeSight, map, scale, output, feather);
-              return { texture: Texture.from(canvas), x, y };
-            });
+            const parts = bakeFlameParts(origin, range, light, edges, freeSight, map, scale, output, config.pixelsPerMeter)
+              .map(({ canvas, x, y }) => ({ texture: Texture.from(canvas), x, y }));
             entry = { key, mask: freeSight, wallKey, parts };
             projections.set(slot, entry);
           }
@@ -190,7 +191,7 @@ export async function mountLighting(host, map) {
         } else {
           const overhead = beam === 'overhead';
           const radius = overhead ? Math.max(range, width) : range;
-          mask.poly(visibilityPolygon(origin, radius, edges, direction, overhead ? 360 : light.aperture, freeSight).flat()).fill(0xffffff);
+          mask.poly(visibilityPolygon(origin, radius, edges, direction, overhead ? 360 : light.aperture, freeSight, Boolean(beingMoved)).flat()).fill(0xffffff);
         }
         const magic = light.type === 'magiskt';
         for (let index = 0; index < Math.ceil(Math.min(3, light.intensity)); index++) {

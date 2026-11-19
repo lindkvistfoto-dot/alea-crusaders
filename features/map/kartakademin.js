@@ -633,11 +633,11 @@ async function openEditor(map, areas, imageUrl) {
     tokenLayer.classList.toggle('kartakademin-tokens-interactive', interactive);
   }
 
-  function draw() {
+  function draw(moving = null) {
     const lightOnly = get('[data-light-only]').checked;
     const discovery = get('[data-player]').checked;
     board.classList.toggle('kartakademin-light-only', lightOnly);
-    state.view?.renderer?.update(state.config, areas, state.positions, lightOnly || !discovery);
+    state.view?.renderer?.update(state.config, areas, state.positions, lightOnly || !discovery, moving);
     get('[data-map-scale]').textContent = `${state.config.pixelsPerMeter.toLocaleString('sv-SE', { maximumFractionDigits: 2 })} px/m`;
     updateMaskOverlay();
     const roomGroup = svg.querySelector('#mapAreaRoomLayer');
@@ -1210,13 +1210,13 @@ async function openEditor(map, areas, imageUrl) {
         const [dx, dy] = lightDrag.offset;
         const destination = [Math.max(0, Math.min(map.width-.001, point[0]+dx)),
           Math.max(0, Math.min(map.height-.001, point[1]+dy))];
-        if (moveCharacter(lightDrag.characterId, destination)) draw();
+        if (moveCharacter(lightDrag.characterId, destination)) draw(lightDrag);
         return;
       }
       const light = state.config.lights.find(item => item.id === lightDrag.id);
       if (!light || !moveLight(light, point)) return;
       lightDrag.moved ||= Math.hypot(event.clientX - lightDrag.x, event.clientY - lightDrag.y) > 3;
-      draw();
+      draw(lightDrag);
       return;
     }
     if (!stroke) return;
@@ -1234,6 +1234,7 @@ async function openEditor(map, areas, imageUrl) {
         requestAnimationFrame(() => { skipLightClick = false; });
       }
       lightDrag = null;
+      draw();
       return;
     }
     if (!stroke) return;

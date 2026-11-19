@@ -39,7 +39,7 @@ export function unobstructedDistance(origin, dx, dy, limit, edges, freeSight) {
   return freeSight ? traceFree(freeSight, origin, dx, dy, limit) : limit;
 }
 
-export function visibilityPolygon(origin, radius, edges, direction = 0, aperture = 360, freeSight = null) {
+export function visibilityPolygon(origin, radius, edges, direction = 0, aperture = 360, freeSight = null, visibleCornersOnly = false) {
   const start = (direction - aperture / 2) * Math.PI / 180;
   const span = aperture * Math.PI / 180;
   const normalize = angle => ((angle - start) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
@@ -50,9 +50,21 @@ export function visibilityPolygon(origin, radius, edges, direction = 0, aperture
       Math.min(ay, by) > origin[1] + radius || Math.max(ay, by) < origin[1] - radius);
   };
   const nearby = edges.filter(near);
+  const seen = new Set();
   for (const edge of [...nearby, ...(freeSight?.edges ?? []).filter(near)]) {
     for (const [x, y] of edge) {
-      const angle = Math.atan2(y - origin[1], x - origin[0]);
+      const key = x + ',' + y;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      const vx = x - origin[0], vy = y - origin[1];
+      if (visibleCornersOnly) {
+        // A corner hidden strictly behind an earlier blocker cannot introduce
+        // a silhouette. A tangent silhouette is represented by the nearer corner.
+        const length = Math.hypot(vx, vy);
+        const limit = Math.min(length, radius);
+        if (length && unobstructedDistance(origin, vx / length, vy / length, limit, nearby, freeSight) < limit - .00001) continue;
+      }
+      const angle = Math.atan2(vy, vx);
       for (const offset of [-EPSILON, 0, EPSILON]) {
         const relative = normalize(angle + offset);
         if (relative <= span) angles.push(relative);

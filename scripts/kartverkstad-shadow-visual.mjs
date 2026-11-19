@@ -59,6 +59,8 @@ try {
     };
     window.shadowScenario=(mode,time=0)=>{
       torch.on=mode!=='off';
+      torch.type=['magiskt','solljus','manljus'].includes(mode)?mode:'fackla';
+      torch.motion=(torch.type === 'fackla' && mode !== 'still') ? .18 : 0;
       config.lights=mode==='two'?[torch,other]:[torch];
       config.freeSight=mode==='open'?open:solid;
       const player=mode==='player';
@@ -78,7 +80,18 @@ try {
     return (await view.screenshot(filename?{path:output+'/'+filename}:{})).toString('base64');
   }
   const blocked=await capture('torch',0,'fackla.png');
+  const costs=await page.evaluate(()=>{
+    const canvas=document.querySelector('canvas.kartakademin-canvas');
+    const gl=canvas.getContext('webgl2') || canvas.getContext('webgl');
+    const measure=fn=>{const start=performance.now();fn();gl.finish();return performance.now()-start};
+    const addSecond=measure(()=>window.shadowScenario('two'));
+    const warm=measure(()=>window.shadowScenario('two'));
+    const frames=Array.from({length:60},(_,i)=>measure(()=>window.shadowTick(i*16.67))).sort((a,b)=>a-b);
+    return {addSecond,warm,frameMedian:frames[30],frameP95:frames[56]};
+  });
+  console.log('Two-light WebGL timing (ms)',costs);
   if(version!=='baseline') {
+    await page.evaluate(()=>window.shadowScenario('torch',0));
     await page.evaluate(()=>window.shadowTick(140*3*Math.PI));
     const moved=(await view.screenshot({path:output+'/fackla-rakurs-2.png'})).toString('base64');
     const open=await capture('open',0);
@@ -101,13 +114,20 @@ try {
         if(x>210 && x<405 && Math.abs(channel(0,x,y)-channel(1,x,y))>3) moving++;
       }
       return {levels:levels.size,moving,wallLeak,core:ratio(310,190), clear:ratio(120,100),
-        near:ratio(209,189), small:ratio(180,249), second:channel(4,310,190,2)-channel(0,310,190,2),
+        near:ratio(209,189), small:ratio(180,249), smallFar:ratio(293,368), second:channel(4,310,190,2)-channel(0,310,190,2),
         unknown:channel(5,310,190),explored:channel(5,120,100)};
     },[blocked,moved,open,off,two,player]);
     console.log('Shadow pixel measurements',result);
     assert.ok(result.levels>=6 && result.moving>50,'graded, moving penumbra');
     assert.ok(result.clear>.93 && result.core<.01 && result.near<.01 && result.wallLeak<=1,'solid wall and umbra');
+    assert.ok(result.small<.02 && result.smallFar>.08,'small Solid retains contact and loses contrast at distance');
     assert.ok(result.second>10 && result.unknown===0 && result.explored>20,'independent lights and player fog');
+    for(const type of ['still','magiskt','solljus','manljus']) {
+      const first=await capture(type,0);
+      assert.notEqual(first,off);
+      assert.equal(await capture(type,2100),first,'stable '+type);
+    }
+    assert.equal(await capture('torch',0),blocked,'relighting restores the same map position and shading');
     await page.evaluate(()=>{window.shadowScenario('torch');window.shadowZoom()});
     const bounds=await view.boundingBox();assert.equal(bounds.width,780);assert.equal(bounds.x,18);
     await view.screenshot({path:output+'/zoom.png'});
