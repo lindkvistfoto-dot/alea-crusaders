@@ -3263,7 +3263,14 @@ async function advanceCampaignDay(withRest){
 async function loadCampaignMaps(loadViewed=true){
  if(!centralCampaignId){campaignMaps=[];campaignActiveMapId=null;setCampaignMapData(null,[]);return}
  await loadCampaignMapRole();
- let maps=await dbJson('campaign_maps?campaign_id=eq.'+encodeURIComponent(centralCampaignId)+'&select=id,campaign_id,site_id,name,image_path,width,height,pixels_per_meter,scale_point_a,scale_point_b,scale_distance_m,player_visible,first_activated_at,last_activated_at,sort_order&order=sort_order.asc,name.asc');
+ const mapsQuery='campaign_maps?campaign_id=eq.'+encodeURIComponent(centralCampaignId)+'&select=id,campaign_id,site_id,name,image_path,width,height,player_visible,first_activated_at,last_activated_at,sort_order';
+ const order='&order=sort_order.asc,name.asc';
+ let maps;
+ try{maps=await dbJson(mapsQuery+',pixels_per_meter'+order)}
+ catch(error){
+  if(!/column .*pixels_per_meter.*does not exist/i.test(error.message))throw error;
+  maps=await dbJson(mapsQuery+order);
+ }
  campaignMaps=Array.isArray(maps)?maps:[];
  let settings=await dbJson('campaign_map_settings?campaign_id=eq.'+encodeURIComponent(centralCampaignId)+'&select=active_map_id&limit=1');
  campaignActiveMapId=settings?.[0]?.active_map_id||null;
@@ -4313,6 +4320,7 @@ function renderMapPanel(){
  let img=$('mapImage'),overlay=$('mapOverlay'),placeholder=$('mapPlaceholder'),subtitle=$('mapSubtitle'),status=$('mapStatusText');
  let viewport=$('mapViewport');
  if(!activeCampaignMap){
+  void window.syncArcaneMapObjects?.(null);
   viewport?.style.removeProperty('--campaign-map-aspect-ratio');
   viewport?.style.removeProperty('--campaign-map-aspect-ratio-number');
   img.classList.add('hidden');overlay.classList.add('hidden');placeholder.classList.remove('hidden');subtitle.textContent='Kampanjens aktuella karta.';status.textContent='Ingen karta vald';renderMapLibraryControls();return
@@ -4328,6 +4336,8 @@ function renderMapPanel(){
  let maskShapes=campaignMapAreas.map(a=>mapFogMaskShape(a)).join('');
  let hitShapes=campaignMapAreas.map(a=>mapAreaHitSvg(a)).join('');
  overlay.innerHTML=`<defs><mask id="${maskId}" maskUnits="userSpaceOnUse"><rect x="0" y="0" width="${w}" height="${h}" fill="white"/>${maskShapes}</mask></defs><rect class="map-fog" x="0" y="0" width="${w}" height="${h}" mask="url(#${maskId})"/>${hitShapes}`;
+ window.renderArcaneMapObjects?.();
+ void window.syncArcaneMapObjects?.(activeCampaignMap.id);
  renderMapLibraryControls();applyMapTransform();
 }
 function mapShapeTag(a,attrs=''){

@@ -1,7 +1,8 @@
 /* ARCANE OBJECT LIBRARY V1.0. Map coordinates remain intrinsic image pixels. */
 (() => {
  const root=window,SVG='http://www.w3.org/2000/svg';
- const state={mapId:null,loadedMapId:null,definitions:[],placements:[],calibration:null,assets:new Map(),active:null,drag:null,calibrating:false,calibrationPoints:[],dirty:new Set(),definitionDirty:new Set()};
+ const state={mapId:null,definitions:[],placements:[],assets:new Map(),active:null,drag:null,calibrating:false,calibrationPoints:[],dirty:new Set(),definitionDirty:new Set()};
+ let display;
  const $=id=>document.getElementById(id), esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const uuid=()=>crypto.randomUUID();
  const manager=()=>typeof canManageCampaignMaps==='function'&&canManageCampaignMaps();
@@ -22,14 +23,18 @@
    for(const row of rows||[]){const url=assetUrl(row.asset_path);if(url)state.assets.set(row.asset_key,url)}
   }catch(err){console.warn('Objektbilder från HERMES kunde inte läsas',err)}
  }
- async function loadDefinitions(){
+ async function readDefinitions(){
   const rows=await dbJson('arcane_object_definitions?select=id,object_key,name,object_type,image_asset_key,width_m,depth_m,height_m,default_rotation,revision,active,movement_blocking,light_blocking,shadow_casting,footprint,image_crop&active=eq.true&order=name.asc');
-  state.definitions=Array.isArray(rows)?rows:[];await loadAssetUrls(state.definitions);return state.definitions;
+  const definitions=Array.isArray(rows)?rows:[];
+  await loadAssetUrls(definitions);
+  return definitions;
+ }
+ async function readPlacements(mapId){
+  const rows=await dbJson('campaign_map_objects?select=id,campaign_id,map_id,object_definition_id,x,y,rotation,movement_blocking,light_blocking,shadow_casting&map_id=eq.'+encodeURIComponent(mapId)+'&order=created_at.asc');
+  return Array.isArray(rows)?rows:[];
  }
  async function loadPlacements(mapId){
-  if(!mapId){state.placements=[];return []}
-  const rows=await dbJson('campaign_map_objects?select=id,campaign_id,map_id,object_definition_id,x,y,rotation,movement_blocking,light_blocking,shadow_casting&map_id=eq.'+encodeURIComponent(mapId)+'&order=created_at.asc');
-  state.placements=Array.isArray(rows)?rows:[];return state.placements;
+  state.placements=await readPlacements(mapId);
  }
  function selectedDefinition(id){return state.definitions.find(x=>x.id===id)||null}
  function objectSize(def){const size=root.aleaMapObjectGeometry?.pixelSize(def,Number(visibleMap()?.pixels_per_meter)||0);return size?{w:size.width,h:size.depth}:{w:0,h:0}}
@@ -42,22 +47,55 @@
  function renderDisplay(){
   const svg=$('mapOverlay');if(!svg)return;
   svg.querySelector('.arcane-map-objects')?.remove();
-  if(!visibleMap()||!activeCampaignMap||!$('arcaneObjectLibraryModal')?.classList.contains('hidden')||state.mapId!==activeCampaignMap.id||!state.placements.length||!state.definitions.length)return;
+  const map=activeCampaignMap, viewer=activeUser()?.id, canManage=manager();
+  if(!map||display?.mapId!==map.id||display.viewer!==viewer||display.canManage!==canManage||!display.placements?.length)return;
   const group=document.createElementNS(SVG,'g');group.setAttribute('class','arcane-map-objects');group.setAttribute('aria-label','Kartobjekt');
-  const defs=new Map(state.definitions.map(d=>[d.id,d]));
-  for(const p of state.placements){const d=defs.get(p.object_definition_id),url=d&&state.assets.get(d.image_asset_key);if(!d||!url)continue;
-   const size=objectSize(d);if(!size.w||!size.h)continue;
-   appendObjectArt(group,d,url,Number(p.x),Number(p.y),size.w,size.h,Number(p.rotation)||0);
+  if(!canManage){
+   // Kartakademin draws fog on a separate canvas. Clip SVG art at room boundaries.
+   const mask=document.createElementNS(SVG,'mask');
+   mask.id='arcaneMapObjectDiscovery';
+   mask.setAttribute('maskUnits','userSpaceOnUse');
+   mask.setAttribute('x','0');mask.setAttribute('y','0');
+   mask.setAttribute('width',map.width);mask.setAttribute('height',map.height);
+   const explored=campaignMapAreas.filter(area=>area.status==='explored');
+   const concealed=campaignMapAreas.filter(area=>area.status!=='explored');
+   mask.innerHTML=explored.map(area=>mapShapeTag(area,'fill="white"')).join('')+
+     concealed.map(area=>mapShapeTag(area,'fill="black"')).join('');
+   group.append(mask);
+   group.setAttribute('mask','url(#arcaneMapObjectDiscovery)');
   }
-  const fog=svg.querySelector('.map-fog');fog?svg.insertBefore(group,fog):svg.prepend(group);
+  const defs=new Map(display.definitions.map(d=>[d.id,d]));
+  for(const p of display.placements){
+   const definition=defs.get(p.object_definition_id),url=definition&&state.assets.get(definition.image_asset_key);
+   if(!definition||!url)continue;
+   const size=root.aleaMapObjectGeometry?.pixelSize(definition,Number(map.pixels_per_meter));
+   if(size)appendObjectArt(group,definition,url,Number(p.x),Number(p.y),size.width,size.depth,Number(p.rotation)||0);
+  }
+  // Draw above the map shading and below the room hit targets.
+  const fog=svg.querySelector('.map-fog');
+  if(fog)fog.after(group);else svg.prepend(group);
  }
  async function syncDisplay(mapId,force=false){
-  if(!mapId)return;
-  if(!$('arcaneObjectLibraryModal')?.classList.contains('hidden')&&mapId!==state.mapId)return;
-  if(!force&&state.loadedMapId===mapId)return;
-  if(state.mapId!==mapId){state.mapId=mapId;state.placements=[]}
-  if(!state.definitions.length)await loadDefinitions();
-  await loadPlacements(mapId);state.loadedMapId=mapId;renderDisplay();
+  if(!mapId){display=null;return}
+  if(activeCampaignMap?.id!==mapId||!(Number(activeCampaignMap.pixels_per_meter)>0))return;
+  const viewer=activeUser()?.id, canManage=manager();
+  if(display?.mapId!==mapId||display.viewer!==viewer||display.canManage!==canManage)display={mapId,viewer,canManage};
+  const current=display;
+  if(!force&&(current.loading||current.placements))return;
+  const loading=current.loading=Promise.all([
+   !force&&current.definitions ? current.definitions : readDefinitions(),
+   readPlacements(mapId),
+  ]);
+  try{
+   const [definitions,placements]=await loading;
+   if(display!==current||current.loading!==loading)return;
+   Object.assign(current,{definitions,placements});
+   renderDisplay();
+  }catch(error){
+   if(display===current&&current.loading===loading)console.warn('Kartobjekten kunde inte läsas',error);
+  }finally{
+   if(current.loading===loading)current.loading=null;
+  }
  }
  function calibrationText(map){return Number(map?.pixels_per_meter)>0?`${Number(map.pixels_per_meter).toFixed(1)} px/m`:'Skala saknas'}
  function editorCanvasHtml(map){
@@ -102,10 +140,22 @@
   document.querySelectorAll('[data-placement-prop]').forEach(el=>el.addEventListener('change',()=>{const p=state.placements.find(x=>x.id===state.active?.placementId);if(p){p[el.dataset.placementProp]=el.checked;state.dirty.add(p.id)}}));
   board?.addEventListener('pointerup',()=>{if(state.calibrationPoints.length===2)void confirmCalibration()});
  }
- async function open(mapId){if(!manager()){alert('Objektredigering är endast tillgänglig för spelledare.');return}const original=campaignMaps.find(x=>x.id===mapId);if(!original)return;state.mapId=mapId;state.active=null;state.dirty.clear();state.definitionDirty.clear();const map={...original,image_url:await getMapImageUrl(original)};await Promise.all([loadDefinitions(),loadPlacements(mapId)]);const modal=$('arcaneObjectLibraryModal');modal.classList.remove('hidden');modal.setAttribute('aria-hidden','false');modal.innerHTML=`<div class="modal arcane-object-modal" role="dialog" aria-modal="true" aria-labelledby="arcaneObjectTitle"><div class="modalhead"><h2 id="arcaneObjectTitle">Objekt · ${esc(map.name)}</h2><button class="modalclose" id="arcaneObjectClose" aria-label="Stäng">×</button></div>${editorCanvasHtml(map)}</div>`;bindEditor();$('arcaneObjectClose').onclick=close;}
+ async function open(mapId){
+  if(!manager()){alert('Objektredigering är endast tillgänglig för spelledare.');return}
+  const original=campaignMaps.find(x=>x.id===mapId);if(!original)return;
+  try{
+   const [imageUrl,definitions,placements]=await Promise.all([getMapImageUrl(original),readDefinitions(),readPlacements(mapId)]);
+   Object.assign(state,{mapId,definitions,placements,active:null,drag:null,calibrating:false,calibrationPoints:[]});
+   state.dirty.clear();state.definitionDirty.clear();
+   const map={...original,image_url:imageUrl};
+   const modal=$('arcaneObjectLibraryModal');
+   modal.classList.remove('hidden');modal.setAttribute('aria-hidden','false');
+   modal.innerHTML=`<div class="modal arcane-object-modal" role="dialog" aria-modal="true" aria-labelledby="arcaneObjectTitle"><div class="modalhead"><h2 id="arcaneObjectTitle">Objekt · ${esc(map.name)}</h2><button class="modalclose" id="arcaneObjectClose" aria-label="Stäng">×</button></div>${editorCanvasHtml(map)}</div>`;
+   bindEditor();$('arcaneObjectClose').onclick=close;
+  }catch(error){alert('Kunde inte öppna objektbiblioteket: '+error.message)}
+ }
  function close(){const m=$('arcaneObjectLibraryModal');if(m){m.classList.add('hidden');m.setAttribute('aria-hidden','true');m.innerHTML=''}state.active=null;if(typeof activeCampaignMap!=='undefined'&&activeCampaignMap?.id)void syncDisplay(activeCampaignMap.id,true)}
  root.openArcaneObjectLibrary=open;root.closeArcaneObjectLibrary=close;root.renderArcaneMapObjects=renderDisplay;root.syncArcaneMapObjects=syncDisplay;
  root.getArcaneMapObjectRuntimeData=id=>{const p=state.placements.find(x=>x.id===id),d=p&&selectedDefinition(p.object_definition_id);if(!p||!d)return null;return {id:p.id,definitionId:d.id,position:{x:Number(p.x),y:Number(p.y)},width_m:Number(d.width_m),depth_m:Number(d.depth_m),height_m:Number(d.height_m),rotation_degrees:Number(p.rotation)||0,footprint:root.aleaMapObjectGeometry?.footprint(d.width_m,d.depth_m,p.rotation)||[],movement_blocking:!!p.movement_blocking,light_blocking:!!p.light_blocking,shadow_casting:!!p.shadow_casting}}
  document.addEventListener('click',e=>{if(e.target?.id==='arcaneObjectLibraryModal')close()});
- if(typeof renderMapPanel==='function'){const previous=renderMapPanel;window.renderMapPanel=function(...args){const result=previous.apply(this,args);if(visibleMap())void syncDisplay(visibleMap().id);else state.placements=[];return result}}
 })();

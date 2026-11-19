@@ -85,15 +85,38 @@ drop policy if exists arcane_object_definitions_admin on public.arcane_object_de
 create policy arcane_object_definitions_admin on public.arcane_object_definitions
   for all to authenticated using (private.is_admin()) with check (private.is_admin());
 
+create function private.is_campaign_map_object_discovered(
+  p_map_id uuid, p_campaign_id uuid, p_position point
+) returns boolean
+language sql stable security definer set search_path = ''
+as $$
+  with rooms as (
+    select coalesce(s.status, 'unknown') as status,
+      case when a.shape_type = 'rect' then polygon(box(
+        point((a.shape_data->>'x')::float8, (a.shape_data->>'y')::float8),
+        point((a.shape_data->>'x')::float8 + (a.shape_data->>'width')::float8,
+              (a.shape_data->>'y')::float8 + (a.shape_data->>'height')::float8)))
+      when jsonb_array_length(a.shape_data->'points') >= 3 then
+        (select ('(' || string_agg(format('(%s,%s)', (v->>0)::float8, (v->>1)::float8), ',' order by n) || ')')::polygon
+          from jsonb_array_elements(a.shape_data->'points') with ordinality p(v,n))
+      end as shape
+    from public.campaign_maps m
+    join public.campaign_map_areas a on a.map_id=m.id and a.campaign_id=m.campaign_id
+    left join public.campaign_location_state s on s.location_id=a.location_id and s.campaign_id=a.campaign_id
+    where m.id=p_map_id and m.campaign_id=p_campaign_id and m.player_visible
+      and private.is_campaign_member(p_campaign_id)
+  )
+  select coalesce(bool_and(status='explored'), false)
+  from rooms where shape @> p_position;
+$$;
+revoke all on function private.is_campaign_map_object_discovered(uuid,uuid,point) from public, anon;
+grant execute on function private.is_campaign_map_object_discovered(uuid,uuid,point) to authenticated;
+
 drop policy if exists campaign_map_objects_select on public.campaign_map_objects;
 create policy campaign_map_objects_select on public.campaign_map_objects
   for select to authenticated using (
     private.is_admin() or private.is_campaign_gm(campaign_id) or
-    (private.is_campaign_member(campaign_id) and exists (
-      select 1 from public.campaign_maps m
-      where m.id=campaign_map_objects.map_id
-        and m.campaign_id=campaign_map_objects.campaign_id and m.player_visible
-    ))
+    private.is_campaign_map_object_discovered(map_id,campaign_id,point(x::float8,y::float8))
   );
 drop policy if exists campaign_map_objects_manage on public.campaign_map_objects;
 create policy campaign_map_objects_manage on public.campaign_map_objects
