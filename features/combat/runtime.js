@@ -938,7 +938,7 @@ function combatIsResetReadyForPlay(scene){
   String(combatActiveSceneId())===String(scene?.id||'')
 }
 function combatConfirmReplaceActiveRuntime(scene){
- if(!activeCombat?.id||combatIsResetReadyForPlay(scene))return true;
+ if(!activeCombat?.id||activeCombat.status==='completed'||combatIsResetReadyForPlay(scene))return true;
  const activeName=activeCombat.name||combatSceneFromId(combatActiveSceneId())?.name||'Strid';
  const selectedName=scene?.name||'vald stridsscen';
  return confirm('En pågående strid ("'+activeName+'") är sparad och kan återupptas där den slutade.\n\nPlay startar "'+selectedName+'" från början och ersätter den sparade striden. Vill du fortsätta?')
