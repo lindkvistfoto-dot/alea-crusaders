@@ -1,4 +1,5 @@
 import { Application, BlurFilter, Container, Graphics, RenderTexture, Sprite, Texture } from 'pixi.js';
+import { bakeFlameSample, flameOrigins, flames, flameWeights } from './kartakademin-flame.js';
 import { isFree, prepareFreeSight } from './kartakademin-mask.js';
 import { blockers, directionalReach, isBlocked, parallelBeamQuads, resolveOrigin, roomVisibility, visibilityPolygon } from './kartakademin-geometry.js';
 
@@ -6,6 +7,10 @@ export async function mountLighting(host, map) {
   const app = new Application();
   let lightTexture, target, frame, imageTexture;
   let destroyed = false;
+  const projections = new Map();
+  function releaseProjection(entry) {
+    for (const part of entry.parts) part.texture.destroy(true);
+  }
   const beamTextures = new Map();
   function beamTexture(shape, softness) {
     const key = shape + ':' + softness;
@@ -88,12 +93,16 @@ export async function mountLighting(host, map) {
     app.canvas.setAttribute('aria-hidden', 'true');
 
     function paint(time) {
-      for (const { sprite, light } of lights) {
+      for (const { sprites, light, flame } of lights) {
         const magic = light.type === 'magiskt';
-        const wave = (1 + Math.sin(time / (magic ? 1250 : light.type === 'eldstad' ? 93 : 140))) / 2;
+        const phase = time / (magic ? 1250 : light.type === 'eldstad' ? 93 : 140);
+        const wave = (1 + Math.sin(phase)) / 2;
         const motion = light.motion || 0;
         const power = light.intensity * (1 - motion * wave);
-        for (const [index, part] of sprite.entries()) part.alpha = Math.min(1, Math.max(0, power - index));
+        const weights = flame && flameWeights(phase, motion, flame);
+        for (const { sprite, index, sample } of sprites) {
+          sprite.alpha = Math.min(1, Math.max(0, power - index)) * (weights ? weights[sample] : 1);
+        }
 
       }
       app.renderer.render({ container: lightmap, target, clear: true });
@@ -126,7 +135,10 @@ export async function mountLighting(host, map) {
       ambient.clear().rect(0, 0, map.width, map.height).fill(level * 0x010101);
       const freeSight = prepareFreeSight(map.width, map.height, config.freeSight);
       const edges = blockers(config.geometry, 'light');
-      for (const light of config.lights) {
+      const wallKey = JSON.stringify(edges);
+      const activeProjections = new Set();
+      // The player RPC intentionally omits light IDs.
+      for (const [slot, light] of config.lights.entries()) {
         const origin = resolveOrigin(light, positions);
         if (!light.on || !origin || !freeSight || !isFree(freeSight, origin) || isBlocked(config.geometry, origin, 'light')) continue;
         const directional = ['solljus', 'manljus'].includes(light.type);
@@ -139,6 +151,37 @@ export async function mountLighting(host, map) {
         const width = (light.beamWidth ?? light.range) * config.pixelsPerMeter;
         const softness = (light.edgeSoftness ?? (light.type === 'manljus' ? 45 : 25)) / 100;
         const layer = new Container();
+        const flame = flames[light.type];
+        const sprites = [];
+        if (flame) {
+          const key = JSON.stringify([light.type, origin, range, light.direction, light.aperture, config.pixelsPerMeter]);
+          let entry = projections.get(slot);
+          if (!entry || entry.key !== key || entry.mask !== freeSight || entry.wallKey !== wallKey) {
+            if (entry) releaseProjection(entry);
+            const feather = Math.min(.04 * range, 1.4 * flame.swing * config.pixelsPerMeter);
+            const parts = flameOrigins(origin, config.pixelsPerMeter, flame, edges, freeSight).map(sample => {
+              const { canvas, x, y } = bakeFlameSample(sample, origin, range, light, edges, freeSight, map, scale, output, feather);
+              return { texture: Texture.from(canvas), x, y };
+            });
+            entry = { key, mask: freeSight, wallKey, parts };
+            projections.set(slot, entry);
+          }
+          activeProjections.add(slot);
+          for (const [sample, part] of entry.parts.entries()) {
+            for (let index = 0; index < Math.ceil(Math.min(3, light.intensity)); index++) {
+              const sprite = new Sprite(part.texture);
+              sprite.position.set(part.x, part.y);
+              sprite.scale.set(1 / scale);
+              sprite.tint = light.color;
+              sprite.blendMode = 'add';
+              layer.addChild(sprite);
+              sprites.push({ sprite, index, sample });
+            }
+          }
+          lightmap.addChild(layer);
+          lights.push({ sprites, light, flame });
+          continue;
+        }
         const mask = new Graphics();
         if (beam === 'parallel') {
           const quads = parallelBeamQuads(origin, range, width, direction, edges, freeSight);
@@ -149,7 +192,6 @@ export async function mountLighting(host, map) {
           const radius = overhead ? Math.max(range, width) : range;
           mask.poly(visibilityPolygon(origin, radius, edges, direction, overhead ? 360 : light.aperture, freeSight).flat()).fill(0xffffff);
         }
-        const sprites = [];
         const magic = light.type === 'magiskt';
         for (let index = 0; index < Math.ceil(Math.min(3, light.intensity)); index++) {
           const sprite = new Sprite(beam ? beamTexture(beam, softness) : lightTexture);
@@ -161,7 +203,7 @@ export async function mountLighting(host, map) {
           sprite.tint = light.color;
           sprite.blendMode = 'add';
           layer.addChild(sprite);
-          sprites.push(sprite);
+          sprites.push({ sprite, index });
         }
         if (magic && light.motion > 0) {
           const aura = new Sprite(lightTexture);
@@ -176,7 +218,13 @@ export async function mountLighting(host, map) {
         layer.addChild(mask);
         layer.mask = mask;
         lightmap.addChild(layer);
-        lights.push({ sprite: sprites, light });
+        lights.push({ sprites, light });
+      }
+      for (const [id, entry] of projections) {
+        if (!activeProjections.has(id)) {
+          releaseProjection(entry);
+          projections.delete(id);
+        }
       }
       paint(performance.now());
       if (lights.some(({ light }) => light.motion > 0)) {
@@ -194,6 +242,8 @@ export async function mountLighting(host, map) {
       cancelAnimationFrame(frame);
       lightmap.destroy({ children: true });
       app.destroy({ removeView: true }, { children: true });
+      for (const entry of projections.values()) releaseProjection(entry);
+      projections.clear();
       target.destroy(true);
       lightTexture.destroy(true);
       for (const texture of [...beamTextures.values(), ...retiredTextures]) texture.destroy(true);

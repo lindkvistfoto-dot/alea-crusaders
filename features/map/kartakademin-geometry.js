@@ -34,6 +34,11 @@ function intersection(origin, dx, dy, [[ax, ay], [bx, by]]) {
   return distance >= 0 && along >= -EPSILON && along <= 1 + EPSILON ? distance : Infinity;
 }
 
+export function unobstructedDistance(origin, dx, dy, limit, edges, freeSight) {
+  for (const edge of edges) limit = Math.min(limit, intersection(origin, dx, dy, edge));
+  return freeSight ? traceFree(freeSight, origin, dx, dy, limit) : limit;
+}
+
 export function visibilityPolygon(origin, radius, edges, direction = 0, aperture = 360, freeSight = null) {
   const start = (direction - aperture / 2) * Math.PI / 180;
   const span = aperture * Math.PI / 180;
@@ -54,11 +59,10 @@ export function visibilityPolygon(origin, radius, edges, direction = 0, aperture
       }
     }
   }
-  const points = angles.sort((a, b) => a - b).map(angle => {
+  // Adjacent wall segments share corner rays, particularly on painted Solid masks.
+  const points = [...new Set(angles)].sort((a, b) => a - b).map(angle => {
     const dx = Math.cos(start + angle), dy = Math.sin(start + angle);
-    let distance = radius;
-    for (const edge of nearby) distance = Math.min(distance, intersection(origin, dx, dy, edge));
-    if (freeSight) distance = traceFree(freeSight, origin, dx, dy, distance);
+    const distance = unobstructedDistance(origin, dx, dy, radius, nearby, freeSight);
     return [origin[0] + distance * dx, origin[1] + distance * dy];
   });
   return aperture < 360 ? [origin, ...points] : points;
