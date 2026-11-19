@@ -136,21 +136,29 @@ async function openEditor(map, areas, imageUrl) {
   if (!canManageCampaignMaps() || !opener) return;
   const root = document.createElement('section');
   root.className = 'kartakademin-editor';
+  const roomHelp = window.aleaSectionHelp;
+  roomHelp?.register('kartverkstad-rum', {
+    title: 'Rumsverktyg',
+    paragraphs: [
+      'Rita minst tre hörn. Nya punkter fäster mot befintliga hörn och kanter. Tomrum mellan rum är tillåtna, men polygoner får inte överlappa.',
+      'Välj Infoga punkt och klicka nära en kant. Dra ett hörn för att flytta det. Koppla sedan polygonen till en plats i rumslistan.',
+    ],
+  });
   root.innerHTML = `<div data-body>
       <details class="kartakademin-settings" data-settings-panel open>
         <summary>Kartinställningar</summary>
-        <div class="kartakademin-controls">
+        <div class="kartakademin-settings-grid">
           <fieldset><legend>Miljö</legend><label><input type="radio" name="map-environment" data-config="environment" value="outdoor"> Utomhus</label><label><input type="radio" name="map-environment" data-config="environment" value="indoor"> Inomhus</label><label><input type="radio" name="map-environment" data-config="environment" value="underground"> Underjord</label></fieldset>
           <label>Grundmörker (%)<input data-config="darkness" type="number" min="60" max="80" step="1"></label>
           <label>Kartans bredd (m)<input data-config="pixelsPerMeter" type="number" min="0.01" step="any" required></label>
-          <output data-map-scale></output>
-          <label>Norr (° medurs från kartans överkant)<input data-config="north" type="number" min="0" max="359" step="1" required></label>
+          <output data-map-scale aria-label="Kartskala"></output>
+          <label>Norr (° medurs)<input data-config="north" type="number" min="0" max="359" step="1" required></label>
           <button type="button" class="btn" data-reset-north>Återställ norr</button>
         </div>
       </details>
-      <div class="kartakademin-controls kartakademin-mode-controls" data-mode-controls>
+      <div class="kartakademin-mode-controls" data-mode-controls>
         <div class="kartakademin-view-controls">
-          <label>Zoom<input data-zoom type="range" min="0.02" max="5" step="any" value="1"></label>
+          <label>Zoom <output data-zoom-percent>100 %</output><input data-zoom type="range" min="0.02" max="5" step="any" value="1"></label>
           <button type="button" class="btn" data-pan-tool aria-pressed="false" title="Panorera med vänster musknapp"><span aria-hidden="true">✋︎</span> Panorera</button>
           <button type="button" class="btn" data-ruler-tool aria-pressed="false"><span aria-hidden="true">📏</span> Linjal</button>
           <output data-measurement aria-label="Uppmätt avstånd" hidden></output>
@@ -163,7 +171,7 @@ async function openEditor(map, areas, imageUrl) {
           <summary>Synliga kartlager</summary>
           <div class="kartakademin-layers" aria-label="Synliga kartlager"><label><input type="checkbox" data-layer="rooms" checked> Rumsgränser</label><label><input type="checkbox" data-player> Rummens upptäcktsstatus</label><label><input type="checkbox" data-layer="effects" checked> Effektområden</label><label><input type="checkbox" data-layer="sight" checked> Fri sikt</label><label><input type="checkbox" data-layer="solid"> Solid</label><label><input type="checkbox" data-layer="lights" checked> Ljuskällor</label><label><input type="checkbox" data-layer="characters" checked> Rollpersoner</label><label><input type="checkbox" data-layer="objects" checked> Objekt</label></div>
         </details>
-        <label><input type="checkbox" data-light-only> Visa endast ljusresultat</label>
+        <label class="kartakademin-preview-switch"><input type="checkbox" data-light-only> Visa endast ljusresultat</label>
       </div>
       <nav class="kartakademin-mode-nav" data-mode-nav aria-label="Kartverkstadens redigeringslägen" role="tablist">
         <button type="button" role="tab" data-mode-button="rooms" aria-selected="true">Rum</button>
@@ -185,7 +193,7 @@ async function openEditor(map, areas, imageUrl) {
         <button type="button" class="btn kartakademin-destructive" data-remove>Ta bort</button>
       </div>
       <div data-light class="kartakademin-controls">
-        <h3>Inställningar för vald ljuskälla</h3>
+        <h3>Vald ljuskälla</h3>
         <label>Typ<select name="type"></select></label>
         <label>Namn<input name="name" maxlength="80"></label>
         <label>Färg<input name="color" type="color"></label>
@@ -284,7 +292,10 @@ async function openEditor(map, areas, imageUrl) {
   frame.setAttribute('aria-hidden', 'true');
   for (let i = 0; i < 4; i++) frame.append(document.createElement('span'));
   mapStage.append(frame);
-  toolPanel.append(toolbar, roomNotice, roomList, root);
+  const toolHeader = document.createElement('div');
+  toolHeader.className = 'kartakademin-panel-heading';
+  toolHeader.innerHTML = `<h3></h3>${roomHelp?.button('kartverkstad-rum') ?? ''}`;
+  toolPanel.append(toolHeader, toolbar, roomNotice, roomList, root);
   const output = get('[data-save-message]');
   const saveStatus = get('[data-save-status]');
   const announce = message => { output.textContent = message; };
@@ -454,7 +465,8 @@ async function openEditor(map, areas, imageUrl) {
   function refreshToolPicker(preferred = state.tool) {
     const options = toolsForMode(state.mode);
     const picker = get('[data-tool-picker]');
-    picker.replaceChildren(...options.filter(item => item.value !== 'pan').map(item => {
+    const choices = options.filter(item => item.value !== 'pan');
+    picker.replaceChildren(...(choices.length > 1 ? choices : []).map(item => {
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'btn';
@@ -473,6 +485,10 @@ async function openEditor(map, areas, imageUrl) {
 
   function refreshList() {
     const modeKey = state.mode;
+    toolHeader.querySelector('h3').textContent = modeKey === 'rooms' ? 'Rumsverktyg' :
+      modeButtons.find(button => button.dataset.modeButton === modeKey)?.textContent;
+    const help = toolHeader.querySelector('button');
+    if (help) help.hidden = modeKey !== 'rooms';
     const maskModeKey = maskMode.value;
     const drawingMask = modeKey === 'sight' && state.tool === 'mask';
     const polygonMaskMode = drawingMask && ['add', 'subtract'].includes(maskModeKey);
@@ -621,7 +637,7 @@ async function openEditor(map, areas, imageUrl) {
     const discovery = get('[data-player]').checked;
     board.classList.toggle('kartakademin-light-only', lightOnly);
     state.view?.renderer?.update(state.config, areas, state.positions, lightOnly || !discovery);
-    get('[data-map-scale]').textContent = `${Number(state.config.pixelsPerMeter.toFixed(2))} px/m`;
+    get('[data-map-scale]').textContent = `${state.config.pixelsPerMeter.toLocaleString('sv-SE', { maximumFractionDigits: 2 })} px/m`;
     updateMaskOverlay();
     const roomGroup = svg.querySelector('#mapAreaRoomLayer');
     if (roomGroup) roomGroup.style.display = state.layers.rooms ? '' : 'none';
@@ -933,6 +949,7 @@ async function openEditor(map, areas, imageUrl) {
   let offsetX = 0, offsetY = 0;
   const fitScale = () => Math.min(viewport.clientWidth / map.width, viewport.clientHeight / map.height);
   function positionBoard() {
+    get('[data-zoom-percent]').value = Math.round(zoom.valueAsNumber * 100) + ' %';
     const scale = fitScale() * zoom.valueAsNumber;
     const width = map.width * scale;
     const height = map.height * scale;

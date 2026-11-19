@@ -1,0 +1,45 @@
+name: Kartverkstad visual regression
+on:
+  pull_request:
+    paths:
+      - 'features/map/kartakademin*'
+      - 'scripts/kartverkstad-visual.mjs'
+      - '.github/workflows/kartverkstad-visual.yml'
+permissions:
+  contents: read
+jobs:
+  layout:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 2
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Install the project's browser test driver
+        run: npm install --no-save --package-lock=false playwright@1.56.1
+      - name: Capture previous and current layouts in Chrome
+        run: |
+          set -euo pipefail
+          if git cat-file -e HEAD^:features/map/kartakademin.js; then
+            git worktree add --detach "$RUNNER_TEMP/kart-before" HEAD^
+            ln -s "$PWD/node_modules" "$RUNNER_TEMP/kart-before/node_modules"
+            (cd "$RUNNER_TEMP/kart-before" && npm run build)
+            python -m http.server 4180 --bind 127.0.0.1 --directory "$RUNNER_TEMP/kart-before/dist" &
+            node scripts/kartverkstad-visual.mjs http://127.0.0.1:4180 visual-results/before baseline
+          fi
+          npm run build
+          python -m http.server 4181 --bind 127.0.0.1 --directory dist &
+          node scripts/kartverkstad-visual.mjs http://127.0.0.1:4181 visual-results/after
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: kartverkstad-desktop-mobile
+          path: visual-results/
+          retention-days: 14

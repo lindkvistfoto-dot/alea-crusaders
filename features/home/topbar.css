@@ -281,9 +281,11 @@
    and for narrower desktop windows it is viewport width minus 52px.
    Gaps are 12px; the first grid track and one gap = 25% + 6px. */
 @media (min-width: 1024px) {
-  .alea-app-header {
+  :root {
     --alea-desktop-grid-width: 1534px;
     --alea-desktop-grid-gutters: 52px;
+  }
+  .alea-app-header {
     position: sticky;
     padding: 16px 0;
     background-color: #100e0c;
