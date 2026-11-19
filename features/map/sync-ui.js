@@ -46,7 +46,10 @@ async function refreshMapOnce(){
   else void openMapLocationInfoByArea(mapSelectedAreaId,true);
  }
  renderMapPanel();
- await window.aleaKartakademin?.syncCampaign(activeCampaignMap,areas,true);
+ await Promise.all([
+  window.aleaKartakademin?.syncCampaign(activeCampaignMap,areas,true),
+  window.syncArcaneMapObjects?.(desired.id,true),
+ ]);
 }
 export async function reconcileCampaignMap(){
  if(!mapPanelOpen())return;

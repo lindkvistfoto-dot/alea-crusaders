@@ -3263,7 +3263,14 @@ async function advanceCampaignDay(withRest){
 async function loadCampaignMaps(loadViewed=true){
  if(!centralCampaignId){campaignMaps=[];campaignActiveMapId=null;setCampaignMapData(null,[]);return}
  await loadCampaignMapRole();
- let maps=await dbJson('campaign_maps?campaign_id=eq.'+encodeURIComponent(centralCampaignId)+'&select=id,campaign_id,site_id,name,image_path,width,height,player_visible,first_activated_at,last_activated_at,sort_order&order=sort_order.asc,name.asc');
+ const mapsQuery='campaign_maps?campaign_id=eq.'+encodeURIComponent(centralCampaignId)+'&select=id,campaign_id,site_id,name,image_path,width,height,player_visible,first_activated_at,last_activated_at,sort_order';
+ const order='&order=sort_order.asc,name.asc';
+ let maps;
+ try{maps=await dbJson(mapsQuery+',pixels_per_meter'+order)}
+ catch(error){
+  if(!/column .*pixels_per_meter.*does not exist/i.test(error.message))throw error;
+  maps=await dbJson(mapsQuery+order);
+ }
  campaignMaps=Array.isArray(maps)?maps:[];
  let settings=await dbJson('campaign_map_settings?campaign_id=eq.'+encodeURIComponent(centralCampaignId)+'&select=active_map_id&limit=1');
  campaignActiveMapId=settings?.[0]?.active_map_id||null;
@@ -3609,7 +3616,7 @@ function renderAdminMaps(){
  let directMaps=campaignMaps.filter(m=>m.site_id===site.id),directLocs=campaignLocations.filter(l=>l.site_id===site.id);
  if($('adminSiteDetailMeta'))$('adminSiteDetailMeta').textContent=(site.site_type||'struktur')+' · '+directMaps.length+' kartor · '+directLocs.length+' platser';
  if(st)st.textContent=directMaps.length?directMaps.length+' kartor i denna platsstruktur.':'Inga kartor i denna platsstruktur ännu.';
- if(mt)mt.innerHTML=directMaps.length?'<div class="ahead">Karta</div><div class="ahead">Status</div><div class="ahead">Åtgärd</div>'+directMaps.map(m=>'<div><b>'+escAttr(m.name||'Namnlös karta')+'</b><div class="muted" style="font-size:11px">'+m.width+'×'+m.height+'</div></div><div>'+(m.id===campaignActiveMapId?'<span class="admin-map-current">AKTUELL</span> ':'')+(m.player_visible?'<span class="admin-map-visible">SPELARE</span>':'<span class="admin-map-hidden">DOLD</span>')+'</div><div class="admin-map-actions"><button class="smallbtn" onclick="editCampaignMap(\''+m.id+'\')" title="Redigera karta">✎</button><button class="smallbtn" onclick="openMapAreaEditor(\''+m.id+'\')" title="Öppna Kartverkstad" aria-label="Öppna Kartverkstad">⬡</button><button class="smallbtn admin-map-toggle '+(m.id===campaignActiveMapId?'active':'')+'" onclick="activateCampaignMapById(\''+m.id+'\')" title="'+(m.id===campaignActiveMapId?'Aktuell karta':'Gör aktuell')+'">📍</button><button class="smallbtn admin-map-toggle '+(m.player_visible?'active':'')+'" onclick="toggleMapPlayerVisibility(\''+m.id+'\')" title="'+(m.player_visible?'Dölj för spelare':'Gör tillgänglig för spelare')+'">👁</button><button class="deletebtn" onclick="deleteCampaignMap(\''+m.id+'\')">×</button></div>').join(''):'<div class="admin-site-empty">Inga kartor ännu. Lägg till exempelvis Bottenvåning, Våning 2 eller Krypta.</div>';
+ if(mt)mt.innerHTML=directMaps.length?'<div class="ahead">Karta</div><div class="ahead">Status</div><div class="ahead">Åtgärd</div>'+directMaps.map(m=>'<div><b>'+escAttr(m.name||'Namnlös karta')+'</b><div class="muted" style="font-size:11px">'+m.width+'×'+m.height+'</div></div><div>'+(m.id===campaignActiveMapId?'<span class="admin-map-current">AKTUELL</span> ':'')+(m.player_visible?'<span class="admin-map-visible">SPELARE</span>':'<span class="admin-map-hidden">DOLD</span>')+'</div><div class="admin-map-actions"><button class="smallbtn" onclick="editCampaignMap(\''+m.id+'\')" title="Redigera karta">✎</button><button class="smallbtn" onclick="openMapAreaEditor(\''+m.id+'\')" title="Öppna Kartverkstad" aria-label="Öppna Kartverkstad">⬡</button><button class="smallbtn" onclick="openArcaneObjectLibrary(\''+m.id+'\')" title="Placera kartobjekt">🪑</button><button class="smallbtn admin-map-toggle '+(m.id===campaignActiveMapId?'active':'')+'" onclick="activateCampaignMapById(\''+m.id+'\')" title="'+(m.id===campaignActiveMapId?'Aktuell karta':'Gör aktuell')+'">📍</button><button class="smallbtn admin-map-toggle '+(m.player_visible?'active':'')+'" onclick="toggleMapPlayerVisibility(\''+m.id+'\')" title="'+(m.player_visible?'Dölj för spelare':'Gör tillgänglig för spelare')+'">👁</button><button class="deletebtn" onclick="deleteCampaignMap(\''+m.id+'\')">×</button></div>').join(''):'<div class="admin-site-empty">Inga kartor ännu. Lägg till exempelvis Bottenvåning, Våning 2 eller Krypta.</div>';
  if(lt)lt.innerHTML=directLocs.length?'<div class="ahead">ID</div><div class="ahead">Namn</div><div class="ahead">Typ</div><div class="ahead">Åtgärd</div>'+directLocs.map(l=>'<div>'+escAttr(l.location_key||'—')+'</div><div>'+escAttr(l.name||'—')+(locationEventSummary(l.id)?'<div class="location-event-mini">⚡ '+escAttr(locationEventSummary(l.id))+'</div>':'')+(l.ambience_cue_key?'<div class="location-sound-mini">♫ '+escAttr(window.aleaAudio?.cues?.().find(c=>c.cue_key===l.ambience_cue_key)?.title||l.ambience_cue_key)+'</div>':'')+'</div><div>'+escAttr(l.location_type||'—')+'</div><div class="admin-map-actions">'+(l.ambience_cue_key?'<button class="smallbtn" type="button" onclick="window.aleaSoundboard?.playLocation(\''+l.id+'\')" title="Spela platsljud för alla deltagare">♫ ▶</button>':'')+'<button class="smallbtn" onclick="editCampaignLocation(\''+l.id+'\')" title="Grunddata">✎</button><button class="smallbtn" onclick="editLocationContent(\''+l.id+'\')" title="Beskrivning, bilder och kopplingar">📖</button><button class="deletebtn" onclick="deleteCampaignLocation(\''+l.id+'\')">×</button></div>').join(''):'<div class="admin-site-empty">Inga rum eller platser i strukturen ännu.</div>'
 }
 function siteOptions(selected='',allowNone=true,excludeId=''){
@@ -4313,6 +4320,7 @@ function renderMapPanel(){
  let img=$('mapImage'),overlay=$('mapOverlay'),placeholder=$('mapPlaceholder'),subtitle=$('mapSubtitle'),status=$('mapStatusText');
  let viewport=$('mapViewport');
  if(!activeCampaignMap){
+  void window.syncArcaneMapObjects?.(null);
   viewport?.style.removeProperty('--campaign-map-aspect-ratio');
   viewport?.style.removeProperty('--campaign-map-aspect-ratio-number');
   img.classList.add('hidden');overlay.classList.add('hidden');placeholder.classList.remove('hidden');subtitle.textContent='Kampanjens aktuella karta.';status.textContent='Ingen karta vald';renderMapLibraryControls();return
@@ -4328,6 +4336,8 @@ function renderMapPanel(){
  let maskShapes=campaignMapAreas.map(a=>mapFogMaskShape(a)).join('');
  let hitShapes=campaignMapAreas.map(a=>mapAreaHitSvg(a)).join('');
  overlay.innerHTML=`<defs><mask id="${maskId}" maskUnits="userSpaceOnUse"><rect x="0" y="0" width="${w}" height="${h}" fill="white"/>${maskShapes}</mask></defs><rect class="map-fog" x="0" y="0" width="${w}" height="${h}" mask="url(#${maskId})"/>${hitShapes}`;
+ window.renderArcaneMapObjects?.();
+ void window.syncArcaneMapObjects?.(activeCampaignMap.id);
  renderMapLibraryControls();applyMapTransform();
 }
 function mapShapeTag(a,attrs=''){
