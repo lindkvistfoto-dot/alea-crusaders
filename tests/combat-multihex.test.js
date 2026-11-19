@@ -72,7 +72,7 @@ this.expose={combatFootprintCells,combatFootprintKey,combatFootprintOverlaps,com
     'combatFootprintDistance(actor,target)',
     'combatFootprintIntersectsRadius(row,center,radius)',
     'combatFootprintCells(row).some(cell=>combatBeskyddareContains(cubeArea,cell))',
-    'combatFootprintCanStand(combatant,nq,nr)',
+    'combatFootprintCanStand(combatant,nq,nr,facing,cellByKey)',
     'rpc/alea_move_multhex',
     'rpc/alea_rotate_multhex',
     'combat-footprint-hex'

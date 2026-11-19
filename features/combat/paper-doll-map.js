@@ -144,7 +144,7 @@
    '" viewBox="'+[bounds.left,bounds.top,bounds.width,bounds.height].join(' ')+'" overflow="hidden"><image href="'+esc(src)+
    '" width="'+bounds.imageWidth+'" height="'+bounds.imageHeight+'"/></svg>';
  }
- function render(classic,actor,cell,g,stateClasses='',mapBaseWidth,collectArt){
+ function render(classic,actor,cell,g,stateClasses='',mapBaseWidth,collectArt,allowStand=false){
   // Preserve the combat engine's defeated skull/base instead of drawing an upright paper doll.
   if(actor?.status==='dead')return classic;
   if(!ready){load();return classic}
@@ -159,8 +159,8 @@
   const chosenAssets={...assets,[resolver.BASE]:baseAsset};
   const publicPose=published?.image_path&&typeof SUPABASE_URL==='string'?SUPABASE_URL+'/storage/v1/object/public/alea-hermes-public/'+published.image_path:'';
   const selected=resolver.resolve(actor,{assets:chosenAssets,footprint:mapToken?'single':combatFootprintShape(actor),battlePoseUrl:publicPose||pose(actor),portraitUrl:portrait(actor)});
-  if(mapToken&&selected.mode!=='battle-pose')return '';
-  if(mapToken&&collectArt)collectArt(selected.baseUrl,selected.poseUrl);
+  if(mapToken&&selected.mode!=='battle-pose'&&!(allowStand&&selected.mode==='portrait-stand'))return '';
+  if(mapToken&&collectArt)collectArt(selected.baseUrl,selected.mode==='battle-pose'?selected.poseUrl:selected.standUrl);
   if(selected.mode==='classic')return classic;
   // One base occupies the same hex as the classic marker; no hit geometry changes.
   // SCALE STANDARD: fit the visible High Angle base footprint to the map hex.
@@ -199,6 +199,21 @@
    '</g>';
   return mapToken?overlay:'<g class="combat-paper-doll-classic">'+classic+'</g>'+overlay;
  }
+ function mapBaseWidth(pixelsPerMeter){
+  return .60*pixelsPerMeter;
+ }
+ function renderBattleToken(classic,actor,cell,g,stateClasses){
+  if(!g.pixelsPerMeter||actor.status==='dead'||combatFootprintShape(actor)!=='single'){
+   return render(classic,actor,cell,g,stateClasses);
+  }
+  const overlay=render('',actor,cell,g,stateClasses,mapBaseWidth(g.pixelsPerMeter),(base,pose)=>{
+   const missing=[base,pose].filter(src=>src&&!mapBounds.has(src)&&!pendingBounds.has(src));
+   if(missing.length)Promise.all(missing.map(measureMapArt)).then(()=>{
+    if(typeof renderCombat==='function'&&typeof document!=='undefined'&&document.querySelector?.('#combatPage:not(.hidden)'))renderCombat();
+   });
+  },true);
+  return overlay?'<g class="combat-paper-doll-classic">'+classic+'</g>'+overlay:classic;
+ }
  function renderMapToken(characterId,baseWidth,collectArt){
   if(!Number.isFinite(baseWidth)||baseWidth<=0)return '';
   return render('',{id:characterId,source_type:'character',source_id:characterId,side:'heroes'},{x:0,y:0},null,'',baseWidth,collectArt);
@@ -211,5 +226,5 @@
   renderMapToken(characterId,BASE_WIDTH,(base,pose)=>{pending=[measureMapArt(base),measureMapArt(pose)]});
   return Promise.all(pending);
  }
- root.aleaCombatPaperDollMap=Object.freeze({render,load,renderMapToken,loadMapTokens,prepareMapToken});
+ root.aleaCombatPaperDollMap=Object.freeze({render,renderBattleToken,mapBaseWidth,load,renderMapToken,loadMapTokens,prepareMapToken});
 })(globalThis);

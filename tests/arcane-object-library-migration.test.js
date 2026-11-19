@@ -62,6 +62,58 @@ it('shares objects only inside explored parts of a player-visible map', async ()
     expect(await readObjects()).toEqual([]);
     await db.exec('reset role; set role anon;');
     await expect(readObjects()).rejects.toThrow(/permission denied/);
+
+    // Capture the exact map edition in the same transaction as the encounter insert.
+    await db.exec(`reset role;
+      create schema auth;
+      create function auth.uid() returns uuid language sql as 'select ''${explored}''::uuid';
+      alter table campaign_maps add width int default 24, add height int default 16, add image_path text default 'crypt.webp';
+      update campaign_maps set pixels_per_meter=2;
+      create table campaign_map_academy(map_id uuid,campaign_id uuid,configuration jsonb);
+      insert into campaign_map_academy values ('${map}','${campaign}','{"lights":[{"name":"Hemlig fackla"}]}');
+      create table combat_instances(id uuid primary key,map_id uuid,campaign_id uuid,settings jsonb,status text default 'setup');
+      create table arcane_system_assets(asset_key text primary key,asset_path text);
+      insert into arcane_system_assets values ('arcane-object-wooden-table','original-art');
+    `);
+    const snapshot = readFileSync(new URL('../supabase/migrations/20261119193000_combat_map_snapshots.sql', import.meta.url), 'utf8');
+    await db.exec(snapshot);
+    const create = scale => db.query('insert into combat_instances(id,map_id,campaign_id,settings) values ($1,$2,$3,$4)', [
+      map, map, campaign, JSON.stringify({ academy_map:true, pixels_per_meter:scale, background_width:24, background_height:16 }),
+    ]);
+    await expect(create(3)).rejects.toThrow(/skala/);
+    expect((await db.query('select count(*)::int as count from combat_instances')).rows[0].count).toBe(0);
+    await create(2);
+    const objects = async () => (await db.query('select read_combat_map_objects($1) as items',[map])).rows[0].items;
+    const source = async () => (await db.query('select read_combat_map_source($1) as config',[map])).rows[0].config;
+    await db.exec(`delete from campaign_map_objects;
+      update campaign_map_academy set configuration='{}';
+      update arcane_system_assets set asset_path='replacement';
+      update arcane_object_definitions set width_m=5;
+      set role authenticated; set test.role='gm';
+    `);
+    const original = await objects();
+    expect(original.map(o=>o.x).sort((a,b)=>a-b)).toEqual([2,5.5,8.5,18]);
+    expect(original.every(o=>o.definition.width_m===1.8 && o.asset_path==='original-art')).toBe(true);
+    expect(await source()).toEqual({lights:[{name:'Hemlig fackla'}]});
+    await expect(db.query('select * from private.combat_map_snapshots')).rejects.toThrow(/permission denied/);
+    await db.exec("set test.role='member'");
+    expect(await objects()).toEqual([]);
+    await db.exec("reset role; update combat_instances set status='active'; set role authenticated;");
+    expect((await objects()).map(o=>o.x).sort((a,b)=>a-b)).toEqual([2,5.5]);
+    expect(await source()).toBeNull();
+    await db.exec(`reset role; update campaign_location_state set status='unknown' where location_id='${unexplored}';
+      set role authenticated; set test.role='member';`);
+    expect((await objects()).map(o=>o.x)).toEqual([2]);
+    await db.exec("set test.role='outsider'");
+    expect(await objects()).toEqual([]);
+    await db.exec("reset role; update campaign_maps set image_path='different.webp'; set role authenticated; set test.role='member'");
+    await expect(objects()).rejects.toThrow(/Kartbilden har bytts/);
+    await db.exec("reset role; update campaign_maps set player_visible=false; set role authenticated; set test.role='member'");
+    expect(await objects()).toEqual([]);
+    await db.exec('reset role; set role anon');
+    await expect(objects()).rejects.toThrow(/permission denied/);
+    await db.exec('reset role; delete from combat_instances');
+    expect((await db.query('select count(*)::int as count from private.combat_map_snapshots')).rows[0].count).toBe(0);
   } finally {
     await db.close();
   }

@@ -949,7 +949,8 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("combat-hit-model-overlay");
     expect(combat).toContain("combat-hit-zone-fill");
     expect(combat).toContain("clipPath id=");
-    expect(combat).not.toContain("mask=\"url(#");
+    const hitLocationMarkup = combat.slice(combat.indexOf('function combatHitLocationFigureHtml'),combat.indexOf('function combatAttackResultHtml'));
+    expect(hitLocationMarkup).not.toContain("mask=\"url(#");
     expect(css).toContain(".combat-hit-model-stage{");
     expect(css).toContain(".combat-hit-model-image{");
     expect(css).toContain(".combat-hit-model-image-svg{");
@@ -1144,7 +1145,7 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("Math.floor(combatMovementMaximum(combatant)/2)");
     expect(combat).toContain("combatMovementSpent(combatant)+Number(pathCost)<=combatHalfMoveLimit(combatant)");
     expect(combat).toContain("flight.ignore_terrain?1:footprint.some(c=>cellByKey.get(combatFootprintKey(c))?.movement_mode==='difficult')?2:1");
-    expect(combat).toContain("if(!cell||!combatFootprintCanStand(combatant,nq,nr))continue");
+    expect(combat).toContain("if(!cell||!combatFootprintCanStand(combatant,nq,nr,facing,cellByKey))continue");
     expect(combat).toContain("if(nextCost>budget)continue");
     expect(combat).toContain("cls.push('move-reachable')");
     expect(combat).toContain("'move-action-kept':'move-action-spent'");

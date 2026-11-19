@@ -78,3 +78,11 @@
 #combatPage .combat-hex.battlefield-placement-hex{cursor:crosshair;stroke:#efc56f;stroke-width:2;stroke-dasharray:4 3;filter:drop-shadow(0 0 3px rgba(240,195,103,.75))}
 #combatPage .combat-hex.hex-trigger-selectable{cursor:crosshair;stroke:#f0a35e;stroke-width:2;stroke-dasharray:3 3}
 #combatPage .combat-hex.hex-trigger-selected{fill:#a84e30;fill-opacity:.42;stroke:#ffc47b;stroke-width:3;stroke-dasharray:none;filter:drop-shadow(0 0 4px rgba(255,160,88,.8))}
+
+#combatPage .combat-map-effects-toggle{
+ display:inline-flex;align-items:center;gap:.5em;min-height:36px;color:#e4d4b9;cursor:pointer
+}
+@media(max-width:760px){
+ #combatPage .slcb-panel{position:relative;top:0;margin-top:6px;max-height:none}
+ #combatPage .slcb-tabs{flex-wrap:wrap}
+}

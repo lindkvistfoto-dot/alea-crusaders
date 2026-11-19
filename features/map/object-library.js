@@ -29,20 +29,70 @@
   await loadAssetUrls(definitions);
   return definitions;
  }
- async function readPlacements(mapId){
-  const rows=await dbJson('campaign_map_objects?select=id,campaign_id,map_id,object_definition_id,x,y,rotation,movement_blocking,light_blocking,shadow_casting&map_id=eq.'+encodeURIComponent(mapId)+'&order=created_at.asc');
-  return Array.isArray(rows)?rows:[];
+ const placementFields = 'id,campaign_id,map_id,object_definition_id,x,y,rotation,movement_blocking,light_blocking,shadow_casting';
+ async function readPlacements(mapId, withDefinition = false) {
+  const fields = withDefinition
+   ? placementFields + ',definition:arcane_object_definitions(name,image_asset_key,image_crop,width_m,depth_m,height_m)'
+   : placementFields;
+  const rows = await dbJson('campaign_map_objects?select=' + fields + '&map_id=eq.' + encodeURIComponent(mapId) + '&order=created_at.asc');
+  return Array.isArray(rows) ? rows : [];
+ }
+
+ // Always start from the caller's RLS-filtered placements. Editor state may contain GM-only objects.
+ async function loadBattleObjects(map, combatId = null) {
+  if (!map?.id || !(Number(map.pixels_per_meter) > 0)) throw new Error('Kalibrera kartans skala innan du startar striden.');
+  let placements;
+  try {
+   placements = combatId
+    ? await dbJson('rpc/read_combat_map_objects', { method: 'POST', body: JSON.stringify({ p_combat_id: combatId }) })
+    : await readPlacements(map.id, true);
+  } catch (error) {
+   if (/PGRST20[05]|42P01|schema cache|does not exist/i.test(error.message)) {
+    throw new Error('Kunde inte läsa kartobjekten. Kontrollera att objektbibliotekets databasmigrering är installerad.', { cause: error });
+   }
+   throw error;
+  }
+  if (!combatId) await loadAssetUrls(placements.map(row => row.definition).filter(Boolean));
+  return placements.map(row => {
+   const definition = row.definition;
+   const geometry = root.aleaMapObjectGeometry;
+   const size = geometry.pixelSize(definition, map.pixels_per_meter);
+   if (!size) throw new Error('Kartobjektets fysiska mått saknas.');
+   const x = Number(row.x), y = Number(row.y), rotation = Number(row.rotation);
+   const footprint = geometry.footprint(definition.width_m, definition.depth_m, rotation)
+    .map(point => ({ x: x + point.x * map.pixels_per_meter, y: y + point.y * map.pixels_per_meter }));
+   return {
+    id: row.id, name: definition.name, x, y, rotation, widthPx: size.width, depthPx: size.depth,
+    footprint, movement_blocking: row.movement_blocking, light_blocking: row.light_blocking,
+    shadow_casting: row.shadow_casting, assetUrl: combatId ? assetUrl(row.asset_path) : state.assets.get(definition.image_asset_key) || '',
+    imageCrop: definition.image_crop,
+   };
+  });
  }
  async function loadPlacements(mapId){
   state.placements=await readPlacements(mapId);
  }
  function selectedDefinition(id){return state.definitions.find(x=>x.id===id)||null}
  function objectSize(def){const size=root.aleaMapObjectGeometry?.pixelSize(def,Number(visibleMap()?.pixels_per_meter)||0);return size?{w:size.width,h:size.depth}:{w:0,h:0}}
- function appendObjectArt(parent,def,url,x,y,w,h,rotation=0){
-  const crop=def.image_crop||{x:0,y:0,width:1254,height:1254},group=document.createElementNS(SVG,'g');
-  group.setAttribute('transform','translate('+x+' '+y+') rotate('+rotation+')');group.setAttribute('pointer-events','none');
-  const art=document.createElementNS(SVG,'svg');art.setAttribute('x',String(-w/2));art.setAttribute('y',String(-h/2));art.setAttribute('width',String(w));art.setAttribute('height',String(h));art.setAttribute('viewBox',[crop.x,crop.y,crop.width,crop.height].join(' '));art.setAttribute('preserveAspectRatio','none');
-  const image=document.createElementNS(SVG,'image');image.setAttribute('href',url);image.setAttribute('x','0');image.setAttribute('y','0');image.setAttribute('width','1254');image.setAttribute('height','1254');image.setAttribute('preserveAspectRatio','none');art.append(image);group.append(art);parent.append(group);
+ function objectArt(url, crop, width, depth) {
+  const x = -width / 2, y = -depth / 2;
+  if (!url) return `<rect x="${x}" y="${y}" width="${width}" height="${depth}" fill="#81654a" stroke="#bca27a" vector-effect="non-scaling-stroke"/>`;
+  const box = crop || { x: 0, y: 0, width: 1254, height: 1254 };
+  const viewBox = [box.x, box.y, box.width, box.height].map(Number).join(' ');
+  return `<svg x="${x}" y="${y}" width="${width}" height="${depth}" viewBox="${viewBox}" preserveAspectRatio="none"><image href="${esc(url)}" x="0" y="0" width="1254" height="1254" preserveAspectRatio="none"/></svg>`;
+ }
+ function renderBattleObjects(objects = []) {
+  return objects.map(object => {
+   const { x, y, rotation, widthPx, depthPx, name, assetUrl, imageCrop } = object;
+   return `<g transform="translate(${Number(x)} ${Number(y)}) rotate(${Number(rotation)})" pointer-events="none"><title>${esc(name)}</title>${objectArt(assetUrl, imageCrop, Number(widthPx), Number(depthPx))}</g>`;
+  }).join('');
+ }
+ function discoveryMask(areas, map, id) {
+  const explored = areas.filter(area => area.status === 'explored');
+  const concealed = areas.filter(area => area.status !== 'explored');
+  const shapes = explored.map(area => mapShapeTag(area, 'fill="white"')).join('')
+   + concealed.map(area => mapShapeTag(area, 'fill="black"')).join('');
+  return `<defs><mask id="${esc(id)}" maskUnits="userSpaceOnUse" x="0" y="0" width="${Number(map.width)}" height="${Number(map.height)}">${shapes}</mask></defs>`;
  }
  function renderDisplay(){
   const svg=$('mapOverlay');if(!svg)return;
@@ -52,16 +102,7 @@
   const group=document.createElementNS(SVG,'g');group.setAttribute('class','arcane-map-objects');group.setAttribute('aria-label','Kartobjekt');
   if(!canManage){
    // Kartakademin draws fog on a separate canvas. Clip SVG art at room boundaries.
-   const mask=document.createElementNS(SVG,'mask');
-   mask.id='arcaneMapObjectDiscovery';
-   mask.setAttribute('maskUnits','userSpaceOnUse');
-   mask.setAttribute('x','0');mask.setAttribute('y','0');
-   mask.setAttribute('width',map.width);mask.setAttribute('height',map.height);
-   const explored=campaignMapAreas.filter(area=>area.status==='explored');
-   const concealed=campaignMapAreas.filter(area=>area.status!=='explored');
-   mask.innerHTML=explored.map(area=>mapShapeTag(area,'fill="white"')).join('')+
-     concealed.map(area=>mapShapeTag(area,'fill="black"')).join('');
-   group.append(mask);
+   group.insertAdjacentHTML('beforeend',discoveryMask(campaignMapAreas,map,'arcaneMapObjectDiscovery'));
    group.setAttribute('mask','url(#arcaneMapObjectDiscovery)');
   }
   const defs=new Map(display.definitions.map(d=>[d.id,d]));
@@ -69,7 +110,9 @@
    const definition=defs.get(p.object_definition_id),url=definition&&state.assets.get(definition.image_asset_key);
    if(!definition||!url)continue;
    const size=root.aleaMapObjectGeometry?.pixelSize(definition,Number(map.pixels_per_meter));
-   if(size)appendObjectArt(group,definition,url,Number(p.x),Number(p.y),size.width,size.depth,Number(p.rotation)||0);
+   if(size)group.insertAdjacentHTML('beforeend', renderBattleObjects([{
+    ...p, name: definition.name, widthPx: size.width, depthPx: size.depth, assetUrl: url, imageCrop: definition.image_crop,
+   }]));
   }
   // Draw above the map shading and below the room hit targets.
   const fog=svg.querySelector('.map-fog');
@@ -108,9 +151,26 @@
   const flags=['movement_blocking','light_blocking','shadow_casting'].map((field,i)=>`<label class="arcane-object-instance-flag"><input type="checkbox" data-placement-prop="${field}" ${selected?.[field]?'checked':''} ${selected?'':'disabled'}>${['Blockerar rörelse','Blockerar ljus','Kastarskugga'][i]}</label>`).join('');
   return `<div class="arcane-object-editor-grid"><aside class="arcane-object-sidebar"><h3>Objektbibliotek</h3><p>Dra ett objekt till kartan eller tryck på det och sedan på kartan.</p><div class="arcane-object-catalog">${defs}</div>${dimensionEditor}</aside><main class="arcane-object-work"><div class="arcane-object-toolbar"><span id="arcaneObjectScale">${esc(calibrationText(map))}</span><button type="button" class="smallbtn" id="arcaneObjectCalibrate">Kalibrera skala</button><button type="button" class="smallbtn" id="arcaneObjectDuplicate" ${state.active?.placementId?'':'disabled'}>Duplicera</button><label>Rotation° <input id="arcaneObjectRotation" type="number" step="1" value="${Number(state.active?.rotation)||0}" ${state.active?.placementId?'':'disabled'}></label><button type="button" class="deletebtn" id="arcaneObjectDelete" ${state.active?.placementId?'':'disabled'}>Radera</button><button type="button" class="smallbtn" id="arcaneObjectSave">Spara karta</button>${flags}</div><p id="arcaneObjectNotice" class="arcane-object-notice" role="status">${Number(map.pixels_per_meter)>0?'':'Kalibrera kartan innan du placerar objekt.'}</p><div class="arcane-object-board-wrap"><svg id="arcaneObjectBoard" class="arcane-object-board" viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid meet" aria-label="Karta för objektplacering">${imageDef}${placementSvg()}</svg></div></main></div>`
  }
- function placementSvg(){return state.placements.map(p=>{const d=selectedDefinition(p.object_definition_id),url=d&&state.assets.get(d.image_asset_key);if(!d||!url)return '';const size=objectSize(d),crop=d.image_crop||{x:0,y:0,width:1254,height:1254};return `<g class="arcane-object-placement ${state.active?.placementId===p.id?'selected':''}" data-placement="${p.id}" transform="translate(${Number(p.x)} ${Number(p.y)}) rotate(${Number(p.rotation)||0})"><svg x="${-size.w/2}" y="${-size.h/2}" width="${size.w}" height="${size.h}" viewBox="${crop.x} ${crop.y} ${crop.width} ${crop.height}" preserveAspectRatio="none"><image href="${esc(url)}" x="0" y="0" width="1254" height="1254" preserveAspectRatio="none"/></svg><rect x="${-size.w/2}" y="${-size.h/2}" width="${size.w}" height="${size.h}"/></g>`}).join('')}
+ function placementSvg() {
+  return state.placements.map(row => {
+   const definition = selectedDefinition(row.object_definition_id);
+   if (!definition) return '';
+   const size = objectSize(definition);
+   const art = objectArt(state.assets.get(definition.image_asset_key), definition.image_crop, size.w, size.h);
+   const selected = state.active?.placementId === row.id ? ' selected' : '';
+   return `<g class="arcane-object-placement${selected}" data-placement="${esc(row.id)}" transform="translate(${Number(row.x)} ${Number(row.y)}) rotate(${Number(row.rotation) || 0})">${art}<rect x="${-size.w/2}" y="${-size.h/2}" width="${size.w}" height="${size.h}"/></g>`;
+  }).join('');
+ }
  function rerenderBoard(){const board=$('arcaneObjectBoard');if(!board)return;board.querySelectorAll('.arcane-object-placement').forEach(n=>n.remove());board.insertAdjacentHTML('beforeend',placementSvg());const map=campaignMaps.find(m=>m.id===state.mapId),selected=state.placements.find(p=>p.id===state.active?.placementId);$('arcaneObjectScale').textContent=calibrationText(map);$('arcaneObjectRotation').value=Number(state.active?.rotation)||0;$('arcaneObjectDuplicate').disabled=!selected;$('arcaneObjectDelete').disabled=!selected;document.querySelectorAll('[data-placement-prop]').forEach(el=>{el.disabled=!selected;el.checked=!!selected?.[el.dataset.placementProp]})}
- function pointerPosition(e){const board=$('arcaneObjectBoard'),r=board.getBoundingClientRect(),{w,h}=intrinsic();return {x:Math.max(0,Math.min(w,(e.clientX-r.left)/r.width*w)),y:Math.max(0,Math.min(h,(e.clientY-r.top)/r.height*h))}}
+ function pointerPosition(event) {
+  const board = $('arcaneObjectBoard');
+  const pointer = board.createSVGPoint();
+  pointer.x = event.clientX;
+  pointer.y = event.clientY;
+  const local = pointer.matrixTransform(board.getScreenCTM().inverse());
+  const { w, h } = intrinsic();
+  return { x: Math.max(0, Math.min(w, local.x)), y: Math.max(0, Math.min(h, local.y)) };
+ }
  function notice(text){const el=$('arcaneObjectNotice');if(el)el.textContent=text}
  function beginPointer(e){
   if(e.button!=null&&e.button!==0)return;const g=e.target.closest('[data-placement]');if(g){state.active={placementId:g.dataset.placement,definitionId:state.placements.find(p=>p.id===g.dataset.placement)?.object_definition_id};const p=state.placements.find(x=>x.id===state.active.placementId);state.active.rotation=p?.rotation||0;state.drag={id:p?.id};try{$('arcaneObjectBoard').setPointerCapture(e.pointerId)}catch(_){}e.preventDefault();rerenderBoard();return}
@@ -121,15 +181,42 @@
  function movePointer(e){if(!state.drag)return;const p=pointerPosition(e),item=state.placements.find(x=>x.id===state.drag.id);if(!item)return;item.x=p.x;item.y=p.y;state.dirty.add(item.id);rerenderBoard()}
  function endPointer(){state.drag=null}
  async function calibrate(){if(!state.mapId)return;state.calibrating=true;state.calibrationPoints=[];notice('Tryck på två kända punkter på kartan.');$('arcaneObjectBoard')?.classList.add('calibrating')}
- async function confirmCalibration(){const [a,b]=state.calibrationPoints;if(!a||!b)return;const meters=Number(prompt('Verkligt avstånd mellan punkterna i meter'));const ppm=root.aleaMapObjectGeometry?.calibrate(a,b,meters);if(!(ppm>0)){notice('Ange ett avstånd större än 0 meter.');state.calibrationPoints=[];return}try{await dbJson('campaign_maps?id=eq.'+encodeURIComponent(state.mapId),{method:'PATCH',body:JSON.stringify({pixels_per_meter:ppm,scale_point_a:a,scale_point_b:b,scale_distance_m:meters})});const map=campaignMaps.find(x=>x.id===state.mapId);Object.assign(map,{pixels_per_meter:ppm,scale_point_a:a,scale_point_b:b,scale_distance_m:meters});$('arcaneObjectBoard')?.classList.remove('calibrating');state.calibrating=false;state.calibrationPoints=[];notice('Skala sparad: '+ppm.toFixed(1)+' px/m.');rerenderBoard()}catch(err){notice('Kunde inte spara skalan: '+err.message)}}
+ async function confirmCalibration() {
+  const [a, b] = state.calibrationPoints;
+  if (!a || !b) return;
+  const meters = Number(prompt('Verkligt avstånd mellan punkterna i meter'));
+  // Keep the live map and the numeric(12,4) database column at the same precision.
+  const ppm = Number(root.aleaMapObjectGeometry.calibrate(a, b, meters)?.toFixed(4));
+  if (!(ppm > 0)) {
+   notice('Ange ett avstånd större än 0 meter.');
+   state.calibrationPoints = [];
+   return;
+  }
+  const mapId = state.mapId;
+  const patch = { pixels_per_meter: ppm, scale_point_a: a, scale_point_b: b, scale_distance_m: meters };
+  try {
+   await dbJson('campaign_maps?id=eq.' + encodeURIComponent(mapId), { method: 'PATCH', body: JSON.stringify(patch) });
+   const map = campaignMaps.find(item => item.id === mapId);
+   if (map) Object.assign(map, patch);
+   window.dispatchEvent(new CustomEvent('alea:map-object-scale', { detail: { mapId, pixelsPerMeter: ppm } }));
+   if (state.mapId !== mapId) return;
+   $('arcaneObjectBoard')?.classList.remove('calibrating');
+   state.calibrating = false;
+   state.calibrationPoints = [];
+   notice('Skala sparad: ' + ppm.toFixed(1) + ' px/m.');
+   rerenderBoard();
+  } catch (error) {
+   notice('Kunde inte spara skalan: ' + error.message);
+  }
+ }
  async function save(){
   try{if(activeUser()?.admin)for(const d of state.definitions){if(!state.definitionDirty.has(d.id))continue;const patch={};document.querySelectorAll('[data-dim="'+d.id+'"]').forEach(i=>patch[i.dataset.field]=Number(i.value));document.querySelectorAll('[data-prop="'+d.id+'"]').forEach(i=>patch[i.dataset.field]=i.checked);if(Object.keys(patch).length){await dbJson('arcane_object_definitions?id=eq.'+encodeURIComponent(d.id),{method:'PATCH',body:JSON.stringify({...patch,revision:Number(d.revision||1)+1})});Object.assign(d,patch);d.revision=Number(d.revision||1)+1}}
    for(const p of state.placements){const body={x:p.x,y:p.y,rotation:Number(p.rotation)||0,movement_blocking:!!p.movement_blocking,light_blocking:!!p.light_blocking,shadow_casting:!!p.shadow_casting};if(p._new){await dbJson('campaign_map_objects',{method:'POST',body:JSON.stringify({...body,campaign_id:centralCampaignId,map_id:state.mapId,object_definition_id:p.object_definition_id,created_by:supabaseSession?.user?.id})});delete p._new}else if(state.dirty.has(p.id))await dbJson('campaign_map_objects?id=eq.'+encodeURIComponent(p.id),{method:'PATCH',body:JSON.stringify(body)})}
-   state.dirty.clear();state.definitionDirty.clear();notice('Alla objekt och objektmått är sparade.');await loadPlacements(state.mapId);rerenderBoard();renderDisplay();
+   state.dirty.clear();state.definitionDirty.clear();notice('Alla objekt och objektmått är sparade.');await loadPlacements(state.mapId);notifyObjectChange();rerenderBoard();renderDisplay();
   }catch(err){notice('Sparningen misslyckades: '+err.message)}
  }
  async function duplicate(){const p=state.placements.find(x=>x.id===state.active?.placementId);if(!p)return;const copy={...p,id:uuid(),x:Number(p.x)+20,y:Number(p.y)+20,_new:true};state.placements.push(copy);state.active={placementId:copy.id,definitionId:copy.object_definition_id,rotation:copy.rotation};state.dirty.add(copy.id);rerenderBoard()}
- async function remove(){const p=state.placements.find(x=>x.id===state.active?.placementId);if(!p)return;if(p._new)state.placements=state.placements.filter(x=>x.id!==p.id);else{try{await dbJson('campaign_map_objects?id=eq.'+encodeURIComponent(p.id),{method:'DELETE',headers:{'Prefer':'return=minimal'}});state.placements=state.placements.filter(x=>x.id!==p.id)}catch(err){notice('Kunde inte radera objektet: '+err.message);return}}state.active=null;rerenderBoard();renderDisplay()}
+ async function remove(){const p=state.placements.find(x=>x.id===state.active?.placementId);if(!p)return;if(p._new)state.placements=state.placements.filter(x=>x.id!==p.id);else{try{await dbJson('campaign_map_objects?id=eq.'+encodeURIComponent(p.id),{method:'DELETE',headers:{'Prefer':'return=minimal'}});state.placements=state.placements.filter(x=>x.id!==p.id)}catch(err){notice('Kunde inte radera objektet: '+err.message);return}}state.active=null;if(!p._new)notifyObjectChange();rerenderBoard();renderDisplay()}
  function bindEditor(){
   $('arcaneObjectBoard')?.addEventListener('pointerdown',beginPointer);$('arcaneObjectBoard')?.addEventListener('pointermove',movePointer);$('arcaneObjectBoard')?.addEventListener('pointerup',endPointer);$('arcaneObjectBoard')?.addEventListener('pointercancel',endPointer);
   document.querySelectorAll('[data-object-def]').forEach(b=>{b.addEventListener('click',()=>{state.active={definitionId:b.dataset.objectDef};rerenderBoard();document.querySelectorAll('[data-object-def]').forEach(x=>x.classList.toggle('selected',x===b))});b.addEventListener('dragstart',e=>{state.active={definitionId:b.dataset.objectDef};e.dataTransfer.setData('text/plain',b.dataset.objectDef)})});
@@ -154,8 +241,12 @@
    bindEditor();$('arcaneObjectClose').onclick=close;
   }catch(error){alert('Kunde inte öppna objektbiblioteket: '+error.message)}
  }
+ function notifyObjectChange() {
+  window.dispatchEvent(new CustomEvent('alea:map-objects-changed', { detail: { mapId: state.mapId } }));
+ }
  function close(){const m=$('arcaneObjectLibraryModal');if(m){m.classList.add('hidden');m.setAttribute('aria-hidden','true');m.innerHTML=''}state.active=null;if(typeof activeCampaignMap!=='undefined'&&activeCampaignMap?.id)void syncDisplay(activeCampaignMap.id,true)}
+ root.aleaMapBattleObjects=Object.freeze({load:loadBattleObjects,render:renderBattleObjects,discoveryMask});
  root.openArcaneObjectLibrary=open;root.closeArcaneObjectLibrary=close;root.renderArcaneMapObjects=renderDisplay;root.syncArcaneMapObjects=syncDisplay;
- root.getArcaneMapObjectRuntimeData=id=>{const p=state.placements.find(x=>x.id===id),d=p&&selectedDefinition(p.object_definition_id);if(!p||!d)return null;return {id:p.id,definitionId:d.id,position:{x:Number(p.x),y:Number(p.y)},width_m:Number(d.width_m),depth_m:Number(d.depth_m),height_m:Number(d.height_m),rotation_degrees:Number(p.rotation)||0,footprint:root.aleaMapObjectGeometry?.footprint(d.width_m,d.depth_m,p.rotation)||[],movement_blocking:!!p.movement_blocking,light_blocking:!!p.light_blocking,shadow_casting:!!p.shadow_casting}}
+ root.getArcaneMapObjectRuntimeData=id=>{if(!manager())return null;const p=state.placements.find(x=>x.id===id),d=p&&selectedDefinition(p.object_definition_id);if(!p||!d)return null;return {id:p.id,definitionId:d.id,position:{x:Number(p.x),y:Number(p.y)},width_m:Number(d.width_m),depth_m:Number(d.depth_m),height_m:Number(d.height_m),rotation_degrees:Number(p.rotation)||0,footprint:root.aleaMapObjectGeometry?.footprint(d.width_m,d.depth_m,p.rotation)||[],movement_blocking:!!p.movement_blocking,light_blocking:!!p.light_blocking,shadow_casting:!!p.shadow_casting}}
  document.addEventListener('click',e=>{if(e.target?.id==='arcaneObjectLibraryModal')close()});
 })();
