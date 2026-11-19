@@ -68,7 +68,7 @@ it('loads player-approved layers only, clears them on a hidden map and discards 
   let manager = false, visible = true, release;
   const approved = { freeSight: { runs: [] }, lights: [] }, calls = [];
   const context = {
-    centralCampaignId:'party', activeCombat:{ ...linked, id:'battle', settings:{...linked.settings, background_width:240,background_height:120} }, combatCanManage:() => manager,
+    centralCampaignId:'party', supabaseSession:{user:{id:'player'}}, activeCombat:{ ...linked, id:'battle', settings:{...linked.settings, background_width:240,background_height:120} }, combatCanManage:() => manager,
     window:{ aleaMapBattleObjects:{ load: async () => [] } }, console:{ error:()=>{} },
     getMapImageUrl: async () => 'blob:crypt', loadCampaignMapAreas: async () => [],
     dbJson: async (path) => {
@@ -116,4 +116,24 @@ it('selects an existing map through the scene editor and retains placements if a
   expect(st.mapId).toBe('crypt');
   expect(st.hexes.size).toBe(1);
   expect(notice).not.toHaveBeenCalled();
+});
+
+it('reuses only the confirmed raster for the same viewer and encounter while fetching current light origins', async () => {
+  const requests = [], mask = { width:2,height:2,runs:[[0,1]] };
+  const context = {
+    supabaseSession:{user:{id:'a'}},
+    dbJson:async(path,options)=>{
+      const request=JSON.parse(options.body); requests.push(request);
+      const reuse=request.p_known_mask_revision==='12';
+      return {maskRevision:'12',maskUnchanged:reuse,freeSight:reuse?null:mask,lights:[{position:[requests.length,0]}]};
+    }
+  };
+  runInNewContext(reads,context);
+  await context.combatReadAcademyConfig(map,false,'fight-a');
+  const update=await context.combatReadAcademyConfig(map,false,'fight-a');
+  expect(update).toMatchObject({freeSight:mask,lights:[{position:[2,0]}]});
+  context.supabaseSession.user.id='b';
+  await context.combatReadAcademyConfig(map,false,'fight-a');
+  await context.combatReadAcademyConfig(map,false,'fight-b');
+  expect(requests.map(r=>r.p_known_mask_revision)).toEqual([null,'12',null,null]);
 });

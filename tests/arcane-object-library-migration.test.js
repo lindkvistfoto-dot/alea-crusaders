@@ -16,9 +16,9 @@ it('shares objects only inside explored parts of a player-visible map', async ()
       create role authenticated;
       create schema private;
       grant usage on schema private to authenticated;
-      create function private.is_admin() returns boolean language sql as 'select false';
+      create function private.is_admin() returns boolean language sql as 'select current_setting(''test.role'',true) = ''admin''';
       create function private.is_campaign_gm(uuid) returns boolean language sql as
-        'select current_setting(''test.role'', true) = ''gm''';
+        'select $1 = ''${campaign}''::uuid and current_setting(''test.role'', true) = ''gm''';
       create function private.is_campaign_member(uuid) returns boolean language sql as
         'select current_setting(''test.role'', true) = ''member''';
       create function private.bump_campaign_map_signal() returns trigger language plpgsql as
@@ -71,7 +71,10 @@ it('shares objects only inside explored parts of a player-visible map', async ()
       update campaign_maps set pixels_per_meter=2;
       create table campaign_map_academy(map_id uuid,campaign_id uuid,configuration jsonb);
       insert into campaign_map_academy values ('${map}','${campaign}','{"lights":[{"name":"Hemlig fackla"}]}');
-      create table combat_instances(id uuid primary key,map_id uuid,campaign_id uuid,settings jsonb,status text default 'setup');
+      create table combat_instances(id uuid primary key,map_id uuid,campaign_id uuid,settings jsonb,status text default 'setup',
+        updated_at timestamptz default now());
+      grant usage on schema auth to authenticated;
+      grant select, update on combat_instances to authenticated;
       create table arcane_system_assets(asset_key text primary key,asset_path text);
       insert into arcane_system_assets values ('arcane-object-wooden-table','original-art');
     `);
@@ -91,6 +94,26 @@ it('shares objects only inside explored parts of a player-visible map', async ()
       update arcane_object_definitions set width_m=5;
       set role authenticated; set test.role='gm';
     `);
+    const lights = async (previous, next, id = map) =>
+      (await db.query('select set_combat_map_lights_out($1,$2,$3) as saved',[id,previous,next])).rows[0].saved;
+    // An unrelated initiative update landed between the GM reading the board and clicking.
+    await db.query("update combat_instances set updated_at=clock_timestamp(), settings=settings || jsonb_build_object('initiative_done',true) where id=$1",[map]);
+    expect(await lights(false,true)).toBe(true);
+    expect(await lights(false,true)).toBe(false);
+    expect((await db.query('select settings from combat_instances where id=$1',[map])).rows[0].settings)
+      .toMatchObject({map_lights_out:true,initiative_done:true,pixels_per_meter:2});
+    expect(await source()).toEqual({lights:[{name:'Hemlig fackla'}]});
+    await db.exec("set test.role='member'");
+    expect(await lights(true,false)).toBe(false);
+    await db.exec("set test.role='outsider'");
+    expect(await lights(true,false)).toBe(false);
+    await db.exec("set test.role='admin'; update combat_instances set status='paused'");
+    expect(await lights(true,false)).toBe(true);
+    await db.exec("update combat_instances set status='completed'; set test.role='gm'");
+    expect(await lights(false,true)).toBe(false);
+    await db.exec("reset role; set role anon");
+    await expect(lights(false,true)).rejects.toThrow(/permission denied/);
+    await db.exec("reset role; update combat_instances set status='setup'; set role authenticated; set test.role='gm'");
     const original = await objects();
     expect(original.map(o=>o.x).sort((a,b)=>a-b)).toEqual([2,5.5,8.5,18]);
     expect(original.every(o=>o.definition.width_m===1.8 && o.asset_path==='original-art')).toBe(true);

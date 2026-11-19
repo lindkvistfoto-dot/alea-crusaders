@@ -1,9 +1,15 @@
 import { readFileSync } from 'node:fs';
+import { runInNewContext } from 'node:vm';
 import { PGlite } from '@electric-sql/pglite';
 import { expect, it } from 'vitest';
 
 const migration = name => readFileSync(new URL('../supabase/migrations/' + name, import.meta.url), 'utf8');
 const baseline = migration('20261030091654_development_schema_baseline.sql');
+const runtime = readFileSync(new URL('../features/combat/runtime.js', import.meta.url), 'utf8');
+function runtimeFunction(name) {
+  const start = runtime.indexOf('function ' + name + '(');
+  return runtime.slice(start, runtime.indexOf('\nfunction ', start + 1));
+}
 const dbFunction = (source, start) => {
   const from = source.toLowerCase().indexOf(start.toLowerCase());
   if (from < 0) throw Error('Missing database function ' + start);
@@ -61,7 +67,7 @@ it('withholds raw linked records and projects only authorized actors, hit events
       insert into campaign_location_state values ('${hero}','${campaign}','explored'),('${hidden}','${campaign}','unknown');
       insert into combat_instances(id,campaign_id,map_id,status,settings,initiative,active_actor_id) values
         ('${combat}','${campaign}','${map}','active','{"academy_map":true,"pixels_per_meter":20,"gm_note":"SECRET"}',
-          '{"order":["${hero}","${hidden}"],"results":[{"gm_note":"SECRET"}]}','${hidden}'),
+          '{"order":["${hidden}","${hero}","${victim}"],"results":[{"gm_note":"SECRET"}]}','${hidden}'),
         ('${legacy}','${campaign}','${map}','active','{"old_schema":true}','{}',null);
       insert into combatants(id,combat_id,campaign_id,source_type,name_snapshot,q,r,visible_to_players,state) values
         ('${hero}','${combat}','${campaign}','quick_enemy','Astrid',0,0,true,'{"gm_note":"SECRET"}'),
@@ -72,6 +78,15 @@ it('withholds raw linked records and projects only authorized actors, hit events
       insert into combat_actions(id,combat_id,campaign_id,combatant_id,round_number,phase,action_type,target_combatant_id,source_data)
       values(gen_random_uuid(),'${combat}','${campaign}','${hero}',1,'magic','spell','${victim}','{"notes":"SECRET"}'),
         (gen_random_uuid(),'${combat}','${campaign}','${hero}',1,'magic','spell','${hidden}','{}');
+      insert into combat_actions(id,combat_id,campaign_id,combatant_id,round_number,phase,action_type,target_combatant_id,
+        sequence,source_data,result,status)
+      select gen_random_uuid(),'${combat}','${campaign}','${victim}',1,'normal','attack',target,5,
+        '{"action_key":"attack","mode":"ranged","weapon_name":"SECRET"}',
+        '{"outcome":"success","roll":7,"fv":13,"confirmation_roll":{"private":"SECRET"},"full_damage":false,
+          "hit_location":{"key":"head","label":"SECRET","die":"1T8","table":"A","roll":8},
+          "damage":{"net_damage":4,"weapon_damage_value":6,"damage_bonus_value":1,"armor_absorption":3,
+            "kp_before":17,"kp_after":13,"armor_names":["SECRET"]},"private":"SECRET"}','resolved'
+      from (values ('${hero}'::uuid),('${hidden}'::uuid)) as targets(target);
       insert into combat_log(id,combat_id,campaign_id,actor_id,target_id,round_number,phase,event_type,message,details) values
         (1,'${combat}','${campaign}','${hero}','${victim}',1,'magic','spell_attack','SECRET',
           '{"success":true,"hit_resolved":true,"target_results":[{"target_id":"${hidden}","damage":{"secret":"SECRET"}},{"target_id":"${victim}","damage":{"secret":"SECRET"}}]}'),
@@ -89,9 +104,25 @@ it('withholds raw linked records and projects only authorized actors, hit events
     const data = await read(combat);
     expect(JSON.stringify(data)).not.toMatch(new RegExp(['SECRET',hidden,overlap,lamp].join('|')));
     expect(data.combatants.map(c=>c.name_snapshot).sort()).toEqual(['Astrid','Väktare']);
-    expect(data.instance).toMatchObject({active_actor_id:null,initiative:{order:[hero]}});
+    expect(data.instance).toMatchObject({active_actor_id:null,initiative:{order:[hero,victim]}});
+    expect(data.combatants.map(c=>[c.state.initiative_rank,c.sort_order])).toEqual([[1,0],[2,1]]);
     expect(data.objects.map(o=>o.name_snapshot)).toEqual(['Mur']);
-    expect(data.actions.map(a=>a.target_combatant_id)).toEqual([victim]);
+    expect(data.actions.map(a=>a.target_combatant_id).sort()).toEqual([hero,victim].sort());
+    const attack = data.actions.find(a=>a.action_type==='attack');
+    expect(attack.sequence).toBe(1);
+    expect(attack.source_data).toEqual({action_key:'attack',mode:'ranged'});
+    expect(attack.result).toMatchObject({outcome:'success',roll:7,fv:13,hit_location:{key:'head',label:'Huvud',roll:8},
+      damage:{net_damage:4,kp_before:17,kp_after:13}});
+    expect(attack.result.confirmation_roll).toBeUndefined();
+    const ui = {escAttr:String,window:{},COMBAT_HIT_CAMERA:{},combatFumbleResultHtml:()=>''};
+    runInNewContext(['combatOutcomeMeta','combatAttackResultHtml','combatHitLocationResultHtml','combatHitLocationCameraHtml',
+      'combatHitLocationFigureHtml','combatParryResultHtml','combatDamageResultHtml'].map(runtimeFunction).join('\n'),ui);
+    const panel=ui.combatAttackResultHtml(attack);
+    expect(panel).toContain('LYCKAT SLAG');
+    expect(panel).toContain('T20 <b>7</b> mot FV <b>13</b>');
+    expect(panel).toContain('Huvud');
+    expect(panel).toContain('17 − 4 = 13');
+
     expect(data.events.map(e=>e.details.target_results)).toEqual([[{target_id:victim,damage:true}]]);
     for (const table of ['combat_log','combat_actions','combatants','combat_hexes','combat_battlefield_objects','campaign_journal_entries'])
       expect((await db.query('select * from '+table)).rows).toEqual([]);

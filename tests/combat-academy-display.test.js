@@ -65,16 +65,16 @@ it('keeps a temporary shared lighting change on the selected combat instance and
     settings:{academy_map:true,scene_id:'encounter',pixels_per_meter:40}};
   const context={
     activeCombat:fight,combatCanManage:()=>true,combatMapLightSavePending:false,renderCombat:vi.fn(),
-    dbJson:vi.fn().mockResolvedValueOnce([{id:'battle'}]).mockResolvedValueOnce([]),alert:vi.fn(),loadActiveCombat:vi.fn(),
+    dbJson:vi.fn().mockResolvedValueOnce(true).mockResolvedValueOnce(false),alert:vi.fn(),loadActiveCombat:vi.fn(),
   };
   runInNewContext(source('async function combatSetMapLightsOut(', 'function combatSlBoardModuleHtml'),context);
   await context.combatSetMapLightsOut(true);
   const [query, request] = context.dbJson.mock.calls[0];
-  expect(query).toBe('combat_instances?id=eq.battle&updated_at=eq.2026-11-19T20%3A00%3A00Z&select=id');
-  expect(JSON.parse(request.body).settings).toEqual({...fight.settings,map_lights_out:true});
+  expect(query).toBe('rpc/set_combat_map_lights_out');
+  expect(JSON.parse(request.body)).toEqual({p_combat_id:'battle',p_expected:false,p_lights_out:true});
   expect(fight.settings.map_lights_out).toBeUndefined();
   await context.combatSetMapLightsOut(false);
-  expect(context.alert).toHaveBeenCalledWith(expect.stringContaining('Striden har ändrats'));
+  expect(context.alert).toHaveBeenCalledWith(expect.stringContaining('stridsläget har ändrats'));
   expect(context.loadActiveCombat).toHaveBeenCalledTimes(2);
   context.combatCanManage=()=>false;
   await context.combatSetMapLightsOut(true);

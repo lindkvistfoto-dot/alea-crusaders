@@ -256,7 +256,7 @@ function combatScenePreviewMapHtml(scene,preview){
  for(const {q,r,x,y} of combatMapGridCells(g)){
   const terrain=byCoord.get(q+','+r)||{},cls=['combat-hex'];
   if(terrain.movement_mode==='difficult')cls.push('difficult');
-  if(terrain.movement_mode==='blocked')cls.push('move-blocked');
+  if(terrain.movement_mode==='blocked'||terrain.academy_barriers?.solid_move)cls.push('move-blocked');
   if(terrain.sight_mode==='obscuring')cls.push('sight-obscuring');
   if(terrain.sight_mode==='blocked'||terrain.academy_barriers?.solid_sight)cls.push('sight-blocked');
   polygons.push('<polygon class="'+cls.join(' ')+'" points="'+combatHexPoints(x,y,g.size*.97)+'"><title>Hex '+q+','+r+'</title></polygon>')
@@ -3338,8 +3338,8 @@ function combatFootprintCanStand(actor,q,r,facing=combatFootprintFacing(actor),t
  const footprint=combatFootprintCells(actor,q,r,facing);
  return footprint.length>0&&footprint.every(cell=>{
   const found=terrain.get(combatFootprintKey(cell));
-  return found&&!found.academy_barriers?.solid_move&&!combatTerrainIsWall(found)&&(found.movement_mode!=='blocked'||flight.ignore_terrain)
-   &&!footprint.some(other=>combatMapEdgeBlocked(terrain,cell,other))
+  return found&&!(flight.ignore_terrain?found.academy_barriers?.solid_wall:found.academy_barriers?.solid_move)&&!combatTerrainIsWall(found)&&(found.movement_mode!=='blocked'||flight.ignore_terrain)
+   &&!footprint.some(other=>combatMapEdgeBlocked(terrain,cell,other,flight.ignore_terrain))
  })&&!combatMovementOccupied(actor,q,r,facing)
 }
 function combatSetMovementPreview(q,r,{render=true}={}){
@@ -4758,7 +4758,7 @@ function combatReachableHexes(combatant){
    const key=nq+','+nr,cell=cellByKey.get(key);
    if(!cell||!combatFootprintCanStand(combatant,nq,nr,facing,cellByKey))continue;
    if(combatFootprintCells(combatant,q,r,facing).some(from=>
-    combatMapEdgeBlocked(cellByKey,from,{q:from.q+nq-q,r:from.r+nr-r})))continue;
+    combatMapEdgeBlocked(cellByKey,from,{q:from.q+nq-q,r:from.r+nr-r},flight.ignore_terrain)))continue;
    if(!combatMentalMovementAllowed(combatant,{q,r},{q:nq,r:nr}))continue;
    const footprint=combatFootprintCells(combatant,nq,nr);
    const stepCost=flight.ignore_terrain?1:footprint.some(c=>cellByKey.get(combatFootprintKey(c))?.movement_mode==='difficult')?2:1;
@@ -5251,7 +5251,7 @@ function renderCombatMap(){
   const cls=['combat-hex'];
   const moveCost=reachable.get(cell.key);
   if(cell.movement_mode==='difficult')cls.push('difficult');
-  if(cell.movement_mode==='blocked')cls.push('move-blocked');
+  if(cell.movement_mode==='blocked'||cell.academy_barriers?.solid_move)cls.push('move-blocked');
   if(combatTerrainIsWall(cell))cls.push('wall');
   if(cell.sight_mode==='obscuring')cls.push('sight-obscuring');
   if(cell.sight_mode==='blocked'||cell.academy_barriers?.solid_sight)cls.push('sight-blocked');
@@ -5276,7 +5276,7 @@ function renderCombatMap(){
   const click=combatHexTriggerPlacement?'onclick="combatHexTriggerPick(event,'+cell.q+','+cell.r+')"':gmPlaceMode?'onclick="combatChooseGmHex(event,'+cell.q+','+cell.r+')"':battlefieldObjectPlaceMode?'onclick="combatPlaceBattlefieldObject(event,'+cell.q+','+cell.r+')"':battlefieldPlaceMode?'onclick="combatApplyBattlefieldPreset(event,'+cell.q+','+cell.r+')"':spellAreaMode?'onclick="combatSetMagicAreaCenter(\''+actor.id+'\','+cell.q+','+cell.r+','+(Number(currentMagic.source_data.area_radius)||0)+')"':
    areaMode?'onclick="combatChooseAreaCenter(event,'+cell.q+','+cell.r+')"':
    clickable?'onclick="previewCombatMovementToHex(event,'+cell.q+','+cell.r+')"':'';
-  return '<polygon class="'+cls.join(' ')+'" data-q="'+cell.q+'" data-r="'+cell.r+'" data-move-cost="'+(moveCost==null?'':moveCost)+'" '+click+' points="'+combatHexPoints(cell.x,cell.y,g.size*.97)+'"><title>Hex '+cell.q+','+cell.r+' · rörelse '+cell.movement_mode+' · sikt '+cell.sight_mode+reachText+(occupied?' · upptagen':'')+(combatHexTriggerPlacement?' · välj för händelseutlösare':'')+(triggerSelected?' · vald för händelseutlösare':'')+'</title></polygon>'
+  return '<polygon class="'+cls.join(' ')+'" data-q="'+cell.q+'" data-r="'+cell.r+'" data-move-cost="'+(moveCost==null?'':moveCost)+'" '+click+' points="'+combatHexPoints(cell.x,cell.y,g.size*.97)+'"><title>Hex '+cell.q+','+cell.r+' · rörelse '+(cell.academy_barriers?.solid_move?'blocked':cell.movement_mode)+' · sikt '+(cell.academy_barriers?.solid_sight?'blocked':cell.sight_mode)+reachText+(occupied?' · upptagen':'')+(combatHexTriggerPlacement?' · välj för händelseutlösare':'')+(triggerSelected?' · vald för händelseutlösare':'')+'</title></polygon>'
  }).join('');
  // Visual guide only: the exact server-validated route, never a straight shortcut.
  const roadPoints=previewRoute&&planningActor
@@ -7385,16 +7385,14 @@ async function combatApplyBattlefieldPreset(event,q,r){
 async function combatSetMapLightsOut(lightsOut){
  const combat=activeCombat;
  if(typeof lightsOut!=='boolean'||!combatCanManage()||!combat?.settings?.academy_map||
-    !combat.updated_at||combat.status==='completed'||combatMapLightSavePending)return;
+    !['setup','active','paused'].includes(combat.status)||combatMapLightSavePending)return;
  combatMapLightSavePending=true;
  renderCombat();
  try{
-  const saved=await dbJson('combat_instances?id=eq.'+encodeURIComponent(combat.id)+
-   '&updated_at=eq.'+encodeURIComponent(combat.updated_at)+'&select=id',{
-    method:'PATCH',headers:{Prefer:'return=representation'},
-    body:JSON.stringify({settings:{...combat.settings,map_lights_out:lightsOut},updated_at:new Date().toISOString()})
-   });
-  if(!saved?.some(row=>row.id===combat.id))throw new Error('Striden har ändrats. Kontrollera aktuellt läge och försök igen.');
+  const saved=await dbJson('rpc/set_combat_map_lights_out',{
+   method:'POST',body:JSON.stringify({p_combat_id:combat.id,p_expected:!lightsOut,p_lights_out:lightsOut})
+  });
+  if(saved!==true)throw new Error('Belysningen eller stridsläget har ändrats. Kontrollera aktuellt läge och försök igen.');
  }catch(error){alert('Kunde inte ändra stridens belysning. '+(error?.message||error))}
  finally{
   combatMapLightSavePending=false;

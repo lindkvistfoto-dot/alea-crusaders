@@ -100,11 +100,12 @@ function* combatMapGridCells(g){
 }
 // Neighbour-bit order is also used by private.academy_edge_bit in PostgreSQL.
 const COMBAT_MAP_DIRECTIONS=[[1,0],[0,1],[-1,1],[-1,0],[0,-1],[1,-1]];
-function combatMapEdgeBlocked(terrain,a,b){
+function combatMapEdgeBlocked(terrain,a,b,ignoreGround=false){
  const barrier=terrain.get(combatFootprintKey(a))?.academy_barriers;
- if(!barrier?.move)return false;
+ const edges=ignoreGround?barrier?.wall:barrier?.move;
+ if(!edges)return false;
  const direction=COMBAT_MAP_DIRECTIONS.findIndex(([dq,dr])=>b.q-a.q===dq&&b.r-a.r===dr);
- return direction>=0&&(barrier.move&(1<<direction))!==0
+ return direction>=0&&(edges&(1<<direction))!==0
 }
 async function combatProjectMapHexes(input){
  const {projectMapHexes}=await import('./map-hex-projection.js');

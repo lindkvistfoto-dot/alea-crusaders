@@ -11,7 +11,7 @@ const settings={academy_map:true,hex_m:1.5,pixels_per_meter:40,background_width:
 const map={width:240,height:180};
 const hero={id:'astrid',q:0,r:0,movement_remaining:1};
 const scene={
-  geometry:[{points:[[60,0],[60,180]],closed:false,movement:true,sight:true}],
+  geometry:[{points:[[60,0],[60,180]],closed:false,movement:true,sight:true,light:true}],
   freeSight:{width:24,height:18,runs:[[0,432]]},
 };
 function battle(config=scene,objects=[]){
@@ -79,6 +79,10 @@ describe('Kartakademin → HEXAGONIA',()=>{
   const {ctx}=battle(null,[object]),target={q:1,r:0};
   expect(ctx.combatHasLineOfSight(hero,target)).toBe(true);
   expect(ctx.combatReachableHexes(hero).has('1,0')).toBe(false);
+  expect(ctx.combatReachableHexes({...hero,flying:true}).has('1,0')).toBe(true);
+  const chasm=battle({...scene,geometry:[{points:[[60,0],[60,180]],closed:false,movement:true}]}).ctx;
+  expect(chasm.combatReachableHexes(hero).has('1,0')).toBe(false);
+  expect(chasm.combatReachableHexes({...hero,flying:true}).has('1,0')).toBe(true);
   for(const config of [{geometry:[],freeSight:null},{geometry:[],freeSight:{width:4,height:3,runs:[[0,1],[2,10]]}}]){
    const {ctx}=battle(config);
    expect(ctx.combatHasLineOfSight(hero,target)).toBe(false);
@@ -114,8 +118,12 @@ test('PostgreSQL movement RPC commits a legal route, rolls back wall crossings a
   await db.exec(read('supabase/migrations/20261119231500_combat_academy_barriers.sql'));
   await db.query("insert into combat_instances(id,campaign_id,settings,active_actor_id,status,phase) values ($1,$2,$3,$4,'active','movement')",
     [battleId,campaign,JSON.stringify(settings),actor]);
-  for(const row of battle().rows)await db.query('insert into combat_hexes(combat_id,campaign_id,q,r,movement_mode,sight_mode,academy_barriers) values($1,$2,$3,$4,$5,$6,$7)',
-   [battleId,campaign,row.q,row.r,row.movement_mode,row.sight_mode,JSON.stringify(row.academy_barriers)]);
+  const installTerrain=async rows=>{
+   await db.query('delete from combat_hexes where combat_id=$1',[battleId]);
+   for(const row of rows)await db.query('insert into combat_hexes(combat_id,campaign_id,q,r,movement_mode,sight_mode,academy_barriers) values($1,$2,$3,$4,$5,$6,$7)',
+    [battleId,campaign,row.q,row.r,row.movement_mode,row.sight_mode,JSON.stringify(row.academy_barriers)]);
+  };
+  await installTerrain(battle().rows);
   await db.query("insert into combatants(id,combat_id,campaign_id,source_type,source_id,name_snapshot,movement_remaining) values($1,$2,$3,'character',$1,'Astrid',4)",[actor,battleId,campaign]);
   await db.exec("set test.role='gm'; set role authenticated");
   expect((await db.query('select * from combat_hexes')).rows.length).toBeGreaterThan(0);
@@ -127,7 +135,28 @@ test('PostgreSQL movement RPC commits a legal route, rolls back wall crossings a
   await db.exec("reset role");
   const restore=()=>db.query("update combatants set q=0,r=0,movement_remaining=4 where id=$1",[actor]);
   await restore();
+  // An explicit GM placement spends no movement and still checks the whole footprint.
+  await db.query("update combatants set q=1 where id=$1",[actor]);
+  await restore();
   await expect(db.query("update combatants set state=$2 where id=$1",[actor,JSON.stringify({footprint:{shape:'line2',facing:0}})])).rejects.toThrow(/hexavtryck/);
+  const step=()=>move(hero,4,[{q:1,r:0}]);
+  await db.query('update combatants set flying=true where id=$1',[actor]);
+  await expect(step()).rejects.toThrow(/hinder/);
+  // Test both the native flying flag and the active FLYGA effect used by the old movement RPC.
+  const chasm=battle({...scene,geometry:[{points:[[60,0],[60,180]],closed:false,movement:true}]}).rows;
+  await installTerrain(chasm);
+  expect((await step()).rows[0].result.spent).toBe(1);
+  await restore();
+  const table={movement_blocking:true,footprint:[{x:62,y:20},{x:102,y:20},{x:102,y:40},{x:62,y:40}]};
+  await installTerrain(battle(null,[table]).rows);
+  await db.query('update combatants set flying=false where id=$1',[actor]);
+  await expect(step()).rejects.toThrow(/hinder/);
+  const {rows:[effect]}=await db.query("insert into rule_effects(code,name,modifiers) values ('flyga','FLYGA',$1) returning id",[JSON.stringify({type:'flight',ignore_terrain:true})]);
+  await db.query('insert into combatant_effects(combat_id,campaign_id,combatant_id,effect_id) values ($1,$2,$3,$4)',[battleId,campaign,actor,effect.id]);
+  expect((await step()).rows[0].result.spent).toBe(1);
+  await restore();
+  await db.query("update combatant_effects set expires_at=now()-interval '1 second' where combatant_id=$1",[actor]);
+  await expect(step()).rejects.toThrow(/hinder/);
   await db.exec("set role authenticated; set test.role='member'");
   expect((await db.query('select * from combat_hexes')).rows).toEqual([]);
   await expect(move(hero,4,[diagonal])).rejects.toThrow(/GM/);

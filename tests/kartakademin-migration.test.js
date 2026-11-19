@@ -43,6 +43,8 @@ it('keeps map settings and party position changes atomic and protects access by 
     await db.exec(`
       alter table campaign_maps add column image_path text default 'crypt';
       create table private.combat_map_snapshots (combat_id uuid, configuration jsonb, map_id uuid, campaign_id uuid, image_path text, width int, height int);
+      create table campaign_map_signals (campaign_id uuid,revision bigint);
+      insert into campaign_map_signals values ('${campaign}',7);
       create table combat_instances (id uuid, map_id uuid, campaign_id uuid, settings jsonb, status text default 'active');
       create table combatants (id uuid, combat_id uuid, campaign_id uuid, source_type text, source_id uuid,
         visible_to_players boolean, status text, state jsonb, q int, r int, name_snapshot text);
@@ -103,6 +105,15 @@ it('keeps map settings and party position changes atomic and protects access by 
     const projected = await battle();
     expect(projected.lights.map(light => light.position)).toEqual([[2,1],[4,1]]);
     expect(projected).toMatchObject({ pixelsPerMeter: 2, environment: 'indoor', freeSight: data.freeSight, geometry: [] });
+    const next = async revision => (await db.query('select read_combat_map_academy_player($1,$2) as data', [npc,revision])).rows[0].data;
+    expect(projected).toMatchObject({maskRevision:'7',maskUnchanged:false});
+    const sameRevision=await next(projected.maskRevision);
+    expect(sameRevision).toMatchObject({freeSight:null,maskUnchanged:true,lights:projected.lights});
+    await db.exec("reset role; update combatants set q=2; set role authenticated");
+    expect((await next('7')).lights.map(light=>light.position)).toEqual([[2,1],[7,1]]);
+    await db.exec("reset role; update campaign_location_state set status='unknown' where status='explored'; update campaign_map_signals set revision=8; set role authenticated");
+    expect(await next('7')).toMatchObject({freeSight:null,maskUnchanged:false,lights:[],maskRevision:'8'});
+    await db.exec(`reset role; update combatants set q=1; update campaign_location_state set status='explored' where location_id='${character}'; update campaign_map_signals set revision=9; set role authenticated`);
     expect(JSON.stringify(projected)).not.toContain(character);
     await db.exec("reset role; update combat_instances set status='setup'; set role authenticated");
     expect(await battle()).toBeNull();

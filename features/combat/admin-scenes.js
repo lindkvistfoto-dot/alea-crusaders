@@ -30,11 +30,30 @@ async function combatReadCampaignMap(mapId, campaignId, manager){
  if(!map||(!manager&&map.player_visible!==true))throw new Error('Kartan är inte tillgänglig.');
  return map
 }
+let combatPlayerLightMask=null;
 async function combatReadAcademyConfig(map,manager,combatId){
+ if(!manager&&combatId){
+  const viewer=supabaseSession?.user?.id;
+  const key=JSON.stringify([viewer,map.campaign_id,map.id,combatId]);
+  const cached=viewer&&combatPlayerLightMask?.key===key?combatPlayerLightMask:null;
+  const data=await dbJson('rpc/read_combat_map_academy_player',{
+   method:'POST',body:JSON.stringify({p_combat_id:combatId,p_known_mask_revision:cached?.revision??null})
+  });
+  if(!data){combatPlayerLightMask=null;return null}
+  // The server checked membership, room states and map publication again.
+  // Only the previously approved raster can be reused: lights always move.
+  if(data.maskUnchanged){
+   if(!cached||cached.revision!==data.maskRevision)throw new Error('Kartans synlighetsmask kunde inte bekräftas.');
+   data.freeSight=cached.mask
+  }
+  if(viewer&&supabaseSession?.user?.id===viewer&&data.maskRevision!=null){
+   combatPlayerLightMask={key,revision:data.maskRevision,mask:data.freeSight}
+  }
+  return data
+ }
+ combatPlayerLightMask=null;
  if(combatId){
-  return dbJson(manager?'rpc/read_combat_map_source':'rpc/read_combat_map_academy_player',{
-   method:'POST',body:JSON.stringify({p_combat_id:combatId})
-  })
+  return dbJson('rpc/read_combat_map_source',{method:'POST',body:JSON.stringify({p_combat_id:combatId})})
  }
  if(!manager)throw new Error('Stridskoppling saknas.');
  const rows=await dbJson('campaign_map_academy?map_id=eq.'+encodeURIComponent(map.id)+'&campaign_id=eq.'+

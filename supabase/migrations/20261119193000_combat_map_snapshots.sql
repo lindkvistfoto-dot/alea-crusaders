@@ -89,3 +89,25 @@ end;
 $$;
 revoke all on function public.read_combat_map_objects(uuid) from public, anon;
 grant execute on function public.read_combat_map_objects(uuid) to authenticated;
+
+-- A lighting cue and an initiative update can safely change the same encounter.
+-- Write just the presentation flag, with the previous flag as the concurrency check.
+create function public.set_combat_map_lights_out(p_combat_id uuid, p_expected boolean, p_lights_out boolean)
+returns boolean language sql volatile security invoker set search_path = ''
+as $$
+  with changed as (
+    update public.combat_instances ci
+    set settings = jsonb_set(ci.settings, '{map_lights_out}', to_jsonb(p_lights_out)),
+        updated_at = clock_timestamp()
+    where ci.id = p_combat_id and ci.settings->'academy_map' = 'true'::jsonb
+      and ci.status in ('setup','active','paused')
+      and (select auth.uid()) is not null
+      and (private.is_admin() or private.is_campaign_gm(ci.campaign_id))
+      and coalesce(ci.settings->'map_lights_out','false'::jsonb) = to_jsonb(p_expected)
+      and p_lights_out is not null
+    returning ci.id
+  )
+  select exists (select from changed)
+$$;
+revoke all on function public.set_combat_map_lights_out(uuid,boolean,boolean) from public, anon;
+grant execute on function public.set_combat_map_lights_out(uuid,boolean,boolean) to authenticated;

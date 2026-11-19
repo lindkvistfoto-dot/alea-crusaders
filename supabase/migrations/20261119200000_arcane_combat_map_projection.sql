@@ -24,7 +24,7 @@ as $$
 $$;
 revoke all on function private.battle_actor_explored(uuid,uuid,jsonb,public.combatants) from public, anon, authenticated;
 
-create function private.project_map_academy(p_map_id uuid, p_combat_id uuid)
+create function private.project_map_academy(p_map_id uuid, p_combat_id uuid, p_known_mask_revision text default null)
 returns jsonb
 language plpgsql stable security definer set search_path = ''
 as $$
@@ -42,6 +42,9 @@ declare
   blockers polygon[];
   edges lseg[];
   clipped jsonb := null;
+  mask_revision text;
+  reuse_mask boolean := false;
+  has_visible_mask boolean := false;
   lights jsonb;
 begin
   select m.campaign_id, m.width, m.height, case when p_combat_id is null then a.configuration else snap.configuration end as configuration
@@ -60,6 +63,12 @@ begin
       where ci.id = p_combat_id and ci.map_id = p_map_id
       and ci.campaign_id = map_row.campaign_id and ci.settings->'academy_map' = 'true'::jsonb;
     if not found then return null; end if;
+    -- Map areas, discovery and map visibility advance this existing revision.
+    -- Snapshot geometry is immutable. Always re-evaluate authorization, rooms
+    -- and current actor locations, including when the raster is unchanged.
+    select s.revision::text into mask_revision from public.campaign_map_signals s
+      where s.campaign_id = map_row.campaign_id;
+    reuse_mask := coalesce(mask_revision = p_known_mask_revision,false);
   end if;
   config := map_row.configuration;
   mask := config->'freeSight';
@@ -86,7 +95,8 @@ begin
   if jsonb_typeof(mask) = 'object' and rooms is not null then
     mw := (mask->>'width')::integer;
     mh := (mask->>'height')::integer;
-    if mw between 1 and 1536 and mh between 1 and 1536 then
+    has_visible_mask := mw between 1 and 1536 and mh between 1 and 1536;
+    if has_visible_mask and not reuse_mask then
       dx := map_row.width::float8 / mw;
       dy := map_row.height::float8 / mh;
       with shapes as (
@@ -149,7 +159,7 @@ begin
     when p_combat_id is null then pos.position
     when actor.id is not null then jsonb_build_array(c.center[0],c.center[1])
     end as origin) f
-  where clipped is not null and item->'playerVisible' = 'true'::jsonb and item->'on' = 'true'::jsonb
+  where has_visible_mask and item->'playerVisible' = 'true'::jsonb and item->'on' = 'true'::jsonb
     and exists (select 1 from unnest(rooms) room where room @> point((origin->>0)::float8,(origin->>1)::float8))
     and not exists (select 1 from unnest(concealed) room where room @> point((origin->>0)::float8,(origin->>1)::float8));
 
@@ -157,25 +167,26 @@ begin
     'freeSight',clipped,'lights',lights,'geometry','[]'::jsonb)
     || case when p_combat_id is null then '{}'::jsonb else jsonb_build_object(
          'pixelsPerMeter',encounter_settings->'pixels_per_meter',
+         'maskRevision',mask_revision,'maskUnchanged',reuse_mask,
          'environment',case when config->>'environment' in ('outdoor','indoor','underground')
            then config->>'environment' else 'indoor' end)
        end;
 end;
 $$;
 
-revoke all on function private.project_map_academy(uuid, uuid) from public, anon, authenticated;
+revoke all on function private.project_map_academy(uuid, uuid, text) from public, anon, authenticated;
 
 create or replace function public.read_campaign_map_academy_player(p_map_id uuid)
 returns jsonb language sql stable security definer set search_path = ''
 as $$ select private.project_map_academy(p_map_id, null) $$;
 
-create function public.read_combat_map_academy_player(p_combat_id uuid)
+create function public.read_combat_map_academy_player(p_combat_id uuid, p_known_mask_revision text default null)
 returns jsonb language sql stable security definer set search_path = ''
 as $$
-  select private.project_map_academy(ci.map_id, ci.id)
+  select private.project_map_academy(ci.map_id, ci.id, p_known_mask_revision)
   from public.combat_instances ci
   where ci.id = p_combat_id and ci.settings->'academy_map' = 'true'::jsonb
     and ci.status in ('active','paused','completed') and (select auth.uid()) is not null and private.is_campaign_member(ci.campaign_id)
 $$;
-revoke all on function public.read_combat_map_academy_player(uuid) from public, anon;
-grant execute on function public.read_combat_map_academy_player(uuid) to authenticated;
+revoke all on function public.read_combat_map_academy_player(uuid,text) from public, anon;
+grant execute on function public.read_combat_map_academy_player(uuid,text) to authenticated;
