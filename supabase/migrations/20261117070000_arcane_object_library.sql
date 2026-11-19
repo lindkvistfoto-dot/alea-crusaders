@@ -4,11 +4,11 @@ alter table public.campaign_maps
   add column if not exists scale_point_a jsonb,
   add column if not exists scale_point_b jsonb,
   add column if not exists scale_distance_m numeric(10,3),
-create unique index if not exists campaign_maps_id_campaign_id_uidx
-  on public.campaign_maps(id,campaign_id);
-
   add constraint campaign_maps_pixels_per_meter_check
     check (pixels_per_meter is null or pixels_per_meter > 0);
+
+create unique index if not exists campaign_maps_id_campaign_id_uidx
+  on public.campaign_maps(id,campaign_id);
 
 create table if not exists public.arcane_object_definitions (
   id uuid primary key default gen_random_uuid(),
