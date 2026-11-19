@@ -47,6 +47,7 @@ async function refreshMapOnce(){
  }
  renderMapPanel();
  await window.aleaKartakademin?.syncCampaign(activeCampaignMap,areas,true);
+ await window.syncArcaneMapObjects?.(desired.id,true);
 }
 export async function reconcileCampaignMap(){
  if(!mapPanelOpen())return;

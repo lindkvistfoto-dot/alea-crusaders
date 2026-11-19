@@ -487,6 +487,48 @@
         1280
       ],
       "archive_folder_id": "1vPZsU1q371IL4wr6CeDcefjENUDRlAq-"
+    },
+    "arcane-object-wooden-table": {
+      "id": "609bf8a6-b186-4ad7-a237-cc60a2596d08",
+      "label": "Wooden table, top-down",
+      "source_size": [
+        1254,
+        1254
+      ],
+      "display_size": [
+        1254,
+        1254
+      ],
+      "archive_folder_id": "1is6mVSPIMcJ6gpjd-y-xfJWZ5Cuv5ELa",
+      "alpha_required": true
+    },
+    "arcane-object-wooden-chair": {
+      "id": "30f7a5dd-3d1d-4ae4-a059-733eb9cd2f40",
+      "label": "Wooden chair, top-down",
+      "source_size": [
+        1254,
+        1254
+      ],
+      "display_size": [
+        1254,
+        1254
+      ],
+      "archive_folder_id": "1is6mVSPIMcJ6gpjd-y-xfJWZ5Cuv5ELa",
+      "alpha_required": true
+    },
+    "arcane-object-wooden-chest-closed": {
+      "id": "886c361f-97ee-4982-b559-6b3248e3cefa",
+      "label": "Closed wooden chest, top-down",
+      "source_size": [
+        1254,
+        1254
+      ],
+      "display_size": [
+        1254,
+        1254
+      ],
+      "archive_folder_id": "1is6mVSPIMcJ6gpjd-y-xfJWZ5Cuv5ELa",
+      "alpha_required": true
     }
   }
 }
