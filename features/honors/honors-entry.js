@@ -236,6 +236,13 @@ window.openArcaneHonorsAdmin = async () => {
       imagePilotEnabled:pilotEnabled,
       onUploadImage:(kind,target,file,onStatus)=>applyImageResult(kind,target,file,onStatus),
       onRemoveImage:(kind,target)=>applyImageResult(kind,target,null),
+      onSaveAccent:async(definition,accent)=>{
+        if(!definition?.id)throw new Error('Utmärkelsen saknar id.');
+        const badgeFrames={...(definition.badge_frame_assets||{}),accent_color:accent};
+        await patchDefinition(definition.id,{badge_frame_assets:badgeFrames});
+        definition.badge_frame_assets=badgeFrames;
+        return badgeFrames;
+      },
       onSave:save,
       onDelete:removeDraft,
       onSaveVariant:saveVariant,

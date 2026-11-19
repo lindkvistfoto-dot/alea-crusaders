@@ -26,6 +26,67 @@ async function assertSquareBadgeImage(file) {
   }
 }
 
+
+function awardAccentFromHue(hue, brightness) {
+  if (hue < 15 || hue >= 345) return 'red';
+  if (hue < 38) return brightness < .48 ? 'brown' : 'orange';
+  if (hue < 52) return 'amber';
+  if (hue < 72) return 'yellow';
+  if (hue < 150) return 'green';
+  if (hue < 175) return 'turquoise';
+  if (hue < 200) return 'cyan';
+  if (hue < 255) return 'blue';
+  if (hue < 290) return 'purple';
+  return 'pink';
+}
+
+async function detectAwardAccent(file) {
+  if (typeof createImageBitmap !== 'function') return 'red';
+  const bitmap = await createImageBitmap(file);
+  try {
+    const canvas = document.createElement('canvas');
+    canvas.width = 64; canvas.height = 64;
+    const context = canvas.getContext('2d', { willReadFrequently: true });
+    if (!context) return 'red';
+    context.drawImage(bitmap, 0, 0, 64, 64);
+    const pixels = context.getImageData(0, 0, 64, 64).data;
+    const bins = new Map();
+    for (let i = 0; i < pixels.length; i += 4) {
+      if (pixels[i + 3] < 180) continue;
+      const r = pixels[i] / 255, g = pixels[i + 1] / 255, b = pixels[i + 2] / 255;
+      const max = Math.max(r, g, b), min = Math.min(r, g, b), delta = max - min;
+      if (max < .12 || delta < .12) continue;
+      let hue = 0;
+      if (max === r) hue = ((g - b) / delta + 6) % 6;
+      else if (max === g) hue = (b - r) / delta + 2;
+      else hue = (r - g) / delta + 4;
+      hue *= 60;
+      const key = Math.floor(hue / 15);
+      const weight = delta * (.5 + max);
+      const bin = bins.get(key) || { x: 0, y: 0, weight: 0, brightness: 0 };
+      const radians = hue * Math.PI / 180;
+      bin.x += Math.cos(radians) * weight;
+      bin.y += Math.sin(radians) * weight;
+      bin.brightness += max * weight;
+      bin.weight += weight;
+      bins.set(key, bin);
+    }
+    const dominant = [...bins.values()].sort((a, b) => b.weight - a.weight)[0];
+    if (!dominant) return 'red';
+    const hue = (Math.atan2(dominant.y, dominant.x) * 180 / Math.PI + 360) % 360;
+    return awardAccentFromHue(hue, dominant.brightness / dominant.weight);
+  } finally {
+    bitmap.close?.();
+  }
+}
+
+
+async function detectAwardAccentFromUrl(url) {
+  const response = await fetch(url, { mode: 'cors', credentials: 'omit' });
+  if (!response.ok) throw new Error('Kunde inte läsa utmärkelsebilden för färganalys.');
+  return detectAwardAccent(await response.blob());
+}
+
 const getCategory = definition => honorCategory(definition);
 const tierText = (definition, tier) => String(definition?.tier_criteria?.[tier] || '');
 const frameFor = (definition, metal) => definition?.badge_frame_assets?.[metal] || laurelFrameKeys[metal];
@@ -97,11 +158,23 @@ export function renderHonorsAdmin(root, options = {}) {
         const status=panel.querySelector('[data-image-status]');status.textContent=file?'Laddar upp och kontrollerar bilden…':'Tar bort bildkopplingen…';
         try{
           if(file&&kind==='relief'&&getCategory(definitions.find(d=>String(d.id)===String(row.honor_id)))==='badge') await assertSquareBadgeImage(file);
+          let detectedAccent=null;
+          if(file&&kind==='definition'&&getCategory(row)==='award'){
+            try{detectedAccent=await detectAwardAccent(file);}catch{detectedAccent='red';}
+          }
           const result=file?await options.onUploadImage(kind,row,file):await options.onRemoveImage(kind,row);
-          Object.assign(row,result);imageBusy=false;draw();openEditor(editing);
+          Object.assign(row,result);
+          if(detectedAccent){
+            row.badge_frame_assets={...(row.badge_frame_assets||{}),accent_color:detectedAccent};
+            if(typeof options.onSaveAccent==='function'){
+              try{await options.onSaveAccent(row,detectedAccent);delete row.image_accent_save_error;}
+              catch(accentError){row.image_accent_save_error=accentError.message||'Accentfärgen kunde inte sparas';}
+            }
+          }
+          imageBusy=false;draw();openEditor(editing);
           const updatedPanel=[...root.querySelectorAll('[data-image-controls]')].find(el=>el.dataset.kind===kind&&el.dataset.id===String(row.id));
-          if(updatedPanel){updatedPanel.querySelector('[data-image-status]').textContent=row.image_preview_pending?'Bilden är sparad. Öppna registret igen för att hämta förhandsvisningen.':file?'Bilden är sparad. Arkivering sker i bakgrunden.':'Bildkopplingen är borttagen.';updatedPanel.scrollIntoView({block:'nearest'});}
-          notice(row.image_preview_pending?'Bilden är sparad, men förhandsvisningen kunde inte hämtas. Öppna registret igen.':file?'Bilden är sparad. Arkivering sker i bakgrunden.':'Bildkopplingen är borttagen.');
+          if(updatedPanel){updatedPanel.querySelector('[data-image-status]').textContent=row.image_preview_pending?'Bilden är sparad. Öppna registret igen för att hämta förhandsvisningen.':row.image_accent_save_error?'Bilden sparades, men accentfärgen kunde inte sparas. Öppna posten igen för att försöka spara färgen.':file?'Bilden och accentfärgen är sparade. Arkivering sker i bakgrunden.':'Bildkopplingen är borttagen.';updatedPanel.scrollIntoView({block:'nearest'});}
+          notice(row.image_preview_pending?'Bilden är sparad, men förhandsvisningen kunde inte hämtas. Öppna registret igen.':row.image_accent_save_error?'Bilden sparades, men accentfärgen kunde inte sparas. Öppna posten igen för att försöka spara färgen.':file?'Bilden och accentfärgen är sparade. Arkivering sker i bakgrunden.':'Bildkopplingen är borttagen.');
         }catch(error){
           panel.querySelector('[data-image-retry]').hidden=false;
           status.textContent='Kunde inte slutföra bildändringen: '+(error.message||'okänt fel')+'. Vid samtidig ändring: stäng och öppna registret igen.';
@@ -172,23 +245,46 @@ export function renderHonorsAdmin(root, options = {}) {
       '</fieldset>') + '</div>';
   }
 
+  function bindAwardPreviews(definition) {
+    if (!definition || getCategory(definition) !== 'award') return;
+    const renderer = root.ownerDocument?.defaultView?.ArcaneAwardRenderer || globalThis.ArcaneAwardRenderer;
+    if (!renderer?.mountAward) return;
+    const motifUrl = assetImage(definition.image_asset_id);
+    root.querySelectorAll('[data-award-tier]').forEach(node => {
+      renderer.mountAward(node, {
+        imageAssetId: definition.image_asset_id,
+        motifUrl,
+        motifAlt: definition.name || 'Utmärkelsemotiv',
+        motifLabel: motifUrl ? '' : (definition.image_asset_id ? 'Förhandsvisning saknas' : 'Ladda upp bild ovan'),
+        tier: node.dataset.awardTier,
+        accent: definition.badge_frame_assets?.accent_color,
+        resolveAsset: key => assetImage(key)
+      });
+    });
+    // Existing uploads gain an accent on first admin preview without requiring another upload.
+    if (motifUrl && !definition.badge_frame_assets?.accent_color && typeof options.onSaveAccent === 'function') {
+      const imageId = definition.image_asset_id;
+      void detectAwardAccentFromUrl(motifUrl).then(async accent => {
+        if (definition.image_asset_id !== imageId || definition.badge_frame_assets?.accent_color || imageBusy) return;
+        await options.onSaveAccent(definition, accent);
+        if (editing === definition && definition.image_asset_id === imageId) bindAwardPreviews(definition);
+      }).catch(error => console.warn('Honor accent detection skipped', error));
+    }
+  }
+
   function renderVariantPanel(definition) {
     // Awards have one canonical image on the definition, not material-based relief variants.
     // Existing relief rows remain untouched in storage for backwards compatibility.
     if (definition && getCategory(definition) === 'award') {
       const image = assetImage(definition.image_asset_id);
       const tiers = AWARD_TIERS.map(tier => [tier, ({bronze:'Brons',silver:'Silver',gold:'Guld'})[tier]]);
-      const previews = tiers.map(([metal, label]) => {
-        const frame = assetImage(AWARD_FRAME_KEYS[metal]);
-        return '<div class="honors-preview-tier"><strong>' + label + '</strong>' +
-          '<div class="honors-preview-art">' +
-          (image ? '<img class="honors-preview-relief" src="' + esc(image) + '" alt="Utmärkelsens bild">' : '<span class="honors-preview-empty">Ladda upp bild ovan</span>') +
-          (frame ? '<img class="honors-preview-frame" src="' + esc(frame) + '" alt="' + label + 'ram">' : '') +
-          '</div></div>';
-      }).join('');
+      const previews = tiers.map(([metal, label]) =>
+        '<div class="honors-preview-tier"><strong>' + label + '</strong>' +
+          '<div class="honors-preview-art arcane-award-mount" data-award-tier="' + metal + '"></div></div>'
+      ).join('');
       return '<section class="honors-variant-library honors-award-single-image">' +
         '<h4>En bild · tre ramar</h4>' +
-        '<p>En motivbild används för alla valörer. Systemet väljer automatiskt den låsta V2.1-lagerkransramen.</p>' +
+        '<p>En motivbild används för alla valörer. Samma motiv monteras i valörens låsta ram med ädelstenar och kronbakgrund.</p>' +
         '<div class="honors-preview-tiers">' + previews + '</div></section>';
     }
     if (!definition) return '<p class="honors-help">Spara utmärkelsen för att lägga till reliefvarianter.</p>';
@@ -396,6 +492,7 @@ export function renderHonorsAdmin(root, options = {}) {
     const badgeEditor=definition?getCategory(definition)==='badge':category==='badge';
     root.querySelector('[data-definition-image]').innerHTML = badgeEditor?'':imageControls('definition',definition)||(imagePilot?'<p>Spara posten innan du lägger till en bild.</p>':'');
     root.querySelector('[data-variants]').innerHTML = renderVariantPanel(definition);
+    bindAwardPreviews(definition);
     bindImages();
     const editor = root.querySelector('[data-editor]'); editor.hidden=false;
     const cat = root.querySelector('[data-fields] [name="category"]');

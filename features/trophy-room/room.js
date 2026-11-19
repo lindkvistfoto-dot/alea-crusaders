@@ -261,15 +261,21 @@ async function renderAwards(){
    if(!d){slot.classList.add('trophy-room-badge-empty');wall.append(slot);continue}
    slot.title=d.name;
    const count=counts.get(String(d.id))||1,tier='bronze'; // Grants have no award-tier field; retain the current bronze fallback and count.
-   const art=document.createElement('div');art.className='trophy-room-badge-art';
-   const award=root.ArcaneAwardRenderer?.awardRenderLayers(d.image_asset_id,tier)||{imageAssetId:d.image_asset_id||null,frameAssetKey:'arcane-award-frame-'+tier};
-   const asset=assetMap.get(award.imageAssetId);
+   const art=document.createElement('div');art.className='trophy-room-badge-art arcane-award-mount';
+   const asset=assetMap.get(d.image_asset_id);
    const reliefUrl=d.image_asset_id?.startsWith('hermes-alea:')?root.aleaHermesAleaImages?.resolve(asset)||null:asset?.asset_path?systemAssetUrl(asset.asset_path):null;
-   const frameAsset=assetMap.get(award.frameAssetKey);
-   const frameUrl=frameAsset?.asset_path?systemAssetUrl(frameAsset.asset_path):null;
-   if(reliefUrl){const img=document.createElement('img');img.className='trophy-room-badge-relief';img.src=reliefUrl;img.alt=d.name;art.append(img)}
+   const awardRenderer=root.ArcaneAwardRenderer;
+   const layers=awardRenderer?.awardRenderLayers(d.image_asset_id,tier,d.badge_frame_assets?.accent_color);
+   const resolveSystemAsset=key=>{const systemAsset=assetMap.get(key);return systemAsset?.asset_path?systemAssetUrl(systemAsset.asset_path):null};
+   if(awardRenderer?.mountAward){
+    awardRenderer.mountAward(art,{
+     imageAssetId:d.image_asset_id,motifUrl:reliefUrl,motifAlt:d.name,motifLabel:reliefUrl?'':d.name,
+     tier,accent:d.badge_frame_assets?.accent_color,
+     resolveAsset:resolveSystemAsset
+    });
+   }else if(reliefUrl){const img=document.createElement('img');img.className='trophy-room-badge-relief';img.src=reliefUrl;img.alt=d.name;art.append(img)}
    else{const fallback=document.createElement('span');fallback.className='trophy-room-badge-label';fallback.textContent=d.name;art.append(fallback)}
-   if(frameUrl){const img=document.createElement('img');img.className='trophy-room-badge-frame';img.src=frameUrl;img.alt='';art.append(img)}
+   if(!layers)art.dataset.awardMetal=tier;
    slot.append(art);
    if(count>1){const marker=document.createElement('span');marker.className='trophy-room-award-count';marker.textContent='×'+count;slot.append(marker)}
    activateHonorSlot(slot,'award',{name:d.name,description:d.description,count,art});
