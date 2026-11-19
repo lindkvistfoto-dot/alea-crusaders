@@ -70,7 +70,7 @@ try {
     route.fulfill({contentType:'text/javascript', body:'export default class DiceBox {}'}));
   page.on('pageerror', error => console.warn('Browser:', error.message));
   page.on('dialog', async dialog => { console.warn(dialog.message()); await dialog.dismiss(); });
-  for (const [width,height] of [[1366,768],[1920,1080],[390,844]]) {
+  async function checkViewport(width,height) {
     await page.setViewportSize({width,height});
     await page.goto(origin);
     await page.waitForFunction(() => window.aleaKartakademin && typeof openMapAreaEditor === 'function');
@@ -78,7 +78,7 @@ try {
     await page.locator('#mapAreaList select').first().waitFor();
     await page.waitForFunction(() => document.querySelector('[data-map-scale]')?.textContent.includes('px/m'));
     await page.screenshot({path:`${output}/${width}x${height}.png`});
-    if (compare === 'baseline') continue;
+    if (compare === 'baseline') return;
     const metrics = await page.evaluate(() => {
       const box = selector => document.querySelector(selector).getBoundingClientRect().toJSON();
       const widths = Array.from(document.querySelector('.map-area-workspace').children, child=>child.getBoundingClientRect().width);
@@ -119,6 +119,7 @@ try {
     assert.equal(await page.locator('[data-mask-tool=paint]').getAttribute('aria-pressed'),'true');
     await page.locator('[data-mode-button=lights]').click();
     await page.locator('[data-new]').click();
+    await page.locator('#mapAreaSvg').click({position:{x:50,y:50}});
     assert.ok(await page.locator('[name=intensity]').isEnabled());
     await page.evaluate(async () => {
       const samples = [
@@ -141,6 +142,12 @@ try {
     await page.locator('[data-mode-button=lights]').click();
     await page.locator('[data-light-id]').first().waitFor();
   }
+  const errors = [];
+  for (const [width,height] of [[1366,768],[1920,1080],[390,844]]) {
+    try { await checkViewport(width,height); }
+    catch (error) { errors.push(error); console.error(width,height,error); }
+  }
+  if (errors.length) throw new AggregateError(errors,'Kartverkstadens webbläsartester');
 } finally {
   await browser.close();
 }

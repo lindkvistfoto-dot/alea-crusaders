@@ -98,16 +98,19 @@
 .kartakademin-mode-nav { display:flex; flex-wrap:wrap; gap:.25rem }
 #mapAreaEditor :is(.btn,.smallbtn,[role=tab]) {
   min-width:0; min-height:30px; padding:.26rem .6rem; border:1px solid var(--bronze); border-radius:5px;
-  background:#231e17 var(--arcane-art-tab-inactive) center / 100% 100% no-repeat;
+  background:#25281f;
   color:var(--ink); font:600 .78rem/1.2 system-ui,sans-serif; text-shadow:0 1px 3px #000; cursor:pointer;
 }
-#mapAreaEditor [role=tab] { flex:1 1 auto; padding:.38rem .45rem }
+#mapAreaEditor [role=tab] {
+  flex:1 1 auto; padding:.38rem .45rem; border-color:transparent;
+  background:var(--arcane-art-tab-inactive) center / 100% 170% no-repeat;
+}
 #mapAreaEditor :is([aria-selected=true],[aria-pressed=true]):is(button):not(.map-status-pill) {
   border-color:#e5bc71; background-color:#493923; color:#fff4d6; box-shadow:inset 0 -2px #e9c479;
 }
 #mapAreaEditor [role=tab][aria-selected=true] { background-image:var(--arcane-art-tab-active) }
 #mapAreaEditor :is([data-save],#mapAreaSaveBtn) {
-  background:#214534 var(--arcane-art-equipment) center / 100% 100% no-repeat;
+  background:#214534 var(--arcane-art-equipment) center / 100% 135% no-repeat;
   color:#fffae9; border-color:#7c9c74; padding-inline:.8rem;
 }
 #mapAreaEditor :is(.kartakademin-destructive,#mapAreaRemoveVertexBtn,.deletebtn,#mapAreaCancelBtn) {
