@@ -42,10 +42,16 @@ async function openTestMap() {
   centralCampaignRole='gm';
   const image = URL.createObjectURL(await new Promise(resolve => plan.toBlob(resolve)));
   window.getMapImageUrl = async () => image;
-  window.dbJson = async path => {
+  let configuration = {environment:'underground',pixelsPerMeter:26.5,darkness:.60};
+  let revision = 1;
+  window.dbJson = async (path, request) => {
+    if (path === 'rpc/save_campaign_map_academy') {
+      configuration = JSON.parse(request.body).p_configuration;
+      return ++revision;
+    }
     if (path.startsWith('campaign_map_areas?')) return areas;
     if (path.startsWith('campaign_locations?')) return campaignLocations;
-    if (path.startsWith('campaign_map_academy?')) return [{configuration:{environment:'underground',pixelsPerMeter:26.5,darkness:.60}}];
+    if (path.startsWith('campaign_map_academy?')) return [{configuration,revision}];
     if (path.startsWith('campaign_location_state?')) return areas.map(area=>({location_id:area.location_id,status:'explored'}));
     return [];
   };
@@ -90,6 +96,14 @@ try {
     }
     assert.ok(metrics.board.x>=metrics.stage.x-1 && metrics.board.right<=metrics.stage.right+1 &&
       metrics.board.y>=metrics.stage.y-1 && metrics.board.bottom<=metrics.stage.bottom+1,'map inside frame');
+    const save = page.locator('[data-save]');
+    await save.focus();
+    await page.keyboard.press('Shift+Tab');
+    await page.keyboard.press('Tab');
+    assert.ok(await save.evaluate(button=>button.matches(':focus-visible')));
+    await save.hover();
+    assert.ok(await save.evaluate(button=>button.matches(':hover')));
+    assert.ok(await page.locator('#mapAreaSaveBtn').isDisabled());
     const help = page.getByRole('button',{name:'Mer information om Rumsverktyg'});
     await help.click();
     await page.getByRole('button',{name:'Stäng information'}).click();
@@ -106,6 +120,26 @@ try {
     await page.locator('[data-mode-button=lights]').click();
     await page.locator('[data-new]').click();
     assert.ok(await page.locator('[name=intensity]').isEnabled());
+    await page.evaluate(async () => {
+      const samples = [
+        ['[data-mode-button=lights]',null], ['[data-save]',null],
+        ['.kartakademin-navigation',null], ['.kartakademin-frame span',null],
+        ['[data-tool-choice=light]','::before'],
+      ];
+      for (const [selector,pseudo] of samples) {
+        const style = getComputedStyle(document.querySelector(selector),pseudo);
+        const match = style.backgroundImage.match(/url\("([^"]+)"\)/);
+        if (!match) throw Error('Ingen bild för ' + selector);
+        const img = new Image();
+        img.src = match[1];
+        await img.decode();
+      }
+    });
+    await save.click();
+    await page.locator('[data-save-status][data-status=saved]').waitFor();
+    await page.evaluate(() => openMapAreaEditor(campaignMaps[0].id));
+    await page.locator('[data-mode-button=lights]').click();
+    await page.locator('[data-light-id]').first().waitFor();
   }
 } finally {
   await browser.close();

@@ -158,14 +158,14 @@ async function openEditor(map, areas, imageUrl) {
       </details>
       <div class="kartakademin-mode-controls" data-mode-controls>
         <div class="kartakademin-view-controls">
+          <button type="button" class="btn" data-zoom-out aria-label="Zooma ut">−</button>
           <label>Zoom <output data-zoom-percent>100 %</output><input data-zoom type="range" min="0.02" max="5" step="any" value="1"></label>
+          <button type="button" class="btn" data-zoom-in aria-label="Zooma in">+</button>
           <button type="button" class="btn" data-pan-tool aria-pressed="false" title="Panorera med vänster musknapp"><span aria-hidden="true">✋︎</span> Panorera</button>
           <button type="button" class="btn" data-ruler-tool aria-pressed="false"><span aria-hidden="true">📏</span> Linjal</button>
           <output data-measurement aria-label="Uppmätt avstånd" hidden></output>
-          <button type="button" class="btn" data-zoom-out aria-label="Zooma ut">−</button>
-          <button type="button" class="btn" data-zoom-in aria-label="Zooma in">+</button>
-          <button type="button" class="btn" data-fit-view>Anpassa karta</button>
-          <button type="button" class="btn" data-reset-view>Återställ vy</button>
+          <button type="button" class="btn" data-fit-view title="Anpassa hela kartan till vyn">Anpassa</button>
+          <button type="button" class="btn" data-reset-view title="Återställ zoom och panorering">Återställ vy</button>
         </div>
         <details class="kartakademin-layers-panel" open>
           <summary>Synliga kartlager</summary>
@@ -471,6 +471,7 @@ async function openEditor(map, areas, imageUrl) {
       button.type = 'button';
       button.className = 'btn';
       button.textContent = item.label;
+      button.dataset.toolChoice = item.value;
       button.setAttribute('aria-pressed', String(item.value === preferred));
       button.onclick = () => {
         tool.value = item.value;
@@ -538,7 +539,7 @@ async function openEditor(map, areas, imageUrl) {
     get('[data-mask-finish]').textContent = maskModeKey === 'subtract' ? 'Slutför borttagningspolygon' : 'Slutför polygon';
     get('[data-mask-undo]').textContent = polygonMaskMode && maskPoints.length ? 'Ångra polygonpunkt' : 'Ångra maskändring';
     const light = state.config.lights.find(item => item.id === state.selected);
-    lightForm.hidden = state.mode !== 'lights' || tool.value !== 'light';
+    lightForm.hidden = !light || state.mode !== 'lights' || tool.value !== 'light';
     geoForm.hidden = state.mode !== 'sight' || tool.value !== 'geometry';
     const lightToolActive = state.mode === 'lights' && state.tool === 'light';
     get('[data-duplicate]').hidden = !lightToolActive;
@@ -985,7 +986,7 @@ async function openEditor(map, areas, imageUrl) {
   get('[data-fit-view]').onclick = get('[data-reset-view]').onclick = resetView;
   const updateWorkspaceHeight = () => {
     const pageTop = workspace.getBoundingClientRect().top + window.scrollY;
-    workspace.style.setProperty('--kartakademin-space', `${Math.max(320, window.innerHeight - pageTop - 12)}px`);
+    workspace.style.setProperty('--kartakademin-space', `${Math.max(160, window.innerHeight - pageTop - 12)}px`);
   };
   const header = document.querySelector('.alea-app-header');
   const resize = new ResizeObserver(entries => {
