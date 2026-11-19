@@ -59,6 +59,10 @@ async function openTestMap() {
 try {
   const page = await browser.newPage();
   await page.route(/^https?:/, route => new URL(route.request().url()).origin === origin ? route.continue() : route.abort());
+  // The application bundle imports the dice engine from a CDN. The editor never rolls dice.
+  await page.route('https://unpkg.com/@3d-dice/dice-box@*/dist/dice-box.es.min.js', route =>
+    route.fulfill({contentType:'text/javascript', body:'export default class DiceBox {}'}));
+  page.on('pageerror', error => console.warn('Browser:', error.message));
   page.on('dialog', async dialog => { console.warn(dialog.message()); await dialog.dismiss(); });
   for (const [width,height] of [[1366,768],[1920,1080],[390,844]]) {
     await page.setViewportSize({width,height});

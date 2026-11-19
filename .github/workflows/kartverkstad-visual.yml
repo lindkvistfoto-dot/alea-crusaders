@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha }}
-          fetch-depth: 2
+          fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@v4
         with:
@@ -27,15 +27,16 @@ jobs:
       - name: Capture previous and current layouts in Chrome
         run: |
           set -euo pipefail
-          if git cat-file -e HEAD^:features/map/kartakademin.js; then
-            git worktree add --detach "$RUNNER_TEMP/kart-before" HEAD^
+          previous=$(git log -1 --format=%H -- features/map/kartakademin.css)^
+          if git cat-file -e "$previous:features/map/kartakademin.js"; then
+            git worktree add --detach "$RUNNER_TEMP/kart-before" "$previous"
             ln -s "$PWD/node_modules" "$RUNNER_TEMP/kart-before/node_modules"
             (cd "$RUNNER_TEMP/kart-before" && npm run build)
-            python -m http.server 4180 --bind 127.0.0.1 --directory "$RUNNER_TEMP/kart-before/dist" &
+            python -m http.server 4180 --bind 127.0.0.1 --directory "$RUNNER_TEMP/kart-before/dist" > "$RUNNER_TEMP/kart-before-http.log" 2>&1 &
             node scripts/kartverkstad-visual.mjs http://127.0.0.1:4180 visual-results/before baseline
           fi
           npm run build
-          python -m http.server 4181 --bind 127.0.0.1 --directory dist &
+          python -m http.server 4181 --bind 127.0.0.1 --directory dist > "$RUNNER_TEMP/kart-http.log" 2>&1 &
           node scripts/kartverkstad-visual.mjs http://127.0.0.1:4181 visual-results/after
       - uses: actions/upload-artifact@v4
         if: always()
