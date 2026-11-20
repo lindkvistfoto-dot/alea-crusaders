@@ -72,3 +72,6 @@
  .journal-outcome,.journal-private{font-size:.6rem;padding:2px 4px}
  .journal-row-details{margin-left:22px}
 }
+
+/* The game-event journal is not an administration change log. */
+body:has(#admin:not(.hidden)) #journalFeed { display: none !important; }
