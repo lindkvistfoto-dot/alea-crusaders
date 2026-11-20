@@ -140,3 +140,13 @@ dialog>.dialog-close{margin-top:.45rem}
 .observation{color:#d7c7a6;line-height:1.4;font-size:.85rem;margin:.6rem 0}
 #dice-result{position:absolute;bottom:.9rem;left:50%;transform:translateX(-50%);background:#272d22f5;color:#f6dfab;border:1px solid #b39765;border-radius:5px;padding:.55rem .9rem;font:1rem/1.25 var(--title);text-align:center;box-shadow:0 6px 20px #0009;max-width:90%;pointer-events:none}
 @media(prefers-reduced-motion:no-preference){#dice-result[data-motion=true]{animation:dice-arrival .28s ease-out}@keyframes dice-arrival{from{opacity:0;transform:translate(-50%,7px) scale(.96)}to{opacity:1;transform:translate(-50%,0) scale(1)}}}
+
+
+.compare{color:var(--brass);font-size:.82rem;text-underline-offset:.22em}
+.art-first #scene{aspect-ratio:auto;height:clamp(430px,76vh,900px);background:#101513}
+.art-first .map-column{min-width:0}
+.art-first .map-frame{background:#101513}
+.art-first .titlebar{padding-block:.8rem}
+.art-first .environment-bar{flex-wrap:wrap}
+.art-first #lamp-select{max-width:13rem}
+@media(max-width:780px){.art-first #scene{height:auto;aspect-ratio:724/768}.art-first .masthead-name{display:none}.art-first .masthead-row{gap:.55rem}.art-first .session-indicator{font-size:.7rem}.art-first .compare{max-width:9rem}}

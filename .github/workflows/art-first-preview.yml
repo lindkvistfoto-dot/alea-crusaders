@@ -1,0 +1,38 @@
+name: Art First comparison
+on:
+  pull_request:
+    paths:
+      - 'features/art-first/**'
+      - 'features/crypt/**'
+      - 'preview/art-first/**'
+      - 'scripts/art-first-visual.mjs'
+      - '.github/workflows/art-first-preview.yml'
+permissions:
+  contents: read
+jobs:
+  painted-chamber:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm install --no-save --package-lock=false playwright@1.56.1
+      - run: npx vitest run tests/art-first.test.js tests/crypt-world.test.js tests/crypt-session.test.js tests/crypt-rules.test.js
+      - run: npm run build
+      - name: Compare original and painted scene with two players
+        run: |
+          python -m http.server 4182 --bind 127.0.0.1 --directory dist > "$RUNNER_TEMP/art-first-http.log" 2>&1 &
+          node scripts/art-first-visual.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: art-first-comparison
+          path: visual-results/art-first/
+          retention-days: 14

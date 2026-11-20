@@ -2,6 +2,8 @@ import { openCryptSession } from './session.js';
 import { HERO_PROFILES, heroPortraitStyle } from './hero-class.js';
 import { mountCrypt } from './render.js';
 
+const artFirst=new URLSearchParams(location.search).get('art')==='1';
+let painting;
 const $ = id => document.getElementById(id);
 const motionPreference = matchMedia('(prefers-reduced-motion: reduce)');
 const settings = { camera: 'map', wallMode: 'low', grid: false, sunlight: true, reducedMotion: motionPreference.matches };
@@ -181,10 +183,10 @@ function refreshControls() {
   $('perspective').setAttribute('aria-pressed', String(playerPreview));
   $('invite').hidden = !gm;
   $('gm-tools').hidden = !gm;
-  $('prepare').hidden = !gm;
+  $('prepare').hidden = !gm || artFirst;
   $('prepare').disabled = pendingCommand || projection.canPrepare === false;
   $('reset').hidden = !gm;
-  $('wall-field').hidden = !gm;
+  $('wall-field').hidden = !gm || artFirst;
   $('sun-field').hidden = !gm;
   $('hero-sheet').hidden = !hero;
   updateHeroes();
@@ -231,6 +233,19 @@ function refreshControls() {
     $('torch-action').disabled = pendingCommand || (!gm && (playerPreview || session.actorId !== 'evalin'));
   }
   for (const id of ['combat-action','next-turn','guard-move','reset']) $(id).disabled = pendingCommand;
+  if(artFirst){
+    const lamps=projection.lamps??[];
+    $('lamp-tools').hidden=!gm;
+    const selector=$('lamp-select');
+    if(gm && selector.options.length===0){
+      selector.add(new Option('Alla fasta ljus','all'));
+      for(const l of lamps)selector.add(new Option(l.name,String(l.id)));
+    }
+    if(gm){
+      const affected=lamps.filter(l=>selector.value==='all'||String(l.id)===selector.value);
+      $('lamp-toggle').textContent=affected.some(l=>l.on)?'Släck':'Tänd';
+    }
+  }
   updatePending();
   for (const b of $('pending').querySelectorAll('button')) b.disabled = pendingCommand;
   updateJournal();
@@ -432,7 +447,29 @@ function bind() {
 
 async function start() {
   bind();
+  if(artFirst) {
+    document.body.classList.add('art-first');
+    document.title='Den målade kryptan · ALEA Crusaders';
+    document.querySelector('h1').textContent='Den målade kryptan';
+    $('compare').href='./kryptans-dorr?compare=1';$('compare').textContent='Jämför med Kryptans dörr';$('compare').hidden=false;
+    $('lamp-select').onchange=refreshControls;
+    $('lamp-toggle').onclick=()=>{
+      const val=$('lamp-select').value,lamp=val==='all'?'all':Number(val);
+      const on=!projection.lamps.some(l=>(lamp==='all'||l.id===lamp)&&l.on);
+      return dispatch({type:'lamps',lamp,on});
+    };
+    const module=await import('../art-first/painting.js');
+    const host=!new URLSearchParams(location.hash.slice(1)).has('player');
+    const studio=host?await module.hostPainting():null;
+    painting={...module,studio};
+  } else if(new URLSearchParams(location.search).has('compare')) {
+    $('compare').href='./kryptans-dorr?art=1';$('compare').textContent='Till den målade kryptan';$('compare').hidden=false;
+  }
   const startup = openCryptSession({
+    ...(artFirst?{loadWorld:async()=>{
+      const [world,{chamber}]=await Promise.all([import('./world.js'),import('../art-first/chamber.js')]);
+      return {...world,createWorld:()=>world.createWorld({map:chamber})};
+    },decoratePlayerView:view=>painting.studio.decorate(view)}:{}),
     onView: showProjection,
     onStatus: text => {
       $('connection').textContent = text;
@@ -440,7 +477,7 @@ async function start() {
     },
     onError: error => announce(error.message)
   });
-  const map = mountCrypt($('scene'), { onHero: setSelection, onPoint: handlePoint, onDoor: toggleDoor, onGuard: selectGuard });
+  const map = mountCrypt($('scene'), { onHero: setSelection, onPoint: handlePoint, onDoor: toggleDoor, onGuard: selectGuard },painting);
   const [opened, mounted] = await Promise.allSettled([startup,map]);
   if (opened.status === 'fulfilled') session = opened.value;
   if (mounted.status === 'fulfilled') renderer = mounted.value;
@@ -462,3 +499,4 @@ window.addEventListener('pagehide', event => {
   session?.close(); renderer?.destroy();
 });
 start().catch(error => showStartupError(error.message));
+
