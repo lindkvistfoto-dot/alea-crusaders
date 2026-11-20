@@ -34,7 +34,8 @@ function visibleMasks(p) {
   }
   if(p.door) {
     const target=p.door.visible===false?known:visible;
-    target.rect(270,522,181,164);
+    target.addPath(stoneFront);
+    target.addPath(doorPath);
   }
   return {visible,known,...floor};
 }

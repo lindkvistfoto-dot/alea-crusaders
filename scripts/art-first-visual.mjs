@@ -50,8 +50,15 @@ try{
   await player.reload();await ready(player);await expected(player,'door-value','Stängd');
   await gm.bringToFront();const painted=await measure(gm);
   await gm.setViewportSize({width:390,height:844});await gm.waitForTimeout(500);const mobile=await measure(gm);
-  assert.ok(await gm.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
   await gm.screenshot({path:out+'/03-mobil.png',fullPage:true});
+  for(const width of [390,320]){
+    await gm.setViewportSize({width,height:844});
+    const overflow=await gm.evaluate(()=>({
+      width:innerWidth,scroll:document.documentElement.scrollWidth,
+      elements:[...document.querySelectorAll('body *')].filter(e=>e.getBoundingClientRect().right>innerWidth+1).map(e=>[e.tagName,e.id,e.className])
+    }));
+    assert.ok(overflow.scroll<=width+1,JSON.stringify(overflow));
+  }
   await player.bringToFront();await player.locator('#scene canvas').screenshot({path:out+'/04-spelare.png'});
   for(const {masterRequests} of clients)assert.deepEqual(masterRequests,[]);
   const original=await context.newPage();await original.setViewportSize({width:1220,height:900});

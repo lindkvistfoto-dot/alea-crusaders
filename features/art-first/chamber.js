@@ -25,7 +25,7 @@ export const chamber = {
     ['Skrivbordsljuset',395,795,516,824],['Västra väggljuset',175,904,210,929],
     ['Vänstra portljuset',576,1242,644,1322],['Högra portljuset',873,1242,801,1322]
   ].map(([name,x,y,fx,fy],i)=>({id:i,name,x:x/2,y:y/2,foot:[fx/2,fy/2],range:142})),
-  starts:{astrid:[272,416],evalin:[466,479],lyra:[375,593]},
+  starts:{astrid:[272,416],evalin:[466,479],lyra:[369,514]},
   // Variants are chosen by the session host, independently from either paint plate.
   guardSpots:[[350,703],[376,748],[321,747]]
 };

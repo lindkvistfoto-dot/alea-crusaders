@@ -150,3 +150,14 @@ dialog>.dialog-close{margin-top:.45rem}
 .art-first .environment-bar{flex-wrap:wrap}
 .art-first #lamp-select{max-width:13rem}
 @media(max-width:780px){.art-first #scene{height:auto;aspect-ratio:724/768}.art-first .masthead-name{display:none}.art-first .masthead-row{gap:.55rem}.art-first .session-indicator{font-size:.7rem}.art-first .compare{max-width:9rem}}
+
+@media(max-width:520px){
+  .art-first .masthead-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:.15rem .6rem;padding:.35rem 0}
+  .art-first .masthead-row .compare{grid-row:2;grid-column:1 / -1;max-width:none}
+  .art-first .session-indicator{grid-column:2;grid-row:1;max-width:100%}
+  .art-first .environment-bar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+  .art-first .environment-item{grid-template-columns:minmax(0,1fr)}
+  .art-first #lamp-select{width:100%;max-width:100%;min-width:0}
+  .art-first #torch-item{grid-column:1 / -1;border-left:0;border-top:1px solid var(--line);grid-template-columns:1fr auto}
+  .art-first #torch-action{grid-column:2;grid-row:1 / 3}
+}

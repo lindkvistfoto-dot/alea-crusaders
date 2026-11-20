@@ -71,7 +71,10 @@ export async function mountCrypt(host,callbacks={},painting=null) {
     if(disposed)return;
     if(!next){clear();return;}
     options={...options,...nextOptions};
-    if(next.paint && remote?.key===next.paint.terrain && remote?.leafKey===next.paint.leaves)remoteSource=next.paint;
+    if(next.paint && remote?.key===next.paint.terrain && remote?.leafKey===next.paint.leaves){
+      if(downloading && downloading!==next.paint){paintRev++;downloading=null;}
+      remoteSource=next.paint;
+    }
     if(painting && next.paint && remoteSource!==next.paint){
       if(downloading===next.paint)return;
       const epoch=++paintRev;downloading=next.paint;
@@ -154,7 +157,7 @@ export async function mountCrypt(host,callbacks={},painting=null) {
     if(layers.grid)list.push(layer('hex-grid',layers.grid,0,0,p.width,p.height));
     const weights=flameWeights(t*6.1,still?0:.1,flames.fackla);
     if(layers.sun){
-      list.push(layer('sun',layers.sun,0,0,p.width,p.height,{add:true,alpha:.86+.06*Math.sin(t*.45)}));
+      list.push(layer('sun',layers.sun,0,0,p.width,p.height,{add:true,alpha:(painting ? .46 : .86)+.06*Math.sin(t*.45)}));
       for(let i=0;i<layers.dust.length;i++){
         const dot=layers.dust[i],u=dot.phase+t*.33,s=1.6+(i%3)*.55;
         list.push(layer('dust'+i,mote,dot.x+Math.sin(u)*1.1,dot.y+Math.cos(u*.8),s,s,{ax:.5,ay:.5,add:true,alpha:.5+.32*Math.sin(u)}));
@@ -162,12 +165,13 @@ export async function mountCrypt(host,callbacks={},painting=null) {
     }
     if(lit)list.push(layer('torchlight',lit,0,0,p.width,p.height,{add:true,alpha:.84+.15*weights[0]}));
     list.push(layer('shadows',shadows));
+    const paintedLeaves=[];
     if(p.door && painting){
       const {x,y,w,h}=painting.aperture;
       const openness=1-(still?doorTo:angleAt(now))/(Math.PI/2);
       const width=w*.5*Math.cos(openness*Math.PI/2);
       if(width>.15)for(const [i,leaf] of layers.leaves.entries()) {
-        list.push(layer('paint-door-'+i,leaf,i?x+w-width:x,y,width,h));
+        paintedLeaves.push(layer('paint-door-'+i,leaf,i?x+w-width:x,y,width,h));
       }
     } else if(p.door){
       const d=p.door,angle=still?doorTo:angleAt(now),length=Math.hypot(d.endX-d.x,d.endY-d.y);
@@ -220,7 +224,7 @@ export async function mountCrypt(host,callbacks={},painting=null) {
       const f=layers.front;
       const outside=cast.filter(a=>a.y>=p.door.y).map(a=>'actor-'+a.id);
       const at=list.findIndex(v=>outside.includes(v.id));
-      list.splice(at<0?list.length:at,0,layer('painted-arch',f.src,f.x,f.y,f.w,f.h));
+      list.splice(at<0?list.length:at,0,...paintedLeaves,layer('painted-arch',f.src,f.x,f.y,f.w,f.h));
     }
     surface.draw(list,camera,t);
     globalThis.aleaCryptFrameProbe?.();
