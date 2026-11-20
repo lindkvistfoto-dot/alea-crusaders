@@ -113,7 +113,7 @@ try {
     }
     await page.locator('[data-zoom-in]').click();
     assert.equal(await page.locator('[data-zoom-percent]').textContent(),'125 %');
-    await page.locator('[data-fit-view]').click();
+    await page.locator('[data-reset-view]').click();
     await page.locator('[data-mode-button=sight]').click();
     await page.locator('[data-mask-tool=paint]').click();
     assert.equal(await page.locator('[data-mask-tool=paint]').getAttribute('aria-pressed'),'true');
