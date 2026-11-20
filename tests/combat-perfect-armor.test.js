@@ -1,3 +1,4 @@
+import '../features/combat/expert-rules.js';
 import {describe,it,expect} from 'vitest';
 import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
@@ -14,6 +15,7 @@ const resultEnd=runtime.indexOf('function combatOutcomeEarnsErf(',resultBegin);
 function harness({ward=0,armor=5,before=11}={}){
  const writes=[];
  const env={
+  aleaExpertRules:globalThis.aleaExpertRules,
   activeCombat:{id:'battle-1',round_number:1},centralCampaignId:'campaign-1',
   combatParseDamageFormula(text){if(text==='1T6+1')return {qty:1,sides:6,modifier:1,formula:text};
    if(text==='Ingen')return {qty:0,sides:0,modifier:0,formula:text};return null},

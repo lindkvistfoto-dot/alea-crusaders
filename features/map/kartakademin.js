@@ -1,4 +1,7 @@
 import './kartakademin.css';
+import { fieldHeroId, fieldHeroSvg } from '../crypt/hero-field.js';
+// The linked battle view is a classic script and reads this same field adapter.
+globalThis.aleaHeroClassField = Object.freeze({ fieldHeroId, fieldHeroSvg });
 import '../combat/battle-map-effects.js';
 import { createMask, findSmallSolidIslands, isFree, maskHistory, paintMask, polygonMask, prepareFreeSight, serializeMask } from './kartakademin-mask.js';
 import { FREE_SIGHT_RESET_CONFIRMATION, FREE_SIGHT_RESET_LABEL, removalConfirmation, resetFreeSight, toolsForMode } from './kartakademin-actions.js';
@@ -186,8 +189,8 @@ async function openEditor(map, areas, imageUrl) {
       <label class="kartakademin-mode-select" hidden>Redigeringsläge<select data-mode aria-hidden="true" tabindex="-1"><option value="rooms">Rum</option><option value="effects">Områdeseffekter</option><option value="sight">Sikt och hinder</option><option value="lights">Ljuskällor</option><option value="objects">Objekt</option></select></label>
       <div class="kartakademin-controls" data-tool-controls>
         <label data-item-select>Välj<select data-items></select></label>
-        <label data-token-style-control>Visning<select data-token-style><option value="portrait">Porträtt</option><option value="battlepose">Battlepose</option></select></label>
-        <details data-token-preview hidden><summary>Förstora figur</summary><svg viewBox="-80 -180 160 240" role="img" aria-label="Förstorad battlepose"></svg></details>
+        <label data-token-style-control>Visning<select data-token-style><option value="portrait">Porträtt</option><option value="battlepose">Battlepose</option><option value="hero-class">Hero Class · utan bas</option></select></label>
+        <details data-token-preview hidden><summary>Förstora figur</summary><svg viewBox="-80 -180 160 240" role="img" aria-label="Förstorad figur"></svg></details>
         <button type="button" class="btn" data-token-demo>Placera Astrid och Evalin</button>
         <div data-light-list class="kartakademin-light-list" role="listbox" aria-label="Ljuskällor" hidden></div>
         <button type="button" class="btn" data-new>Ny ljuskälla</button>
@@ -351,7 +354,10 @@ async function openEditor(map, areas, imageUrl) {
   const characterName = character => character.name || character.identity?.namn || character._dbId;
   const astrid = roster.find(character => /^astrid(?:\s|$)/i.test(characterName(character)));
   const evalin = roster.find(character => /^evalin(?:\s|$)/i.test(characterName(character)));
-  const tokenStyle = id => state.config.characterTokenStyles?.[id] === 'battlepose' ? 'battlepose' : 'portrait';
+  const tokenStyle = id => {
+    const style = state.config.characterTokenStyles?.[id];
+    return ['battlepose', 'hero-class'].includes(style) ? style : 'portrait';
+  };
   const tokenDemo = get('[data-token-demo]');
 
   const maskOverlay = document.createElement('canvas'); maskOverlay.dataset.maskOverlay = ''; maskOverlay.hidden = true; board.append(maskOverlay);
@@ -551,6 +557,8 @@ async function openEditor(map, areas, imageUrl) {
     const editingPosition = tool.value === 'position';
     get('[data-token-style-control]').hidden = !editingPosition;
     tokenStyles.disabled = !state.loaded || !state.selected;
+    tokenStyles.querySelector('option[value="hero-class"]').disabled =
+      !fieldHeroId(roster.find(character => character._dbId === state.selected));
     tokenStyles.value = tokenStyle(state.selected);
     tokenDemo.hidden = !editingPosition || !astrid || !evalin;
     tokenDemo.disabled = !state.loaded;
@@ -622,8 +630,11 @@ async function openEditor(map, areas, imageUrl) {
   };
   function drawCharacterTokens() {
     tokenLayer.replaceChildren();
-    const previewArt = tool.value === 'position' && tokenStyle(state.selected) === 'battlepose'
-      ? window.aleaCombatPaperDollMap?.renderMapToken(state.selected, 100) : '';
+    const selectedCharacter = roster.find(item => item._dbId === state.selected);
+    const previewStyle = tool.value === 'position' && tokenStyle(state.selected);
+    let previewArt = '';
+    if (previewStyle === 'battlepose') previewArt = window.aleaCombatPaperDollMap?.renderMapToken(state.selected, 100);
+    if (previewStyle === 'hero-class') previewArt = window.aleaCombatPaperDollMap?.renderHeroMapToken(selectedCharacter, 74);
     tokenPreview.hidden = !previewArt;
     tokenPreview.querySelector('svg').innerHTML = previewArt || '';
     if (!state.layers.characters || get('[data-light-only]').checked) return;
@@ -637,11 +648,15 @@ async function openEditor(map, areas, imageUrl) {
       const selected = interactive && state.selected === id;
       const marker = node('g', { transform: `translate(${x} ${y})`, 'data-character-token': id });
       const width = window.aleaCombatPaperDollMap?.mapBaseWidth?.(state.config.pixelsPerMeter);
-      const art = tokenStyle(id) === 'battlepose' ? window.aleaCombatPaperDollMap?.renderMapToken(id, width) : '';
+      const style = tokenStyle(id);
+      let art = '';
+      if (style === 'battlepose') art = window.aleaCombatPaperDollMap?.renderMapToken(id, width);
+      if (style === 'hero-class') art = window.aleaCombatPaperDollMap?.renderHeroMapToken(character, state.config.pixelsPerMeter, selected);
       if (art) {
         marker.innerHTML = art;
-        marker.append(node('ellipse', { rx: width / 2, ry: width / 4, fill: 'transparent',
-          stroke: selected ? '#ffe5a1' : 'none', 'vector-effect': 'non-scaling-stroke' }));
+        const hitWidth = style === 'hero-class' ? 1.5 * state.config.pixelsPerMeter : width;
+        marker.append(node('ellipse', { rx: hitWidth / 2, ry: hitWidth / (style === 'hero-class' ? 2 : 4), fill: 'transparent',
+          stroke: selected && style === 'battlepose' ? '#ffe5a1' : 'none', 'vector-effect': 'non-scaling-stroke' }));
       } else {
         const r = 15 / screenScale;
         const portrait = typeof getPortraitSrc === 'function' ? getPortraitSrc(character) : character.portrait;
@@ -660,7 +675,9 @@ async function openEditor(map, areas, imageUrl) {
           'stroke-width': selected ? 3 : 2, 'vector-effect': 'non-scaling-stroke' }));
       }
       const title = node('title', {});
-      title.textContent = tokenStyle(id) === 'battlepose' && !art ? name + ' · Battlepose eller High Angle-bas saknas' : name;
+      title.textContent = name;
+      if (!art && style === 'battlepose') title.textContent += ' · Battlepose eller High Angle-bas saknas';
+      if (!art && style === 'hero-class') title.textContent += ' · Hero Class-bilden saknas i bildregistret';
       marker.append(title);
       if (interactive) {
         marker.setAttribute('tabindex', '0');
@@ -779,7 +796,7 @@ async function openEditor(map, areas, imageUrl) {
   }
 
   function loadTokenArt() {
-    if (!Object.values(state.config.characterTokenStyles ?? {}).includes('battlepose')) return;
+    if (!Object.values(state.config.characterTokenStyles ?? {}).some(style => ['battlepose', 'hero-class'].includes(style))) return;
     const paperDoll = window.aleaCombatPaperDollMap;
     if (!paperDoll) return;
     void paperDoll.loadMapTokens().then(() => Promise.all(

@@ -103,6 +103,9 @@ export default defineConfig({
     },
   ],
   build: {
+    rollupOptions: {
+      input: { app: resolve("index.html"), crypt: resolve("kryptans-dorr.html") },
+    },
     outDir: "dist",
     emptyOutDir: true,
     target: "es2022",

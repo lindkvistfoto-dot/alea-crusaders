@@ -113,3 +113,10 @@ async function combatProjectMapHexes(input){
  if(!g?.pixelsPerMeter)throw new Error('Kartans måttskala saknas.');
  return projectMapHexes(input,g,combatMapGridCells(g),COMBAT_MAP_DIRECTIONS)
 }
+
+// The isolated adventure host imports this classic script as a side-effect module.
+// Keep a single calibrated basis for both adventure anchors and the battle engine.
+globalThis.aleaMapGrid = Object.freeze({
+ geometry: combatMapHexGeometry, center: combatMapHexCenter, pixelToHex: combatMapPixelToHex,
+ cells: combatMapGridCells, distance: combatFootprintDistance, footprint: combatFootprintCells
+});

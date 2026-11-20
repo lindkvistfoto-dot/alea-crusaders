@@ -169,6 +169,14 @@ let combatGmPlacementId=null,combatBattlefieldBrushKey=null,combatBattlefieldObj
 let combatHexTriggers=[],combatHexTriggerPlacement=false,combatHexTriggerSelected=[],combatHexTriggerBusy=false,combatHexTriggerMessageDraft='';
 let combatSlBoardOpen=false,combatSlBoardTab='overview';
 let combatMapEffectsEnabled=true,combatMapLightSavePending=false;
+let combatHeroClassEnabled=false;
+try{combatHeroClassEnabled=localStorage.getItem('alea:hero-class:on')==='1'}catch{}
+function combatSetHeroClass(enabled){
+ combatHeroClassEnabled=enabled===true;
+ try{localStorage.setItem('alea:hero-class:on',combatHeroClassEnabled?'1':'0')}catch{}
+ renderCombat();
+}
+
 let combatSelectedSceneId='',combatSceneBusy=false,combatStopBusy=false,combatLifecycleBusy=false,combatRuntimeMapUrl='',combatRuntimeMapMeta=null,combatRuntimeMapError='';
 let combatScenePreview=null,combatScenePreviewSceneId='',combatScenePreviewLoading=false,combatScenePreviewError='',combatScenePreviewRequest=0;
 let combatMovementPlan=null,combatMovementDrag=null,combatMovementAnimation=null,combatMovementSuppressClickUntil=0;
@@ -543,7 +551,7 @@ function combatBuildInitiative(rows,dieByCombatant=new Map(),colorByCombatant=ne
    color:colorByCombatant.get(String(row.id))||COMBAT_INITIATIVE_COLORS[index%COMBAT_INITIATIVE_COLORS.length],
    original_sort:Number(row.sort_order)||index
   }
- }).sort((a,b)=>b.total-a.total||b.smi-a.smi||a.original_sort-b.original_sort||String(a.name).localeCompare(String(b.name),'sv'));
+ }).sort(globalThis.aleaExpertRules.compareInitiative);
 
  const rankById=new Map(results.map((result,index)=>[String(result.combatant_id),index+1]));
  const resultById=new Map(results.map(result=>[String(result.combatant_id),result]));
@@ -1120,7 +1128,8 @@ function combatRestrictMapInput(event){
  event.preventDefault();
 }
 function combatMapEffectsToggleHtml(){
- return '<label class="combat-map-effects-toggle"><input type="checkbox" id="combatBattleEffects" onchange="combatToggleMapEffects()"'+(combatMapEffectsEnabled?' checked':'')+'> Visa ljus och miljöeffekter på min skärm</label>';
+ return '<label class="combat-map-effects-toggle"><input type="checkbox" id="combatBattleEffects" onchange="combatToggleMapEffects()"'+(combatMapEffectsEnabled?' checked':'')+'> Visa ljus och miljöeffekter på min skärm</label>'+
+  '<label class="combat-map-effects-toggle"><input type="checkbox" onchange="combatSetHeroClass(this.checked)"'+(combatHeroClassEnabled?' checked':'')+'> Använd Hero Class även utan kartinställning</label>';
 }
 function combatSyncMapEffects(body){
  const svg=body.querySelector('.combat-map-svg');
@@ -1788,28 +1797,7 @@ function combatHideMagicResultPopup(){
  const host=$('combatDiceReadout');
  if(host)host.classList.remove('show','outcome-show','mobile-damage-detail','success','fail','special','perfect','fumble');
 }
-const COMBAT_HIT_LOCATION_TABLES={
- humanoid:{
-  A:{die:8,label:'Projektil / oförsvarad närstrid',rows:[
-   {min:1,max:1,key:'right_leg',label:'Höger ben'},
-   {min:2,max:2,key:'left_leg',label:'Vänster ben'},
-   {min:3,max:3,key:'abdomen',label:'Mage'},
-   {min:4,max:5,key:'chest',label:'Bröstkorg'},
-   {min:6,max:6,key:'right_arm',label:'Höger arm'},
-   {min:7,max:7,key:'left_arm',label:'Vänster arm'},
-   {min:8,max:8,key:'head',label:'Huvud'}
-  ]},
-  B:{die:10,label:'Försvarad närstrid',rows:[
-   {min:1,max:1,key:'right_leg',label:'Höger ben'},
-   {min:2,max:2,key:'left_leg',label:'Vänster ben'},
-   {min:3,max:3,key:'abdomen',label:'Mage'},
-   {min:4,max:4,key:'chest',label:'Bröstkorg'},
-   {min:5,max:6,key:'right_arm',label:'Höger arm'},
-   {min:7,max:8,key:'left_arm',label:'Vänster arm'},
-   {min:9,max:10,key:'head',label:'Huvud'}
-  ]}
- }
-};
+const COMBAT_HIT_LOCATION_TABLES=globalThis.aleaExpertRules.hitTables;
 function combatHitLocationProfile(combatant){
  const profile=String(combatant?.state?.hit_location_profile||combatant?.state?.anatomy_profile||'humanoid').trim();
  return COMBAT_HIT_LOCATION_TABLES[profile]?profile:'humanoid'
@@ -2146,7 +2134,8 @@ async function combatResolveAttackAction(actor,target,action,weapon,attackMode='
   (typeof window!=='undefined'?window.aleaSoundboard:null)?.broadcastCue?.(rolled.outcome==='fumble'?'melee.fumble':'melee.miss');
  }
  if(attackMode==='melee'&&rolled.outcome==='perfect')window.aleaAnimations?.play('melee.perfect',{target});
- const outcome=rolled.outcome,success=rolled.success,fullDamage=outcome==='special'||outcome==='perfect';
+ const outcome=rolled.outcome,success=rolled.success;
+ const {fullDamage}=globalThis.aleaExpertRules.attackPolicy(outcome);
  const result={
   resolution_id:crypto.randomUUID(),
   success,outcome,roll:rolled.roll,confirmation_roll:rolled.confirmation_roll,fv,
@@ -3458,15 +3447,11 @@ function combatMovementHasUsedMoreThanHalf(combatant){
  return combatMovementSpent(combatant)>combatHalfMoveLimit(combatant)
 }
 function combatMovementAllowance(combatant){
- const remaining=combatMovementBudget(combatant);
  if(!combatant)return 0;
- if(combatMovementHasUsedMoreThanHalf(combatant))return remaining;
+ const remaining=combatMovementBudget(combatant), maximum=combatMovementMaximum(combatant);
  const action=combatChosenAction(combatant);
- if(!action)return remaining;
- const def=combatActionDefinition(action);
- if(def?.key==='move_full')return remaining;
- const halfLeft=Math.max(0,combatHalfMoveLimit(combatant)-combatMovementSpent(combatant));
- return Math.min(remaining,halfLeft)
+ const committed=!combatMovementHasUsedMoreThanHalf(combatant)&&action&&combatActionDefinition(action)?.key!=='move_full';
+ return globalThis.aleaExpertRules.movementBudget(maximum,remaining,!!committed).allowance
 }
 function combatAxialDistance(a,b){
  const aq=Number(a?.q)||0,ar=Number(a?.r)||0,bq=Number(b?.q)||0,br=Number(b?.r)||0;
@@ -3775,42 +3760,18 @@ function combatCanParryAttack(defender){
  return !!defender&&!combatCannotReact(defender)&&combatHasUnusedAction(defender)&&combatParryOptions(defender).length>0
 }
 async function combatExpertRoll(label,fv){
- const first=await combatRollDice([{qty:1,sides:20}],label);
- const roll=Number(first?.rolls?.[0]?.value);
- if(!Number.isInteger(roll))throw new Error('Slaget gav inget giltigt T20-resultat.');
- const ctx={target:fv,baseTarget:fv,skillConfirmKind:null};
- let resolution=typeof expertSkillInitialResolution==='function'
-  ?expertSkillInitialResolution(ctx,roll)
-  :{outcome:(roll!==20&&roll<=fv)?'success':'fail'};
- let confirmationRoll=null,outcome=resolution.outcome;
- if(!outcome&&resolution.confirm){
-  ctx.skillConfirmKind=resolution.confirm;
-  await new Promise(resolve=>setTimeout(resolve,520));
-  const confirm=await combatRollDice([{qty:1,sides:20}],label+' · kontrollslag');
-  confirmationRoll=Number(confirm?.rolls?.[0]?.value);
-  if(!Number.isInteger(confirmationRoll))throw new Error('Kontrollslaget gav inget giltigt T20-resultat.');
-  outcome=typeof expertSkillConfirmationResolution==='function'
-   ?expertSkillConfirmationResolution(ctx,confirmationRoll)
-   :resolution.fallback
+ const sequence=globalThis.aleaExpertRules.expertRoll(fv);
+ let step=sequence.next();
+ while(!step.done){
+  if(step.value.confirmation)await new Promise(resolve=>setTimeout(resolve,520));
+  const rolled=await combatRollDice([{qty:1,sides:step.value.sides}],label+(step.value.confirmation?' · kontrollslag':''));
+  const face=Number(rolled?.rolls?.[0]?.value);
+  if(!Number.isInteger(face)||face<1||face>20)throw new Error('Slaget gav inget giltigt T20-resultat.');
+  step=sequence.next(face)
  }
- return{
-  roll,confirmation_roll:confirmationRoll,outcome,
-  success:['success','special','perfect'].includes(outcome)
- }
+ return step.value
 }
-function combatParseDamageFormula(formula,fallback=''){
- const raw=String(formula||fallback||'').trim().toUpperCase().replace(/\s+/g,'');
- if(!raw)return null;
- if(/^[+-]?\d+$/.test(raw))return{qty:0,sides:0,modifier:Number(raw),formula:raw};
- const match=raw.match(/^(\d+)T(\d+)([+-]\d+)?$/);
- if(!match)return null;
- return{
-  qty:Math.max(0,Number(match[1])||0),
-  sides:Math.max(0,Number(match[2])||0),
-  modifier:Number(match[3]||0),
-  formula:raw
- }
-}
+function combatParseDamageFormula(formula,fallback=''){return globalThis.aleaExpertRules.damageSpec(formula,fallback)}
 function combatDamageBonusSpec(combatant){
  const profile=combatAttackProfile(combatant),raw=profile.damage_bonus;
  if(raw&&typeof raw==='object'){
@@ -3850,42 +3811,15 @@ function combatArmorAbsorption(combatant){
  return{absorption,names:[...new Set(names)]}
 }
 async function combatResolveDamage(actor,target,weapon,fullDamage=false,hitLocation=null,ignoreArmor=false){
- const damageRolls=[];
  const weaponSpec=combatParseDamageFormula(weapon?.damage,weapon?._unarmed?'1T3':'');
  if(!weaponSpec)throw new Error((weapon?.name||'Vapnet')+' saknar giltig skadetärning.');
  const bonusSpec=weapon?._spell_damage?{qty:0,sides:0,modifier:0,formula:'Ingen'}:combatDamageBonusSpec(actor);
- let weaponValue=Number(weaponSpec.modifier)||0,bonusValue=Number(bonusSpec.modifier)||0;
- if(fullDamage){
-  weaponValue+=weaponSpec.qty*weaponSpec.sides;
-  bonusValue+=bonusSpec.qty*bonusSpec.sides
- }else{
-  const specs=[];
-  if(weaponSpec.qty>0&&weaponSpec.sides>0)specs.push({kind:'weapon',qty:weaponSpec.qty,sides:weaponSpec.sides});
-  if(bonusSpec.qty>0&&bonusSpec.sides>0)specs.push({kind:'bonus',qty:bonusSpec.qty,sides:bonusSpec.sides});
-  if(specs.length){
-   const rolled=await combatRollDice(specs.map(({qty,sides})=>({qty,sides})),'Skada · '+actor.name_snapshot+' → '+target.name_snapshot);
-   let rollIndex=0;
-   for(const spec of specs){
-    let subtotal=0;const faces=[];
-    for(let i=0;i<spec.qty;i++){
-     const face=Number(rolled?.rolls?.[rollIndex++]?.value)||0;
-     faces.push(face);subtotal+=face
-    }
-    damageRolls.push({kind:spec.kind,qty:spec.qty,sides:spec.sides,faces});
-    if(spec.kind==='weapon')weaponValue+=subtotal;
-    else bonusValue+=subtotal
-   }
-  }
- }
- weaponValue=Math.max(0,Math.floor(weaponValue));
- bonusValue=Math.floor(bonusValue);
- const gross=Math.max(0,weaponValue+bonusValue);
+ const plan=globalThis.aleaExpertRules.damageDice(weaponSpec,bonusSpec,fullDamage);
+ const rolled=plan.dice.length?await combatRollDice(plan.dice,'Skada · '+actor.name_snapshot+' → '+target.name_snapshot):null;
  const armor=combatArmorAbsorption(target),ward=combatProtectionValue(target,weapon?.damage_kind||'physical');
- // Perfect attacks inflict full damage without mundane armor absorption.
- // Magical protection wards remain effective and are accounted for separately.
- const effectiveArmor=ignoreArmor===true?0:armor.absorption;
- const net=Math.max(0,gross-effectiveArmor-ward.points);
- const before=Math.max(0,combatNumber(target.current_kp,0)),after=Math.max(0,before-net),defeated=after<=0;
+ const before=Math.max(0,combatNumber(target.current_kp,0));
+ const {weaponValue,bonusValue,damageRolls,gross,effectiveArmor,net,after,defeated}=plan.resolve(
+  (rolled?.rolls||[]).map(row=>Number(row.value)||0),armor.absorption,ward.points,ignoreArmor,before);
  const patch={current_kp:after,updated_at:new Date().toISOString()};
  if(defeated)patch.status='dead';
  // Optimistic concurrency: never overwrite damage committed by another player.
@@ -4022,10 +3956,7 @@ function combatActionWeapon(combatant,action,mode='auto'){
 }
 function combatMeleeReachHexesForWeapon(weapon){
  const length=combatNumber(weapon?.weapon_length??weapon?.length,null);
- if(length==null)return 1;
- if(length<=1)return 1;
- if(length<=3)return 2;
- return 3
+ return globalThis.aleaExpertRules.meleeReach(length)
 }
 function combatMeleeRangeHexes(combatant,weapon=null){
  if(weapon?._unarmed)return 1;
@@ -4730,11 +4661,11 @@ function combatMovementSpent(combatant){
  return Math.max(0,maximum-combatMovementBudget(combatant))
 }
 function combatHalfMoveLimit(combatant){
- return Math.floor(combatMovementMaximum(combatant)/2)
+ return globalThis.aleaExpertRules.halfMovement(combatMovementMaximum(combatant))
 }
 function combatDestinationKeepsAction(combatant,pathCost){
  if(!combatant||pathCost==null)return false;
- return combatMovementSpent(combatant)+Number(pathCost)<=combatHalfMoveLimit(combatant)
+ return globalThis.aleaExpertRules.movementBudget(combatMovementMaximum(combatant),combatMovementBudget(combatant),false).keepsAction(Number(pathCost))
 }
 function combatReachableHexes(combatant){
  const cells=combatRuntimeHexCells();
@@ -5332,7 +5263,8 @@ function renderCombatMap(){
    visual=miniature||('<circle class="combat-token '+side+selected+turn+targetClass+planningClass+'" cx="'+cell.x+'" cy="'+cell.y+'" r="'+(g.size*.48)+'"><title>'+escAttr(c.name_snapshot)+targetTitle+(isPlanning?' · dra för att planera förflyttning':'')+'</title></circle><text class="combat-token-label" x="'+cell.x+'" y="'+cell.y+'">'+escAttr(combatTokenInitials(c.name_snapshot))+'</text>')
   }
   if(typeof window!=='undefined'&&window.aleaCombatPaperDollMap)
-   visual=window.aleaCombatPaperDollMap.renderBattleToken(visual,c,cell,g,selected+turn+targetClass+planningClass);
+   visual=window.aleaCombatPaperDollMap.renderBattleToken(visual,c,cell,g,selected+turn+targetClass+planningClass,
+    combatHeroClassEnabled||combatRuntimeMapMeta?.config?.characterTokenStyles?.[c.source_id]==='hero-class');
   else if(typeof window!=='undefined'&&window.aleaAstridPaperDoll)
    visual=window.aleaAstridPaperDoll.render(visual,c,cell,g,selected+turn+targetClass+planningClass);
   const footprintVisual=footprint.length>1?points.map(p=>'<polygon class="combat-footprint-hex" points="'+combatHexPoints(p.x,p.y,g.size*.94)+'" fill="'+(side==='hero'?'#4fa86d':side==='enemy'?'#cb5e52':'#739ec0')+'" fill-opacity="'+(isPlanning?'.4':'.24')+'" stroke="'+(attack?'#f5cb69':side==='hero'?'#79d9a0':side==='enemy'?'#ff9a86':'#9bc9e3')+'" stroke-width="'+(selected||turn?'3':'1.8')+'"/>').join(''):'';

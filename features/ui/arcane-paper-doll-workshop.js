@@ -43,6 +43,28 @@
    '<section class="apdw-pose-admin"><h3>Spara till kombattant</h3><label>Kombattant <select id="apdwCombatant"><option value="">Välj kombattant…</option>'+records.map((item,i)=>'<option value="'+i+'">'+escape((kinds[item.kind]||item.kind)+' · '+item.name)+'</option>').join('')+'</select></label><label>Battle Pose <select id="apdwPoseKey">'+(root.aleaBattlePoseCatalog?.POSES||[{id:'standard',label:'Standard Front'}]).map(({id,label})=>'<option value="'+id+'">'+escape(label)+'</option>').join('')+'</select></label><button type="button" data-action="save-pose" class="btn primary">Spara och leverera via HERMES</button><button type="button" data-action="load-pose" class="btn">Ladda sparad profil</button><p class="apdw-help">Sparar cutout och monteringsprofil samt skapar ett leveransjobb hos HERMES. Posen aktiveras först efter verifierad arkivering och publicering.</p></section>'+ 
    '<div class="apdw-actions"><button type="button" data-action="reset" class="btn">Återställ reglage</button></div>'+ 
    '<div class="apdw-profile-box"><label for="apdwProfileSelect">Monteringsprofiler</label><div class="apdw-profile-row"><select id="apdwProfileSelect"><option value="">Välj sparad profil…</option>'+Object.keys(profiles).sort((a,b)=>a.localeCompare(b,'sv')).map(name=>'<option value="'+escape(name)+'">'+escape(name)+'</option>').join('')+'</select><input id="apdwProfileName" maxlength="60" placeholder="Profilnamn" aria-label="Namn på monteringsprofil"><button type="button" data-action="save" class="btn primary">Spara profil</button><button type="button" data-action="load" class="btn">Återläs</button></div><div class="apdw-profile-row"><button type="button" data-action="export" class="btn">Exportera JSON</button><button type="button" data-action="import" class="btn">Importera JSON</button><button type="button" data-action="delete" class="btn">Ta bort profil</button><input id="apdwImportFile" type="file" accept="application/json,.json" hidden></div><p class="apdw-help">Profilen sparar bara geometri och bildnyckel. Den kan användas med valfritt porträtt.</p></div><p id="apdwActionStatus" class="apdw-status" role="status" aria-live="polite"></p></div></div>';
+  const heroPreview = document.createElement('details');
+  heroPreview.className = 'arcane-hero-workbench';
+  heroPreview.innerHTML = '<summary>Hero Class · figur på kartgolv</summary><div data-hero-workbench></div>';
+  mount.prepend(heroPreview);
+  heroPreview.addEventListener('toggle', async () => {
+   if (!heroPreview.open || heroPreview.dataset.loading) return;
+   heroPreview.dataset.loading = 'true';
+   try {
+    const { mountHeroWorkbench } = await import('../crypt/hero-workbench.js');
+    mountHeroWorkbench(heroPreview.querySelector('[data-hero-workbench]'), {
+     resolveAsset: key => asset(key)?.src,
+     heightFor: name => {
+      const record = records.find(item => item.kind === 'character' && (item.name === name || name.startsWith(item.name + ' från ')));
+      if (!record || typeof chars === 'undefined') return undefined;
+      return chars.find(c => (c._dbId || c.id) === record.id)?.identity?.langd;
+     },
+    });
+   } catch {
+    heroPreview.querySelector('[data-hero-workbench]').textContent = 'Figurförhandsvisningen kunde inte öppnas.';
+    delete heroPreview.dataset.loading;
+   }
+  });
   arrangeWorkspace();bind();$('apdwRaceSelect')?.addEventListener('change',e=>{selectedRace=e.target.value});$('apdwRaceGender')?.addEventListener('change',e=>{selectedGender=e.target.value});applyAssets();applyBaseMode();
  }
  function arrangeWorkspace(){

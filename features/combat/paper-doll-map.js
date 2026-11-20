@@ -202,7 +202,21 @@
  function mapBaseWidth(pixelsPerMeter){
   return .60*pixelsPerMeter;
  }
- function renderBattleToken(classic,actor,cell,g,stateClasses){
+ function renderHeroMapToken(character,pixelsPerMeter,active=false){
+  return root.aleaHeroClassField?.fieldHeroSvg(character,pixelsPerMeter,assets,{active})||'';
+ }
+ function renderBattleToken(classic,actor,cell,g,stateClasses,heroClass=false){
+  if(heroClass&&g.pixelsPerMeter&&actor.source_type==='character'&&root.aleaHeroClassField){
+   if(actor.status==='dead')return classic;
+   const source=typeof chars!=='undefined'&&(chars||[]).find(row=>String(row?._dbId||row?.id)===String(actor.source_id));
+   const character=source||{name:actor.name_snapshot};
+   if(root.aleaHeroClassField.fieldHeroId(character)){
+    if(!ready)load();
+    const active=/\b(?:selected|active-turn)\b/.test(stateClasses);
+    const figure=root.aleaHeroClassField.fieldHeroSvg(character,g.pixelsPerMeter,assets,{active,markerFallback:true});
+    return '<g class="combat-paper-doll-classic">'+classic+'</g><g transform="translate('+cell.x+' '+cell.y+')">'+figure+'</g>';
+   }
+  }
   if(!g.pixelsPerMeter||actor.status==='dead'||combatFootprintShape(actor)!=='single'){
    return render(classic,actor,cell,g,stateClasses);
   }
@@ -226,5 +240,5 @@
   renderMapToken(characterId,BASE_WIDTH,(base,pose)=>{pending=[measureMapArt(base),measureMapArt(pose)]});
   return Promise.all(pending);
  }
- root.aleaCombatPaperDollMap=Object.freeze({render,renderBattleToken,mapBaseWidth,load,renderMapToken,loadMapTokens,prepareMapToken});
+ root.aleaCombatPaperDollMap=Object.freeze({render,renderBattleToken,renderHeroMapToken,mapBaseWidth,load,renderMapToken,loadMapTokens,prepareMapToken});
 })(globalThis);

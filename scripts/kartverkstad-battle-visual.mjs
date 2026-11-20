@@ -1,6 +1,7 @@
 // Use the built app and actual WebGL pixels. No campaign login or remote game data.
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright';
+import { verifyCryptPilot } from './kartverkstad-crypt-visual.mjs';
 
 const [origin] = process.argv.slice(2);
 assert.equal(new URL(origin).hostname, '127.0.0.1');
@@ -84,4 +85,5 @@ try {
     assert.equal(await view.locator('canvas').count(),0);
     await page.close();
   }
+  await verifyCryptPilot(browser, origin);
 } finally { await browser.close(); }
