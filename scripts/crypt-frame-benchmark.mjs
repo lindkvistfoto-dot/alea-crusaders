@@ -14,6 +14,9 @@ export async function measureCryptFrames(browser, origin) {
       const canvas = document.querySelector('#scene canvas');
       if (document.querySelector('#motion').checked) throw Error('Expected normal motion.');
       const backend = canvas.dataset.renderer;
+      const gl = backend === 'pixi-webgl' && (canvas.getContext('webgl2') || canvas.getContext('webgl'));
+      const details = gl && gl.getExtension('WEBGL_debug_renderer_info');
+      const renderer = details ? gl.getParameter(details.UNMASKED_RENDERER_WEBGL) : backend;
       const draw = [], raf = [];
       const start = performance.now();
       let wasHidden = false;
@@ -43,7 +46,8 @@ export async function measureCryptFrames(browser, origin) {
         return {intervals:ms.length, meanHz:round(1000 * ms.length / (samples.at(-1) - samples[0])),
           p50Ms:p(.50), p95Ms:p(.95), p99Ms:p(.99), maxMs:round(ms.at(-1))};
       }
-      return {elapsedMs:Math.round(raf.at(-1)-start), backend, foreground:true,
+      return {elapsedMs:Math.round(raf.at(-1)-start), backend, renderer, foreground:true,
+        canvasPixels:[canvas.width,canvas.height], logicalCanvasWidth:Math.round(canvas.getBoundingClientRect().width),
         scene:'SL · hela kartan · tre figurer · fackla, sol och normal rörelse',
         viewport:[innerWidth,innerHeight], devicePixelRatio, sceneDraw:summary(draw), animationFrame:summary(raf)};
     });

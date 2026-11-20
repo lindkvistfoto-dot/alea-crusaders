@@ -3,6 +3,37 @@ import { heroSwayWeights } from './hero-class.js';
 const BACKGROUND = '#161d20';
 const GRID_X = 11, GRID_Y = 15;
 
+// Use the actual foreground drawing cadence. A single expensive action or a background
+// pause is a poor reason to sacrifice detail in the following scene.
+export function backingResolution(nativeResolution) {
+  const levels=[nativeResolution,...[1.5,1,.8,.6].filter(value=>value<nativeResolution)];
+  let level=0, previous=null, count=0, slow=0, duration=0, fastWindows=0, recoverAfter=0;
+  let lastUpgrade=-Infinity;
+  return function sample(now, still) {
+    const interval=previous===null ? 0 : now-previous;
+    previous=now;
+    if(still || interval<=0 || interval>500) {
+      count=0;slow=0;duration=0;fastWindows=0;
+      if(still){level=0;recoverAfter=0;lastUpgrade=-Infinity;}
+      return levels[level];
+    }
+    count++;duration+=interval;if(interval>37)slow++;
+    if(duration<1250 || count<8)return levels[level];
+    const mean=duration/count,sustainedSlow=slow>=count/2;
+    count=0;slow=0;duration=0;
+    // A 60 Hz display often draws every second RAF at the scene's 42 fps ceiling.
+    fastWindows=mean<34 ? fastWindows+1 : 0;
+    if(mean>37 && sustainedSlow && level<levels.length-1){
+      level++;
+      // A failed upward probe should not make the image alternate resolutions.
+      recoverAfter=now+(now-lastUpgrade<5000?60000:10000);
+    }else if(level>0 && fastWindows>=8 && now>=recoverAfter){
+      level--;fastWindows=0;lastUpgrade=now;
+    }
+    return levels[level];
+  };
+}
+
 function deform(mesh, item, time) {
   const geometry = mesh.geometry;
   if (!mesh.poseWeights || mesh.poseWeights.id !== item.hero) {
@@ -31,10 +62,14 @@ async function gpuSurface(host) {
   const {Application,Container,Texture,Sprite,MeshPlane}=await import('pixi.js');
   const app = new Application();
   try {
-    await app.init({width:10,height:10,antialias:true,background:BACKGROUND,
-      resolution:Math.min(window.devicePixelRatio||1,2),autoDensity:true,autoStart:false,
+    const nativeResolution=Math.min(window.devicePixelRatio||1,2);
+    const sampleResolution=backingResolution(nativeResolution);
+    // Edges and alpha already live in antialiased textures; CSS owns the canvas dimensions.
+    await app.init({width:10,height:10,antialias:false,background:BACKGROUND,
+      resolution:nativeResolution,autoDensity:false,autoStart:false,
       sharedTicker:false,preference:'webgl',powerPreference:'low-power'});
     const space=new Container();app.stage.addChild(space);host.append(app.canvas);
+    let width=10,height=10;
     const records=new Map(),textures=new Map();
     const textureFor=src=>{
       let t=textures.get(src);
@@ -42,6 +77,8 @@ async function gpuSurface(host) {
       return t;
     };
     function draw(items,camera,t){
+      const resolution=sampleResolution(t*1000,t===0);
+      if(resolution!==app.renderer.resolution)app.renderer.resize(width,height,resolution);
       space.scale.set(camera.scale);space.position.set(camera.x,camera.y);
       const used=new Set(),sources=new Set();
       for(const [index,item] of items.entries()){
@@ -69,7 +106,7 @@ async function gpuSurface(host) {
       app.render();
     }
     return {canvas:app.canvas,draw,kind:'pixi-webgl',
-      resize:(w,h)=>app.renderer.resize(w,h),
+      resize(w,h){width=w;height=h;app.renderer.resize(w,h);},
       destroy(){const geometries=[...records.values()].filter(d=>d.poseWeights).map(d=>d.geometry);records.clear();
         app.destroy({removeView:true},{children:true});for(const g of geometries)g.destroy();
         for(const t of textures.values())t.destroy(true);textures.clear();}};
