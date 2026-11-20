@@ -1,3 +1,4 @@
+import '../features/combat/expert-rules.js';
 import {describe,test,expect} from 'vitest';
 import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
@@ -23,6 +24,7 @@ if(start<0||stop<=start||damageFrom<0||damageTo<=damageFrom)throw Error('KROKODI
 function sandbox(effects=[]){
  const writes=[];
  const ctx={
+  aleaExpertRules:globalThis.aleaExpertRules,
   combatActiveEffects:effects,combatEffectRegistry:definitions,
   combatEffectIsActive:e=>e.status==='active'&&e.applied_round<=3&&(e.expires_round==null||e.expires_round>=3),
   combatEffectDefinition:e=>definitions.find(d=>d.id===e.effect_id),

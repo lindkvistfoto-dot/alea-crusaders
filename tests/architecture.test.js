@@ -708,7 +708,9 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("function combatRollD10");
     expect(combat).toContain("function combatBuildInitiative");
     expect(combat).toContain("formula:'SMI+1T10'");
-    expect(combat).toContain("b.total-a.total||b.smi-a.smi");
+    const expertRules = read("features/combat/expert-rules.js");
+    expect(combat).toContain(".sort(globalThis.aleaExpertRules.compareInitiative)");
+    expect(expertRules).toContain("b.total - a.total || b.smi - a.smi");
     expect(combat).toContain("visible_to_players!==false");
     expect(combat).toContain("initiative:pendingInitiative,active_actor_id:null");
     expect(combat).toContain("JSON.stringify({initiative,active_actor_id:firstActorId,phase:'movement'");
@@ -729,7 +731,8 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("function combatHalfMoveLimit");
     expect(combat).toContain("function combatMovementAllowance");
     expect(combat).toContain("function combatMovementHasUsedMoreThanHalf");
-    expect(combat).toContain("Math.min(remaining,halfLeft)");
+    expect(combat).toContain("movementBudget(maximum,remaining,!!committed).allowance");
+    expect(expertRules).toContain("Math.min(remaining, halfLeft)");
     expect(combat).toContain("automatic:true");
     expect(combat).toContain("const COMBAT_PRIMARY_ACTIONS=[");
     expect(combat).toContain("reactive:true");
@@ -881,8 +884,9 @@ describe("application architecture smoke checks", () => {
     expect(legacy).toContain("outcome-icon");
     expect(legacy).toContain("expertOutcomeHtml(outcome)");
     expect(legacy).toContain("awardCharacterErfItem(current._dbId,group,key,reason,{amount})");
-    expect(combat).toContain("expertSkillInitialResolution(ctx,roll)");
-    expect(combat).toContain("expertSkillConfirmationResolution(ctx,confirmationRoll)");
+    expect(combat).toContain("globalThis.aleaExpertRules.expertRoll(fv)");
+    expect(expertRules).toContain("expertSkillInitialResolution(ctx, roll)");
+    expect(expertRules).toContain("expertSkillConfirmationResolution({...ctx, skillConfirmKind: initial.confirm}, confirmationRoll)");
     expect(combat).toContain("full_damage:fullDamage");
     expect(combat).toContain("damage_mode:fullDamage?'full':'roll'");
     expect(combat).toContain("rule_engine:'expert_skill'");
@@ -1128,9 +1132,9 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("combatPossibleAttackTargets(combatant,mode,weapon)");
     expect(combat).toContain("function combatMeleeRangeHexes");
     expect(combat).toContain("weapon?.weapon_length??weapon?.length");
-    expect(combat).toContain("if(length<=1)return 1");
-    expect(combat).toContain("if(length<=3)return 2");
-    expect(combat).toContain("return 3");
+    expect(combat).toContain("globalThis.aleaExpertRules.meleeReach(length)");
+    expect(expertRules).toContain("if (length == null || length <= 1) return 1");
+    expect(expertRules).toContain("return length <= 3 ? 2 : 3");
     expect(combat).toContain("if(mode==='melee')return combatMeleeRangeHexes(combatant,weapon)");
     expect(combat).toContain("Närkontakt = närstrid · annars avstånd");
     expect(combat).toContain("cell?.sight_mode==='blocked'");
@@ -1142,8 +1146,10 @@ describe("application architecture smoke checks", () => {
     expect(combat).toContain("resolvedTargetId=action.status===\'resolved\'");
     expect(combat).toContain("function combatAttackPanelHtml");
     expect(combat).toContain("function combatDestinationKeepsAction");
-    expect(combat).toContain("Math.floor(combatMovementMaximum(combatant)/2)");
-    expect(combat).toContain("combatMovementSpent(combatant)+Number(pathCost)<=combatHalfMoveLimit(combatant)");
+    expect(combat).toContain("halfMovement(combatMovementMaximum(combatant))");
+    expect(expertRules).toContain("Math.floor(maximum / 2)");
+    expect(combat).toContain("combatMovementBudget(combatant),false).keepsAction(Number(pathCost))");
+    expect(expertRules).toContain("spent + cost <= halfMovement(maximum)");
     expect(combat).toContain("flight.ignore_terrain?1:footprint.some(c=>cellByKey.get(combatFootprintKey(c))?.movement_mode==='difficult')?2:1");
     expect(combat).toContain("if(!cell||!combatFootprintCanStand(combatant,nq,nr,facing,cellByKey))continue");
     expect(combat).toContain("if(nextCost>budget)continue");

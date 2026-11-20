@@ -4588,34 +4588,9 @@ function skillRollTarget(sk,r=findRuleSkill(sk)){
  return{target:group,source:'BC',label:`BC ${bc}`,bc,baseKey};
 }
 function formatSkillModifier(n){n=Number(n)||0;return n>0?'+'+n:n<0?'−'+Math.abs(n):'±0'}
-function expertSkillSpecialMax(fv){
- fv=Math.floor(Number(fv)||0);
- if(fv<20)return 5;
- return Math.min(19,5+Math.floor((fv-20)/4))
-}
-function expertSkillInitialResolution(ctx,roll){
- let cl=Number(ctx.target),fv=Number(ctx.baseTarget??cl),success=roll!==20&&roll<=cl;
- if(cl>=20){
-  if(roll===1)return {outcome:'perfect'};
-  if(roll===2)return {confirm:'high_perfect',fallback:'special',note:'Kontrollslag för perfekt slag.'};
-  if(roll===20)return {confirm:'high_fumble',fallback:'fail',note:'Kontrollslag för fummel.'};
-  if(roll>=2&&roll<=expertSkillSpecialMax(fv))return {outcome:'special'};
-  return {outcome:success?'success':'fail'}
- }
- if(roll===1)return {confirm:'perfect',fallback:'success',note:'Kontrollslag för perfekt slag.'};
- if(roll===20)return {confirm:'fumble',fallback:'fail',note:'Kontrollslag för fummel.'};
- if(success&&roll>=2&&roll<=5)return {confirm:'special',fallback:'success',note:'Kontrollslag för särskilt slag.'};
- return {outcome:success?'success':'fail'}
-}
-function expertSkillConfirmationResolution(ctx,second){
- let kind=ctx.skillConfirmKind??ctx.confirmKind,fv=Number(ctx.baseTarget??ctx.target);
- if(kind==='perfect')return second<=fv?'perfect':'success';
- if(kind==='special')return second<=fv?'special':'success';
- if(kind==='fumble')return second>fv||second===20?'fumble':'fail';
- if(kind==='high_perfect')return second<=Math.max(0,fv-20)?'perfect':'special';
- if(kind==='high_fumble')return second===20?'fumble':'fail';
- return 'fail'
-}
+function expertSkillSpecialMax(fv){return globalThis.aleaExpertRules.specialMax(fv)}
+function expertSkillInitialResolution(ctx,roll){return globalThis.aleaExpertRules.initialRoll(ctx,roll)}
+function expertSkillConfirmationResolution(ctx,second){return globalThis.aleaExpertRules.confirmationRoll(ctx,second)}
 function skillSpecialMax(fv){return expertSkillSpecialMax(fv)}
 function skillInitialResolution(ctx,roll){return expertSkillInitialResolution(ctx,roll)}
 function skillConfirmationResolution(ctx,second){return expertSkillConfirmationResolution(ctx,second)}
@@ -4877,7 +4852,7 @@ function renderDiceRollResult(rolls,total){
   message:diceExpression(rolls)+' = '+total+' ('+detail+')',details:{rolls,total}});
 }
 function closeDice(){$('dicePage').classList.add('hidden');if(diceReturn==='combat'){$('combatPage').classList.remove('hidden')}else if(diceReturn==='map'){$('mapPage').classList.remove('hidden')}else if(diceReturn==='view'&&current){$('view').classList.remove('hidden');$('back').classList.remove('hidden');$('editBtn').classList.remove('hidden')}else if(diceReturn==='admin'&&activeUser()?.admin){$('admin').classList.remove('hidden')}else{$('home').classList.remove('hidden');renderCards()}}
-function secureDie(sides){let max=0x100000000-(0x100000000%sides),a=new Uint32Array(1),v;do{crypto.getRandomValues(a);v=a[0]}while(v>=max);return(v%sides)+1}
+function secureDie(sides){return globalThis.aleaExpertRules.secureDie(sides)}
 function diceExpression(rolls){let counts={};rolls.forEach(r=>counts[r.sides]=(counts[r.sides]||0)+1);return DICE_SIDES.filter(s=>counts[s]).map(s=>counts[s]+'T'+s).join(' + ')}
 function dieSvg(s,v){let t=String(v);
 if(s===3)return `<svg viewBox="0 0 100 100"><polygon class="face-main" points="50,7 94,88 6,88"/><path class="face-mid" d="M50 7L50 88L6 88Z"/><path class="edge" d="M50 7L50 88M6 88L94 88"/><text x="55" y="61">${t}</text></svg>`;

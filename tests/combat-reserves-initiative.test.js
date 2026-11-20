@@ -1,3 +1,4 @@
+import '../features/combat/expert-rules.js';
 import {describe,it,expect} from 'vitest';
 import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
@@ -7,7 +8,8 @@ const turn=source.slice(source.indexOf('function combatTurnOrderIds('),source.in
 const combatant=(id,options={})=>({id,name_snapshot:id,q:0,r:0,sort_order:0,status:'active',visible_to_players:true,
  source_instance_key:'character:'+id+':1',state:{smi:12},...options});
 function setup(rows){
- const env={combatants:rows,activeCombat:{initiative:{status:'resolved',order:[]}},
+ const env={
+  aleaExpertRules:globalThis.aleaExpertRules,combatants:rows,activeCombat:{initiative:{status:'resolved',order:[]}},
   COMBAT_INITIATIVE_COLORS:['red','blue','gold'],combatRollD10:()=>5,
   combatNumber:(value,fallback=null)=>value==null?fallback:Number(value),
   combatEffectiveAttribute:(row,key)=>row.state?.smi,

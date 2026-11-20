@@ -136,3 +136,18 @@
  #arcanePaperDollWorkshopMount .apdw-cutout-controls{min-width:0;overflow-wrap:anywhere}
  #arcanePaperDollWorkshopMount .apdw-cutout-controls input[type=file]{max-width:100%;min-width:0}
 }
+
+.arcane-hero-workbench { margin-block: .75rem; border: 1px solid #84704b; border-radius: .55rem; padding: .7rem 1rem; }
+.arcane-hero-workbench summary { cursor: pointer; font-weight: 650; }
+.arcane-hero-workbench [data-hero-workbench]:not(:empty) { display: grid; grid-template-columns: minmax(10rem, 16rem) minmax(12rem, 22rem); gap: .8rem 1.4rem; margin-top: .75rem; }
+.arcane-hero-controls { display: grid; align-content: center; gap: .5rem; }
+.arcane-hero-controls label { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: .3rem; }
+.arcane-hero-controls select, .arcane-hero-controls input[type=range] { grid-column: 1 / -1; width: 100%; }
+.arcane-hero-controls input[type=number] { width: 5rem; }
+.arcane-hero-floor { overflow: hidden; border-radius: .35rem; background: radial-gradient(ellipse at 50% 75%, #5c5347, #232327); }
+.arcane-hero-floor svg { display: block; height: min(19rem, 65vw); width: 100%; }
+.arcane-hero-floor image { cursor: crosshair; }
+.arcane-hero-workbench [data-caption] { grid-column: 1 / -1; margin: 0; }
+@media(max-width:600px) {
+ .arcane-hero-workbench [data-hero-workbench]:not(:empty) { grid-template-columns: 1fr; }
+}

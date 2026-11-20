@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#131817">
+  <meta name="referrer" content="no-referrer">
+  <title>Kryptans dörr · ALEA Crusaders</title>
+  <link rel="icon" href="./assets/arcane/system/v1/icon-compass.avif">
+  <link rel="stylesheet" href="./features/crypt/style.css">
+  <script src="./legacy/supabase-environment.js"></script>
+</head>
+<body>
+  <header class="masthead">
+    <div class="frame masthead-row">
+      <a class="brand" href="./" aria-label="Till ALEA Crusaders">
+        <img src="./assets/arcane/system/v1/icon-compass.avif" alt="" width="32" height="32">
+        <span>Alea <b>Crusaders</b></span>
+      </a>
+      <span class="masthead-divider" aria-hidden="true"></span>
+      <span class="masthead-name">Spelbord</span>
+      <span class="session-indicator" id="connection" role="status">Ansluter …</span>
+    </div>
+  </header>
+  <main class="frame" id="board" aria-busy="true">
+    <div class="titlebar">
+      <div>
+        <h1>Kryptans dörr</h1>
+        <p class="scene-line"><span id="phase">Äventyr</span><span aria-hidden="true">/</span><span id="role">Spelbord</span></p>
+      </div>
+      <div class="title-actions" id="gm-title" hidden>
+        <button type="button" id="perspective" aria-pressed="false">Visa som spelare</button>
+        <button type="button" class="button-gold" id="invite">Bjud in spelare</button>
+      </div>
+    </div>
+    <p id="startup-error" class="error-banner" role="alert" hidden></p>
+    <div class="board-grid">
+      <section class="map-column" aria-label="Karta och kartverktyg">
+        <div class="map-frame">
+          <div id="scene" role="group" aria-label="Kryptans karta. Välj en hjälte och tryck på golvet för att flytta."></div>
+          <p id="map-placeholder">Öppnar spelbordet …</p>
+          <output id="dice-result" aria-live="polite" hidden></output>
+          <div class="map-corner map-corner-nw" aria-hidden="true"></div>
+          <div class="map-corner map-corner-ne" aria-hidden="true"></div>
+          <div class="map-corner map-corner-sw" aria-hidden="true"></div>
+          <div class="map-corner map-corner-se" aria-hidden="true"></div>
+        </div>
+        <div class="map-tools">
+          <span class="toolbar-label">Kamera</span>
+          <div class="segmented" role="group" aria-label="Kamera">
+            <button type="button" data-camera="map" aria-pressed="true">Översikt</button>
+            <button type="button" data-camera="room" aria-pressed="false">Rum</button>
+            <button type="button" data-camera="combat" aria-pressed="false">Strid</button>
+            <button type="button" data-camera="party" aria-pressed="false">Grupp</button>
+            <button type="button" data-camera="person" aria-pressed="false">Person</button>
+          </div>
+          <button id="grid" type="button" aria-pressed="false">Hexrutnät</button>
+        </div>
+        <div class="environment-bar" id="environment-bar" hidden>
+          <div class="environment-item" id="door-item">
+            <span class="fixture-label">Dörren</span><strong id="door-value">—</strong>
+            <button type="button" id="door-action">Öppna dörren</button>
+          </div>
+          <div class="environment-item" id="torch-item">
+            <span class="fixture-label">Evalins fackla</span><strong id="torch-value">—</strong>
+            <button type="button" id="torch-action">Släck facklan</button>
+          </div>
+        </div>
+        <details class="journal" id="journal-panel">
+          <summary>Spelhändelser <span id="journal-count"></span></summary>
+          <ol id="journal"></ol>
+        </details>
+      </section>
+      <aside aria-label="Rollpersoner och handlingar">
+        <section class="party-panel">
+          <div class="panel-header"><h2>Spelgruppen</h2></div>
+          <div id="hero-list" class="hero-list" role="group" aria-label="Välj rollperson"></div>
+          <div class="character-sheet" id="hero-sheet" hidden>
+            <h3 id="hero-name"></h3>
+            <p id="hero-detail"></p>
+            <div id="combat-info" class="combat-info" hidden></div>
+            <div class="action-list">
+              <button type="button" id="search"><img src="./assets/arcane/system/v1/icon-die.avif" alt="">Finna dolda ting</button>
+              <button type="button" id="attack" aria-describedby="observed" hidden><img src="./assets/arcane/system/v1/icon-swords.avif" alt=""><span id="attack-target">Anfall</span></button>
+              <button type="button" id="weapon" hidden><img src="./assets/arcane/system/v1/icon-equipment.avif" alt="">Byt vapen</button>
+            </div>
+            <p id="discoveries" class="observation" hidden></p>
+            <p id="observed" class="observation" hidden></p>
+            <p id="action-hint" class="hint"></p>
+            <details class="movement">
+              <summary>Förflytta ett steg</summary>
+              <div id="step-buttons" class="step-buttons" role="group" aria-label="Förflytta vald rollperson en hexagon">
+                <button type="button" data-step="northwest" aria-label="Nordväst">↖</button>
+                <button type="button" data-step="northeast" aria-label="Nordost">↗</button>
+                <button type="button" data-step="west" aria-label="Väst">←</button>
+                <button type="button" data-step="east" aria-label="Öst">→</button>
+                <button type="button" data-step="southwest" aria-label="Sydväst">↙</button>
+                <button type="button" data-step="southeast" aria-label="Sydost">↘</button>
+              </div>
+            </details>
+          </div>
+        </section>
+        <section class="gm-panel" id="gm-tools" hidden>
+          <div class="panel-header"><h2>Spelledare</h2></div>
+          <div id="pending"></div>
+          <div class="gm-actions">
+            <button type="button" id="guard-move" aria-pressed="false">Flytta motståndare</button>
+            <button type="button" id="combat-action">Starta strid</button>
+            <button type="button" id="guard-attack" hidden>Anfall vald rollperson</button>
+            <button type="button" id="next-turn" hidden>Nästa tur</button>
+          </div>
+        </section>
+        <details class="settings" id="settings">
+          <summary>Visning och inställningar</summary>
+          <div class="settings-body">
+            <label class="field" id="wall-field">Vägghöjd
+              <select id="wall-style"><option value="flat">Platt karta</option><option value="low" selected>Låg relief</option><option value="high">Hög relief</option></select>
+            </label>
+            <label class="check" id="sun-field"><input type="checkbox" id="sunlight" checked> Visa solstrålar</label>
+            <label class="check"><input type="checkbox" id="motion"> Minska rörelser</label>
+            <button type="button" id="prepare" hidden>Förbered rum</button>
+            <button type="button" id="reset" hidden>Börja om spelprovet</button>
+          </div>
+        </details>
+      </aside>
+    </div>
+    <p class="feedback" role="status" aria-live="polite" id="feedback"></p>
+  </main>
+  <dialog id="invite-dialog">
+    <h2>Bjud in till kryptan</h2>
+    <p>Välj den rollperson spelaren får styra. Låt spelledarens flik vara öppen under spelprovet.</p>
+    <label class="field">Rollperson <select id="invite-actor"></select></label>
+    <div class="dialog-actions">
+      <button type="button" id="copy-invite">Kopiera länk</button>
+      <a class="button button-gold" id="open-invite" target="_blank" rel="noopener noreferrer">Öppna spelarvy</a>
+    </div>
+    <p class="hint" id="invite-feedback" role="status"></p>
+    <button type="button" class="dialog-close">Stäng</button>
+  </dialog>
+  <dialog id="reset-dialog">
+    <h2>Börja om i kryptan?</h2>
+    <p>Figurerna flyttas tillbaka och gruppens kartminne, upptäckter och strid återställs.</p>
+    <div class="dialog-actions"><button type="button" class="dialog-close">Avbryt</button><button type="button" class="button-gold" id="confirm-reset">Börja om</button></div>
+  </dialog>
+  <noscript><p class="frame error-banner">Spelbordet behöver JavaScript för att visa kartan.</p></noscript>
+  <script type="module" src="./features/crypt/app.js"></script>
+</body>
+</html>
