@@ -87,7 +87,9 @@ function canvasSurface(host) {
   return {canvas,kind:'canvas2d',
     resize(w,h){canvas.width=Math.max(1,Math.round(w*scale));canvas.height=Math.max(1,Math.round(h*scale));},
     draw(items,camera,t){
-      ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle=BACKGROUND;ctx.fillRect(0,0,canvas.width,canvas.height);
+      if(typeof ctx.reset==='function')ctx.reset();
+      ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);
+      ctx.fillStyle=BACKGROUND;ctx.fillRect(0,0,canvas.width,canvas.height);
       ctx.setTransform(scale*camera.scale,0,0,scale*camera.scale,camera.x*scale,camera.y*scale);
       for(const i of items){
         ctx.save();ctx.translate(i.x,i.y);

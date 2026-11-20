@@ -38,7 +38,7 @@ export async function mountCrypt(host,callbacks={}) {
   canvas.style.display='block';canvas.style.width='100%';canvas.style.height='100%';canvas.style.touchAction='manipulation';
   canvas.setAttribute('aria-label','Kryptans spelkarta');canvas.dataset.renderer=surface.kind;
   const portraits=portraitTokens(images), compact=new Map();
-  const leafArt=doorLeaf(),marker=floorMarker(),mote=lightMote(),flame=torchHead(),handle=torchHandle();
+  const leafArt=doorLeaf(),leafEdge=doorLeaf(true),marker=floorMarker(),mote=lightMote(),flame=torchHead(),handle=torchHandle();
   let projection,materials,imagesForFrame,sceneKey='',camera,width=1,height=1,raf=0,lastFrame=0;
   let doorFrom=null,doorTo=null,doorChanged=0,disposed=false,inView=true;
   let options={camera:'map',wallMode:'low',grid:false,sunlight:true};
@@ -103,8 +103,8 @@ export async function mountCrypt(host,callbacks={}) {
     if(p.door){
       const d=p.door,angle=still?doorTo:angleAt(now),length=Math.hypot(d.endX-d.x,d.endY-d.y);
       const thickness=options.wallMode==='flat'?6:options.wallMode==='high'?13:10;
-      list.push(layer('door-edge',leafArt,d.x,d.y+Math.abs(Math.cos(angle))*thickness*.45+1,length,thickness,
-        {ay:.50,angle,alpha:.75}));
+      list.push(layer('door-edge',leafEdge,d.x,d.y+Math.abs(Math.cos(angle))*thickness*.45+1,length,thickness,
+        {ay:.50,angle}));
       list.push(layer('door-leaf',leafArt,d.x,d.y,length,thickness,{ay:.5,angle}));
     }
     const active=layers.cast.find(a=>a.id===options.selectedHero);
@@ -119,13 +119,19 @@ export async function mountCrypt(host,callbacks={}) {
         continue;
       }
       const pixels=h*camera.scale;
-      const small=usePortrait(a.kind,pixels,compact.get(a.id));
-      compact.set(a.id,small);
-      if(small){
-        const side=25/camera.scale;
-        list.push(layer('portrait-'+a.id,portraits.get(a.id),a.x,a.y,side,side,{ax:.5,ay:.70}));
-        continue;
+      let icon=compact.get(a.id);
+      const small=usePortrait(a.kind,pixels,icon?.small);
+      if(!icon || icon.small!==small){
+        icon={small,from:icon?.alpha??Number(small),start:now};compact.set(a.id,icon);
       }
+      const fade=still?1:clamp((now-icon.start)/180,0,1);
+      icon.alpha=icon.from+(Number(small)-icon.from)*fade;
+      if(icon.alpha>0){
+        const side=25/camera.scale;
+        list.push(layer('portrait-'+a.id,portraits.get(a.id),a.x,a.y,side,side,{ax:.5,ay:.70,alpha:icon.alpha}));
+      }
+      if(icon.alpha===1)continue;
+      const actorStart=list.length;
       list.push(layer('actor-'+a.id,a.src,a.x,a.y,w,h,{ax:anchor.x,ay:anchor.y,hero:HERO_PROFILES[a.id]?a.id:null,still}));
       if(a.id==='evalin'&&p.torch?.on){
         const grip=socket(a,'torchGrip'),fire=socket(a,'torchFlame');
@@ -139,8 +145,10 @@ export async function mountCrypt(host,callbacks={}) {
           list.push(layer('spark'+i,mote,xx,yy,1.6,2.1,{ax:.5,ay:.5,add:true,alpha:(1-f)*.92}));
         }
       }
+      if(icon.alpha>0)for(let i=actorStart;i<list.length;i++)list[i].alpha=(list[i].alpha??1)*(1-icon.alpha);
     }
     surface.draw(list,camera,t);
+    globalThis.aleaCryptFrameProbe?.();
   }
   function frame(now){
     raf=0;if(disposed||document.hidden||!inView)return;
@@ -168,7 +176,7 @@ export async function mountCrypt(host,callbacks={}) {
     const [x,y]=screenToMap(camera,e.clientX-r.left,e.clientY-r.top);
     for(const a of [...imagesForFrame.cast].reverse()){
       const side=25/camera.scale;
-      const {width:w,height:h,anchor}=compact.get(a.id)?{width:side,height:side,anchor:{x:.5,y:.70}}:a.p;
+      const {width:w,height:h,anchor}=compact.get(a.id)?.small?{width:side,height:side,anchor:{x:.5,y:.70}}:a.p;
       if(x>=a.x-w*anchor.x&&x<=a.x+w*(1-anchor.x)&&y>=a.y-h*anchor.y&&y<=a.y+h*(1-anchor.y)){
         if(a.kind==='hero')callbacks.onHero?.(a.id);else callbacks.onGuard?.(a.id);return;
       }

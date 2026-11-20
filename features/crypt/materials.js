@@ -222,7 +222,7 @@ export function sunShaft(width,height,sun,seen){
   c.restore();return result;
 }
 
-export function doorLeaf() {
+export function doorLeaf(edge=false) {
   const s=sheet(200,30),c=s.getContext('2d');
   const gradient=c.createLinearGradient(0,0,0,30);
   gradient.addColorStop(0,'#ccaa75');gradient.addColorStop(.18,'#8d6b45');gradient.addColorStop(.75,'#634932');gradient.addColorStop(1,'#2b2422');
@@ -234,6 +234,10 @@ export function doorLeaf() {
   for(const x of [9,42,157,185]){
     c.fillStyle='#252d2d';c.fillRect(x,0,7,30);c.fillStyle='#96938a';c.fillRect(x+.5,1,2,24);
     for(const y of [5,24]){c.fillStyle='#c5a775';c.beginPath();c.arc(x+3,y,1.4,0,2*Math.PI);c.fill();}
+  }
+  if(edge){
+    c.fillStyle='#201d22a8';c.fillRect(0,0,200,30);
+    line(c,[[0,28],[200,28]],'#a288677f',1.6);
   }
   return s;
 }

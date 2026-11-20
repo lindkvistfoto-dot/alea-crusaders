@@ -143,6 +143,7 @@ function updateCombat(hero, actorControlled) {
   const isTurn = inCombat && battle.activeActorId === hero?.id;
   const active = projection.actors.find(a => a.id === battle?.activeActorId);
   const enemy = guard();
+  const personalSight = !!hero && !!enemy?.seenBy?.includes(hero.id);
   const turnAction = actorControlled && isTurn && stats?.actionAvailable;
   $('combat-info').hidden = !inCombat;
   if (inCombat) {
@@ -156,7 +157,7 @@ function updateCombat(hero, actorControlled) {
   }
   $('attack-target').textContent = enemy ? 'Anfall ' + enemy.name : 'Anfall';
   $('attack').hidden = !inCombat || !enemy;
-  $('attack').disabled = !turnAction || pendingCommand || !enemy;
+  $('attack').disabled = !turnAction || pendingCommand || !personalSight;
   $('weapon').hidden = !inCombat;
   $('weapon').disabled = !turnAction || pendingCommand;
   $('combat-action').textContent = inCombat ? 'Avsluta strid' : 'Starta strid';
@@ -164,7 +165,7 @@ function updateCombat(hero, actorControlled) {
   $('guard-attack').hidden = !isGM() || !inCombat || !enemy || battle.activeActorId !== enemy.id;
   $('guard-attack').disabled = !hero || pendingCommand;
   $('guard-attack').textContent = enemy && isGM() ? enemy.name + ' anfaller ' + shortName(hero) : 'Anfall vald rollperson';
-  return { inCombat, isTurn, stats };
+  return { inCombat, isTurn, stats, personalSight };
 }
 
 function refreshControls() {
@@ -192,7 +193,7 @@ function refreshControls() {
     const role = { astrid: 'Krigare', lyra: 'Magiker · mörkerseende i spelprovet', evalin: 'Fackelbärare' };
     $('hero-detail').textContent = role[hero.id] || '';
   }
-  const { inCombat, isTurn, stats } = updateCombat(hero, control);
+  const { inCombat, isTurn, stats, personalSight } = updateCombat(hero, control);
   $('search').disabled = !control || pendingCommand || (inCombat && (!isTurn || !stats?.actionAvailable));
   const waiting = projection.pending?.some(item => item.actorId === hero?.id);
   const hint = playerPreview ? 'Här ser du gruppens gemensamma synfält. Mörkare golv visar det gruppen minns.' :
@@ -210,6 +211,9 @@ function refreshControls() {
   $('observed').hidden = !enemy;
   $('observed').textContent = !enemy ? '' : observers.length ? enemy.name + ' ses av ' + observers.join(', ') + '.' :
     (gm ? enemy.name + ' är utom gruppens synfält.' : 'Gruppen ser ' + enemy.name + '.');
+  if (inCombat && enemy && hero && !personalSight) {
+    $('observed').textContent += ' ' + shortName(hero) + ' behöver själv se målet för att anfalla.';
+  }
   for (const b of $('step-buttons').children) b.disabled = !control || pendingCommand || (inCombat && !isTurn);
   $('guard-move').setAttribute('aria-pressed', String(guardTargeting));
   $('guard-move').textContent = guardTargeting ? 'Avbryt placering' : (gm ? 'Flytta vakten' : 'Flytta motståndare');

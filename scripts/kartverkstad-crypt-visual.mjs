@@ -1,6 +1,7 @@
 // Exercise the same built entry and role invitations that Zeus opens in a preview.
 // All campaign services are offline in this browser test. Local BroadcastChannel carries the projections.
 import assert from 'node:assert/strict';
+import {measureCryptFrames} from './crypt-frame-benchmark.mjs';
 import {mkdir,writeFile} from 'node:fs/promises';
 
 export async function verifyCryptPilot(browser, origin, output='visual-results/after/crypt') {
@@ -28,7 +29,7 @@ export async function verifyCryptPilot(browser, origin, output='visual-results/a
     await gm.locator('.crypt-prep').waitFor({state:'detached'});
     await gm.locator('#settings summary').click();
     const players=[];
-    for (const hero of ['astrid','lyra']) {
+    for (const hero of ['evalin','lyra']) {
       await gm.locator('#invite').click();
       await gm.locator('#invite-actor').selectOption(hero);
       const link=await gm.locator('#open-invite').getAttribute('href');
@@ -62,6 +63,19 @@ export async function verifyCryptPilot(browser, origin, output='visual-results/a
     await gm.waitForFunction(()=>document.querySelector('#journal').textContent.includes('Finna dolda ting'));
     await gm.locator('#combat-action').click();
     await Promise.all(players.map(page=>page.waitForFunction(()=>document.querySelector('#phase').textContent.includes('Strid'))));
+    await gm.locator('[data-hero="evalin"]').click();
+    // Evalin has an action on her turn, but only Lyra can personally perceive the guard.
+    for (let i=0;i<3;i++) {
+      const active=(await gm.locator('#combat-info').innerText()).split(' · ')[1];
+      if (active==='Evalin har turen') break;
+      await gm.locator('#next-turn').click();
+      await gm.waitForFunction(last=>document.querySelector('#combat-info').textContent.split(' · ')[1]!==last,active);
+    }
+    const evalin=players[0];
+    await evalin.waitForFunction(()=>!document.querySelector('#weapon').disabled);
+    assert.ok(await evalin.locator('#attack').isVisible());
+    assert.ok(await evalin.locator('#attack').isDisabled());
+    assert.match(await evalin.locator('#observed').innerText(),/ses av Lyra\. Evalin behöver själv se målet för att anfalla/);
     await gm.locator('#combat-action').click();
     await players[0].waitForFunction(()=>document.querySelector('#phase').textContent.includes('Äventyr'));
     await gm.locator('#door-action').click();await door(players[0],'stängd');
@@ -74,6 +88,8 @@ export async function verifyCryptPilot(browser, origin, output='visual-results/a
     assert.ok(await players[1].evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+1));
     assert.deepEqual(errors,[]);
     console.log('Kryptans dörr · SL, två spelare, kartförberedelse, dörr, slag, strid, omladdning och mobil OK.',measurements);
-    await writeFile(output+'/kontroll.json',JSON.stringify({viewports:['1366x850','390x844'],doorToBothClientsMs:measurements,exceptions:errors},null,2));
   } finally {await context.close();}
+  const cadence=await measureCryptFrames(browser,origin);
+  console.log('Kryptans bildtid',JSON.stringify(cadence));
+  await writeFile(output+'/kontroll.json',JSON.stringify({viewports:['1366x850','390x844'],doorToBothClientsMs:measurements,foregroundCadence:cadence,exceptions:errors},null,2));
 }
