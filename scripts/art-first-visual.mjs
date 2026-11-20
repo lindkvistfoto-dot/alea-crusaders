@@ -13,6 +13,7 @@ const ready=p=>p.waitForFunction(()=>document.querySelectorAll('#hero-list butto
 const expected=(page,id,value)=>page.waitForFunction(([id,v])=>document.getElementById(id).textContent.includes(v),[id,value]);
 async function measure(page,ms=12000){
   await page.bringToFront();
+  await page.locator('#scene canvas').scrollIntoViewIfNeeded();
   return page.evaluate(ms=>new Promise(resolve=>{
     const intervals=[];let last;
     window.aleaCryptFrameProbe=()=>{const now=performance.now();if(last)intervals.push(now-last);last=now;};
@@ -48,7 +49,10 @@ try{
   await gm.locator('#combat-action').click();await expected(player,'phase','Strid');
   await gm.locator('#combat-action').click();await expected(player,'phase','Äventyr');
   await player.reload();await ready(player);await expected(player,'door-value','Stängd');
-  await gm.bringToFront();const painted=await measure(gm);
+  await player.bringToFront();await player.locator('#scene canvas').screenshot({path:out+'/04-spelare.png'});
+  for(const {masterRequests} of clients)assert.deepEqual(masterRequests,[]);
+  await Promise.all(clients.map(({page})=>page.close()));
+  const painted=await measure(gm);
   await gm.setViewportSize({width:390,height:844});await gm.waitForTimeout(500);const mobile=await measure(gm);
   await gm.screenshot({path:out+'/03-mobil.png',fullPage:true});
   for(const width of [390,320]){
@@ -59,8 +63,7 @@ try{
     }));
     assert.ok(overflow.scroll<=width+1,JSON.stringify(overflow));
   }
-  await player.bringToFront();await player.locator('#scene canvas').screenshot({path:out+'/04-spelare.png'});
-  for(const {masterRequests} of clients)assert.deepEqual(masterRequests,[]);
+  await gm.close();
   const original=await context.newPage();await original.setViewportSize({width:1220,height:900});
   await original.goto(root+'/kryptans-dorr.html');await ready(original);const constructed=await measure(original);
   await original.locator('#scene canvas').screenshot({path:out+'/05-kryptans-dorr.png'});

@@ -17,20 +17,29 @@ function floorPaths(p) {
 
 // Static raised surfaces borrow their visibility from the nearest accessible facing.
 // They contain no actors, status indicators, search results or alternate secret passages.
+// Trace the silhouette of each continuous painted surface. The samples lie on
+// its accessible side; a remembered surface can never show a live change.
 const faces=[
-  {at:[215,229],box:[160,65,125,161]}, {at:[496,231],box:[451,66,124,161]},
-  {at:[366,192],box:[284,13,160,184]}, {at:[355,293],box:[275,194,174,93]},
-  {at:[269,445],box:[120,374,145,135]}, {at:[160,295],box:[80,198,87,110]},
-  {at:[536,475],box:[542,425,87,86]}, {at:[112,342],box:[79,287,40,53]},
-  {at:[576,380],box:[574,274,51,99]}
+  {at:[[137,271],[174,232]],shape:'M51 239 L48 194 80 177 84 144 123 107 159 85 189 77 202 99 193 181 158 205 147 246 103 277 81 304 47 307 Z'},
+  {at:[[214,228],[256,216]],shape:'M142 199 L137 164 142 109 174 92 185 57 209 45 267 64 293 65 297 189 273 208 226 224 180 223 Z'},
+  {at:[[256,216],[466,215],[363,189]],shape:'M267 198 L268 91 293 61 313 56 329 29 354 15 373 15 393 33 400 50 432 62 457 64 460 196 429 212 292 212 Z'},
+  {at:[[466,215],[500,231]],shape:'M431 204 L435 67 485 62 500 45 522 46 535 75 564 89 582 111 584 176 561 220 529 224 494 231 465 216 Z'},
+  {at:[[544,244],[564,269]],shape:'M542 208 L545 106 579 92 602 112 628 128 642 172 663 181 672 219 651 248 617 282 576 278 Z'},
+  {at:[[338,291],[419,292]],shape:'M276 282 L278 249 285 242 287 197 434 195 439 241 446 247 446 283 434 287 283 287 Z'},
+  {at:[[264,445],[274,465]],shape:'M103 509 L108 404 130 399 131 382 149 374 162 379 173 396 218 387 235 390 261 421 255 448 249 455 250 480 266 485 265 514 110 516 Z'},
+  {at:[[164,287],[132,307]],shape:'M78 298 L75 243 102 214 138 192 163 211 163 277 148 291 103 308 Z'},
+  {at:[[535,476],[552,459]],shape:'M545 482 L549 452 566 431 581 427 608 439 625 452 621 467 613 495 602 509 577 501 Z'},
+  {at:[[121,330],[116,345]],shape:'M74 320 Q73 290 92 286 Q111 284 120 299 L119 319 113 336 Q92 351 78 335 Z'},
+  {at:[[566,360],[574,380]],shape:'M571 313 Q569 282 587 278 Q607 269 616 288 L618 313 615 319 Q631 333 623 358 Q622 374 608 380 Q583 383 579 364 L574 341 Z'}
 ];
 function visibleMasks(p) {
   const floor=floorPaths(p);
   const visible=new Path2D(floor.seen), known=new Path2D(floor.memory);
   const probe=sheet(1,1).getContext('2d');
-  for(const {at,box} of faces) {
-    if(probe.isPointInPath(floor.seen,...at))visible.rect(...box);
-    else if(probe.isPointInPath(floor.memory,...at))known.rect(...box);
+  for(const face of faces) {
+    const target=face.at.some(point=>probe.isPointInPath(floor.seen,...point)) ? visible
+      : face.at.some(point=>probe.isPointInPath(floor.memory,...point)) ? known : null;
+    if(target)target.addPath(new Path2D(face.shape));
   }
   if(p.door) {
     const target=p.door.visible===false?known:visible;
