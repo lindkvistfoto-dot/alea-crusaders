@@ -297,3 +297,6 @@
     text-align:center;
   }
 }
+
+/* Kartverkstad: keep the global Home shortcut out of the editor workspace. */
+body:has(#mapAreaEditor:not(.hidden)) #landingHomeNavBtn { display: none !important; }

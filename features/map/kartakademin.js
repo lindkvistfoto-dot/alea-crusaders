@@ -175,10 +175,11 @@ async function openEditor(map, areas, imageUrl) {
       </div>
       <nav class="kartakademin-mode-nav" data-mode-nav aria-label="Kartverkstadens redigeringslägen" role="tablist">
         <button type="button" role="tab" data-mode-button="rooms" aria-selected="true">Rum</button>
-        <button type="button" role="tab" data-mode-button="sight" aria-selected="false">Sikt och hinder</button>
-        <button type="button" role="tab" data-mode-button="lights" aria-selected="false">Ljuskällor</button>
-        <button type="button" role="tab" data-mode-button="effects" aria-selected="false">Områdeseffekter</button>
+        <button type="button" role="tab" data-mode-button="sight" aria-selected="false">Sikt</button>
+        <button type="button" role="tab" data-mode-button="lights" aria-selected="false">Ljus</button>
+        <button type="button" role="tab" data-mode-button="effects" aria-selected="false">Effekt</button>
         <button type="button" role="tab" data-mode-button="objects" aria-selected="false">Objekt</button>
+        <button type="button" role="tab" disabled aria-disabled="true" title="Kommande funktion: Varelse">Varelse</button>
       </nav>
       <div class="kartakademin-controls" data-tool-picker></div><select data-tool hidden aria-hidden="true" tabindex="-1"></select>
       <label class="kartakademin-mode-select" hidden>Redigeringsläge<select data-mode aria-hidden="true" tabindex="-1"><option value="rooms">Rum</option><option value="effects">Områdeseffekter</option><option value="sight">Sikt och hinder</option><option value="lights">Ljuskällor</option><option value="objects">Objekt</option></select></label>
