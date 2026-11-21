@@ -82,27 +82,23 @@ it('keeps map settings and party position changes atomic and protects access by 
     const cells = new Set(data.freeSight.runs.flatMap(([start,len]) => Array.from({length:len}, (_, i) => start+i)));
     expect(cells.has(2)).toBe(true);
     for (const hidden of [5,8,9,10,18]) expect(cells.has(hidden)).toBe(false);
-    const lighting = () => db.query('select read_campaign_map_lighting($1) as data', [map]);
-    expect((await lighting()).rows[0].data).toEqual(data);
     await db.exec("set test.role = 'gm'");
     const surface = (left,right) => ({ id:'gm-only', label:'secret', closed:false, light:true,
       points:[[left,7],[right,7]], face:[[left,5],[right,5]] });
-    const visible = surface(1,4);
+    const visible = surface(1,5); // Touches the unexplored border without crossing it.
     await save(1, [], {...config, lightingModel:'painted', geometry:[visible,surface(3,7),surface(13,18),surface(8,9)]});
     await db.exec("set test.role = 'member'");
-    const display = (await lighting()).rows[0].data;
+    const display = (await render()).rows[0].data;
     expect(display.lightingModel).toBe('painted');
     expect(display.visibleFaces).toEqual([{points:visible.points,face:visible.face}]);
     expect(display.geometry).toEqual([]);
     await expect(save(1, [])).rejects.toThrow(/ändrats/);
     await db.exec("set test.role = 'outsider'");
     expect((await render()).rows).toEqual([{ data: null }]);
-    expect((await lighting()).rows).toEqual([{ data: null }]);
     expect((await db.query('select configuration from campaign_map_academy')).rows).toEqual([]);
     await db.exec("reset role; set role anon");
     await expect(db.query('select configuration from campaign_map_academy')).rejects.toThrow(/permission denied/);
     await expect(render()).rejects.toThrow(/permission denied/);
-    await expect(lighting()).rejects.toThrow(/permission denied/);
   } finally {
     await db.close();
   }

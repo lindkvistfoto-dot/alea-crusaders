@@ -22,14 +22,9 @@ async function load(map, manager = canManageCampaignMaps()) {
   let rows;
   try {
     if (!manager) {
-      const request = { method: 'POST', body: JSON.stringify({ p_map_id: map.id }) };
-      let config;
-      try {
-        config = await dbJson('rpc/read_campaign_map_lighting', request);
-      } catch (error) {
-        if (!ignoredMissingTable(error) || !/read_campaign_map_lighting/.test(error.message)) throw error;
-        config = await dbJson('rpc/read_campaign_map_academy_player', request);
-      }
+      const config = await dbJson('rpc/read_campaign_map_academy_player', {
+        method: 'POST', body: JSON.stringify({ p_map_id: map.id }),
+      });
       return { config, positions: [] };
     }
     rows = await dbJson('campaign_map_academy?' + filter(map.id) + '&select=configuration,revision');
