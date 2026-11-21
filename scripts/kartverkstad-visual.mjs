@@ -76,7 +76,10 @@ try {
     await page.goto(origin);
     await page.waitForFunction(() => window.aleaKartakademin && typeof openMapAreaEditor === 'function');
     await page.evaluate(openTestMap);
-    await page.locator(compare === 'baseline' ? '#mapAreaList select, #mapAreaList [data-room-id]' : '#mapAreaList [data-room-id]').first().waitFor();
+    const roomRows = compare === 'baseline'
+      ? '#mapAreaList .map-area-list-row select:visible, #mapAreaList [data-room-id]:visible'
+      : '#mapAreaList [data-room-id]';
+    await page.locator(roomRows).first().waitFor();
     await page.waitForFunction(() => document.querySelector('[data-map-scale]')?.textContent.includes('px/m'));
     await page.screenshot({path:`${output}/${width}x${height}.png`});
     if (compare === 'baseline') return;

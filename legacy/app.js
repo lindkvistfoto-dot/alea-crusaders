@@ -4082,7 +4082,7 @@ async function openMapAreaEditor(mapId){
     mapAreaEditAreas=next;
     if(activeCampaignMap?.id===map.id)setCampaignMapData(activeCampaignMap,next);
    },
-   setStatus:setMapLocationStatus,confirm:askConfirm
+   setStatus:setMapLocationStatus,confirm:askConfirm,cancelConfirm:()=>closeAppConfirm(false)
   });
  }catch(e){alert('Kunde inte öppna Kartverkstaden: '+e.message)}
 }

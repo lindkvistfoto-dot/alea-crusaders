@@ -1,11 +1,11 @@
 // Chromium acceptance against the real Admin → Platser → Kartverkstad entry point.
-// Usage: node scripts/polygon-studio-visual.mjs http://127.0.0.1:5173 /tmp/results [dev-fixture.json] [katakomber-image.png] [visibility.json]
+// Usage: node scripts/polygon-studio-visual.mjs http://127.0.0.1:5173 /tmp/results [dev-fixture.json] [katakomber-image.png] [visibility.json] [current-katakomber-areas.json]
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { mkdir, readFile } from 'node:fs/promises';
 import { chromium } from 'playwright';
 
-const [origin, output, fixturePath, imagePath, visibilityPath] = process.argv.slice(2);
+const [origin, output, fixturePath, imagePath, visibilityPath, currentAreasPath] = process.argv.slice(2);
 assert.equal(new URL(origin).hostname, '127.0.0.1');
 await mkdir(output, {recursive:true});
 const db = fixturePath ? JSON.parse(await readFile(fixturePath,'utf8')) : {maps:[],sites:[],locations:[],areas:[]};
@@ -42,6 +42,19 @@ const seamRooms = [rectangle(80,100,100,150),rectangle(186,100,100,150)].map((po
 }));
 db.maps.push(seamMap);
 db.areas.push(...seamRooms);
+// The two rooms share exact opposing chains. One redundant vertex is straight,
+// another deviates two image pixels. The detached third room must never change.
+const nodeMap={...map,id:randomUUID(),name:'Delad vägg'};
+const chain=[[205,42],[205,120],[205,180],[207,250],[205,345]];
+const nodeRooms=[
+  [[45,42],...chain,[45,345]],
+  [[205,42],[360,42],[360,345],...chain.slice(1).reverse()],
+  rectangle(5,235,23,50),
+].map((points,index)=>({
+  id:randomUUID(),map_id:nodeMap.id,campaign_id:campaign,shape_type:'polygon',shape_data:{points},
+  sort_order:index,location_id:[location.id,linkedRoom.id,null][index],updated_at:timestamp(),
+}));
+db.maps.push(nodeMap);db.areas.push(...nodeRooms);
 const writes = [];
 const states = new Map();
 if (visibilityPath) {
@@ -168,6 +181,67 @@ function checkRepair(before, recipient, afterPoints, firstWrite) {
   }
 }
 
+async function sharedPointTrial(editor, level, roomId, point, changedIds, {confirm=false,touch=false,screenshot}={}) {
+  const baseline=structuredClone(readRows(level.id));
+  const firstWrite=writes.length;
+  const primary=baseline.find(row=>row.id===roomId);
+  const click=button=>touch?button.tap():button.click();
+  const remove=editor.ui('#mapAreaToolbar #mapAreaRemoveVertexBtn');
+  const dialog=editor.page.locator('#appConfirm');
+  await editor.select(roomId);
+  await editor.mode('edit');
+  await editor.click(point);
+  assert.equal(await editor.ui('[data-vertex-index].active').getAttribute('data-vertex-index'),
+    String(primary.shape_data.points.findIndex(p=>pointString([p])===pointString([point]))));
+  assert.match(await editor.ui('#mapAreaNotice').innerText(),/punkt\s*\d+/i,'Valt hörn ska kunna identifieras');
+  assert.ok(await remove.isVisible());
+  assert.ok(await remove.isEnabled());
+  assert.deepEqual(readRows(level.id),baseline,'Att markera ett hörn får inte ändra geometri');
+  if (screenshot) {
+    await remove.evaluate(el=>el.scrollIntoView({block:'center',behavior:'instant'}));
+    await editor.page.screenshot({path:output+'/'+screenshot.replace('.png','-vald.png')});
+  }
+  await click(remove);
+  if (confirm) {
+    await dialog.waitFor();
+    const explanation=await dialog.innerText();
+    assert.match(explanation,/räta ut/i);
+    for (const id of changedIds) {
+      const n=baseline.find(row=>row.id===id).sort_order+1;
+      assert.match(explanation,new RegExp('Polygon '+n+'\\b','i'));
+    }
+    assert.equal(writes.length,firstWrite);
+    if(touch) await click(dialog.getByRole('button',{name:'Avbryt'}));
+    else await editor.page.keyboard.press('Escape');
+    await dialog.waitFor({state:'hidden'});
+    assert.deepEqual(readRows(level.id),baseline,'Avbruten uträtning får inte ändra lagrade rum');
+    await click(remove);await dialog.waitFor();
+    if(screenshot) await editor.page.screenshot({path:output+'/'+screenshot});
+    await click(editor.page.locator('#appConfirmOk'));
+  } else {
+    assert.equal(await dialog.isVisible(),false,'En rak mellanpunkt behöver ingen uträtning');
+  }
+  await waitFor(()=>writes.length===firstWrite+1,'Ta bort vald punkt i en operation');
+  const expectedIds=[...changedIds].sort();
+  assert.deepEqual(writes[firstWrite].map(change=>change.id).sort(),expectedIds);
+  assert.equal(await editor.count(),baseline.length);
+  for(const row of baseline) {
+    const actual=getRow(row.id);
+    if(!changedIds.includes(row.id)) {
+      assert.deepEqual(actual,row,'Orört grannrum ska behålla ursprunglig rad');
+      continue;
+    }
+    const remaining=row.shape_data.points.filter(([x,y])=>x!==point[0] || y!==point[1]);
+    assert.equal(remaining.length,row.shape_data.points.length-1);
+    assert.deepEqual(actual,{...row,updated_at:actual.updated_at,shape_data:{...row.shape_data,points:remaining}});
+  }
+  await click(editor.ui('#mapAreaUndoBtn'));
+  await waitFor(()=>writes.length===firstWrite+2,'Ångra hela den delade kantändringen');
+  assert.deepEqual(writes[firstWrite+1].map(change=>change.id).sort(),expectedIds);
+  for(const row of baseline) assert.deepEqual(getRow(row.id),{...row,updated_at:getRow(row.id).updated_at});
+  await editor.page.waitForFunction(()=>!window.aleaKartakademin.isSaving());
+}
+
 try {
   const {page,ui,open,screen,click,mode,select,active,count}=await session();
   const catacombs=db.maps.find(m=>m.name==='katakomber');
@@ -217,6 +291,9 @@ try {
     await ui('#mapAreaUndoBtn').click();
     await waitFor(()=>pointString(getRow(roomThree.id).shape_data.points)===pointString(roomThree.shape_data.points),'Återställ glipa');
     assert.deepEqual(readRows(catacombs.id).map(a=>a.shape_data),original.map(a=>a.shape_data));
+    const initialRoom=original.find(row=>row.sort_order===0);
+    await sharedPointTrial({page,ui,click,mode,select,count},catacombs,initialRoom.id,
+      [329.77320145664896,528.8146458658598],[initialRoom.id]);
     for (const [name,expected] of [['Skelettbyn',21],['Grottsystem',5]]) {
       const level=db.maps.find(m=>m.name===name);
       await open(level);assert.equal(await count(),expected);
@@ -332,6 +409,10 @@ try {
   await ui('#mapAreaUndoBtn').click();
   await waitFor(()=>pointString(getRow(seamSource).shape_data.points)===pointString(beforeSeam[0].shape_data.points),'Ångra öppen skarv');
 
+  await open(nodeMap);
+  const desktopEditor={page,ui,click,mode,select,count};
+  await sharedPointTrial(desktopEditor,nodeMap,nodeRooms[0].id,[205,120],nodeRooms.slice(0,2).map(r=>r.id));
+  await sharedPointTrial(desktopEditor,nodeMap,nodeRooms[0].id,[207,250],nodeRooms.slice(0,2).map(r=>r.id),{confirm:true});
   const beforeOverlap=writes.length;
   await open(overlapMap);
   await click([199,199]);
@@ -500,9 +581,35 @@ try {
   await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:tx+9,y:ty+9}]});
   await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
   await waitFor(()=>writes.length===touchStart+1,'Avsiktlig pekdragning i Redigera');
+  await mobile.open(nodeMap);
+  await sharedPointTrial(mobile,nodeMap,nodeRooms[1].id,[205,120],nodeRooms.slice(0,2).map(r=>r.id),{touch:true});
+  await sharedPointTrial(mobile,nodeMap,nodeRooms[1].id,[207,250],nodeRooms.slice(0,2).map(r=>r.id),{touch:true,confirm:true});
+  if (currentAreasPath && catacombs) {
+    // Replay the later DEV photograph of the doorway, retaining the row IDs,
+    // point ordering and links. This replaces only the disposable backend.
+    const currentAreas=JSON.parse(await readFile(currentAreasPath,'utf8'));
+    assert.ok(currentAreas.length===11 && currentAreas.every(row=>row.map_id===catacombs.id));
+    db.areas=db.areas.filter(row=>row.map_id!==catacombs.id).concat(currentAreas);
+    const [first,fifth]=[0,4].map(order=>currentAreas.find(row=>row.sort_order===order));
+    await mobile.open(catacombs,true);
+    await mobile.select(first.id);await mobile.mode('edit');
+    const junctionWrites=writes.length;
+    for (const junction of [[333,453.2],[319.4,753.8]]) {
+      await mobile.click(junction);
+      await mobile.ui('#mapAreaToolbar #mapAreaRemoveVertexBtn').tap();
+      assert.match(await mobile.ui('#mapAreaNotice').innerText(),/knut/i);
+      assert.equal(await mobile.page.locator('#appConfirm').isVisible(),false);
+      assert.equal(writes.length,junctionWrites,'Rumsknut med tre riktningar ska bevaras');
+    }
+    for (const [index,point] of [[335.1,556],[335.1,606.3],[326.8,667.8]].entries()) {
+      await sharedPointTrial(mobile,catacombs,first.id,point,[first.id,fifth.id],{touch:true,confirm:true,
+        screenshot:index===1?'katakomber-delad-punkt.png':undefined});
+    }
+  }
   assert.ok(await mobile.page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Mobilbredd');
-  console.log('Godkänt: kartval, platskoppling, magnet, punktredigering, fyllning, historik, omladdning, spelarens tre upptäcktslägen och pekgester.'+
-    (catacombs?' Verkliga DEV-geometrier: katakomber 11, Skelettbyn 21, Grottsystem 5.':' Syntetiska provrum.'));
+  console.log('Godkänt: kartval, platskoppling, magnet, delad punkt, uträtning, fyllning, historik, omladdning, spelarens tre upptäcktslägen och pekgester.'+
+    (catacombs?' Verkliga DEV-geometrier: katakomber 11, Skelettbyn 21, Grottsystem 5.':' Syntetiska provrum.')+
+    (currentAreasPath?' Tre mellanpunkter och två trevägsknutar i Katakombernas aktuella rum 1 och 5.':''));
 } finally {
   await browser.close();
 }

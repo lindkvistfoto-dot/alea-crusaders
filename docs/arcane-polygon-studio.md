@@ -26,6 +26,8 @@ Kartakademin äger kamera, synliga lager och SL-förhandsvisning. Egenskapspanel
 
 Efter panorering eller mätning kan SL trycka direkt på Välj, Rita, Redigera eller Fyll för att arbeta i kartan igen. På mobil visar texten ovanför kartan vilket verktyg som tar emot nästa tryck. I Välj visas det markerade rummets identitet och platskoppling där.
 
+I **Redigera** kan SL markera ett mellanliggande hörn och välja **Ta bort punkt**. Ligger hörnet på en rak gemensam kant behåller rummen sin form. Bildar det en böj där samma två rum möts kan SL bekräfta att gränsen ska rätas ut mellan de kvarvarande hörnen. De berörda polygonerna sparas tillsammans, och **Ångra** återställer deras koordinater i ett steg. En trevägsknut skyddas eftersom ett tredje rum ansluter där.
+
 Dela och sammanfoga kräver beslut om vilken plats och upptäcktsstatus de resulterande ytorna ska tillhöra. Duplicering behöver en särskild placeringsgest för att kopian ska kunna lämna originalytan innan den sparas. Första versionen prioriterar markering, hörn, gemensam gräns och fyllning.
 
 ## Provunderlag och begränsningar
@@ -39,6 +41,8 @@ Dela och sammanfoga kräver beslut om vilken plats och upptäcktsstatus de resul
 Kyrkan innehöll elva valbara platser inklusive Rum 7 Balsameringskammaren. En oberoende jämförelse med GEOS gav samma tio fyllbara ytor och noll överlappning med befintliga rum. De fyra gliporna i Katakomberna omfattade 4,445–147,7 bildpixlar². Skelettbyn har en äldre ring som upprepar första hörnet som slutpunkt. Öppning och markering bevarar den lagrade punktlistan.
 
 På en kopia av Katakomberna lagades de fyra gliporna i följd. Efteråt fanns elva rum och noll slutna glipor. För varje glipa fanns två eller tre möjliga grannrum. Alla tio alternativen gav exakt unionen av rummet och glipan vid kontroll med GEOS. Sparprov med de verkliga koordinaterna bekräftade att även en lagning i ett platskopplat rum bevarar kopplingen genom ångra och gör om.
+
+En senare kopia av Katakomberna användes för att prova de fem synliga punkterna mellan polygon 1 och 5. De tre mellanpunkterna gick att ta bort i alla sex ordningsföljder. De två trevägsknutarna skyddades. Rummens sammanlagda täckning förblev densamma enligt GEOS, och ångra återställde de lagrade koordinaterna i deras ursprungliga ordning.
 
 Det visuella provet använder ordinarie Admin → Platser → Kartverkstad, de ursprungliga koordinaterna och Katakombernas originalmålning i en isolerad webbläsarsession. Det omfattar val, platskoppling, snap, punktredigering, vektorfyllning, omladdning, ångra/gör om och touch. En syntetisk karta i samma webbläsarskript gör grundprovet reproducerbart i CI. Katakomberna är dold för spelare i DEV. Grottsystem har alla tre upptäcktslägen och används därför tillsammans med Skelettbyn för spelarkontrollen.
 

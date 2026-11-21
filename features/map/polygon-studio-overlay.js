@@ -2,7 +2,7 @@
 // SVG coordinate system as the other tools, including at fractional zoom.
 import {
   areaPoints, hitPolygons, insertSharedVertex, mapPointer, mapScreenScale,
-  movePreparedVertices, nearestEdge, polygonsOverlap, prepareVertexMove,
+  movePreparedVertices, nearestEdge, planVertexRemoval, polygonsOverlap, prepareVertexMove,
   snapPoint, validPolygon
 } from './polygon-edit-geometry.js';
 import { findHoles, gapRepairCandidates } from './polygon-topology.js';
@@ -19,7 +19,7 @@ const equalPoint = (a, b) => a[0] === b[0] && a[1] === b[1];
 
 export function createPolygonOverlay({
   svg, map, getAreas, getWalls = () => [], isActive, isVisible = () => true,
-  onSelect = () => {}, onChange = () => {}, onNotice = () => {}, onCreate, onGeometry
+  onSelect = () => {}, onChange = () => {}, onNotice = () => {}, onCreate, onGeometry, confirmBoundaryRemoval
 }) {
   const events = new AbortController();
   const options = { signal: events.signal };
@@ -47,11 +47,16 @@ export function createPolygonOverlay({
   function refreshShapes() {
     const areas = getAreas();
     if (previousAreas === areas) return;
+    const oldVertex = selected()?.points[vertexIndex];
     previousAreas = areas;
     shapes = areas.map(area => ({ id: area.id, points: areaPoints(area) }));
     gaps = undefined;
     // A conflict reload invalidates proposals built against the old boundary.
     clearGap();
+    if (oldVertex && (!selected()?.points[vertexIndex] || !equalPoint(oldVertex, selected().points[vertexIndex]))) {
+      vertexIndex = null;
+      affectedIds = [];
+    }
     if (selectedId && !selected()) {
       selectedId = null;
       vertexIndex = null;
@@ -382,25 +387,31 @@ export function createPolygonOverlay({
   }
   async function removeVertex() {
     if (busy || mode !== 'edit' || vertexIndex === null || !isActive()) return false;
-    const shape = selected(), origin = shape?.points[vertexIndex];
-    if (!origin) return false;
-    const touched = prepareVertexMove(shapes, origin);
-    if (touched.some(item => item.points.length <= 3)) {
-      onNotice('Varje rum behöver minst tre hörn.');
+    refreshShapes();
+    if (vertexIndex === null) { render(); changed(); return false; }
+    const plan = planVertexRemoval(shapes, selectedId, vertexIndex);
+    if (!plan.changes.length) {
+      const explanation = {
+        minimum: 'Varje berört rum behöver minst tre punkter.',
+        junction: 'Punkten är en knut där gränser möts. Den behövs för att rummen ska ansluta.',
+        invalid: 'Punkten behövs för att behålla en giltig rumsgräns utan överlappning.'
+      };
+      onNotice(explanation[plan.reason]);
       return false;
     }
-    // A corner shared by rooms may only be removed simultaneously when each
-    // boundary remains on the same straight line (e.g. an inserted seam node).
-    if (touched.length > 1 && touched.some(({ points, index }) => {
-      const n = points.length, before = points[(index + n - 1) % n], after = points[(index + 1) % n];
-      return (nearestEdge(origin, [before, after], { closed: false })?.distance ?? Infinity) > 1e-8;
-    })) {
-      onNotice('Hörnet formar flera rum. Flytta det för att justera deras gemensamma gräns.');
-      return false;
+    if (plan.straightensSharedBoundary) {
+      const snapshot = previousAreas, roomId = selectedId, index = vertexIndex;
+      if (!await confirmBoundaryRemoval(plan.changes.map(change => change.id), index) || disposed) return false;
+      if (snapshot !== getAreas() || roomId !== selectedId || index !== vertexIndex || !isActive()) {
+        vertexIndex = null;
+        affectedIds = [];
+        render();
+        onNotice('Kartan eller markeringen har ändrats. Välj punkten på nytt.');
+        changed();
+        return false;
+      }
     }
-    const changes = touched.filter(item => shapes.find(s => s.id === item.id).points.some(p => equalPoint(p, origin)))
-      .map(({ id, points, index }) => ({ id, points: points.filter((_, i) => i !== index) }));
-    if (!await persist(changes)) return false;
+    if (!await persist(plan.changes, 'remove-vertex')) return false;
     vertexIndex = null;
     affectedIds = [];
     render();

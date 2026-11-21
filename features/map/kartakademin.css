@@ -268,7 +268,7 @@
     & .kartakademin-center > .kartakademin-footer { order:-3 }
     & .map-area-list { order:-2 }
   }
-  #mapAreaEditor .room-tool-group button, #mapAreaEditor .room-rows button { min-height:44px }
+  #mapAreaEditor .room-tool-group button, #mapAreaEditor .room-rows button, #mapAreaEditor #mapAreaRemoveVertexBtn { min-height:44px }
 }
 
 .room-rows { max-height:24rem; overflow:auto; overscroll-behavior:contain }

@@ -14,7 +14,7 @@ const locationName = place => place.name || ('Plats ' + (place.location_key || '
 
 export function mountPolygonStudio({
   map, svg, toolbar, roomList, roomNotice, sites, locations, sitePath, reload, changed, setStatus,
-  confirm, dbJson, getAreas, getWalls, inRoomMode, isVisible, canPoint, pointerTool, claimRoomPointer, centerOn
+  confirm, cancelConfirm, dbJson, getAreas, getWalls, inRoomMode, isVisible, canPoint, pointerTool, claimRoomPointer, centerOn
 }) {
   const events = new AbortController();
   const listen = (element, type, fn) => element.addEventListener(type, fn, { signal: events.signal });
@@ -33,6 +33,7 @@ export function mountPolygonStudio({
     <div class="room-actions">
       <button type="button" class="smallbtn" id="mapAreaUndoBtn" title="Ctrl/Cmd+Z">Ångra</button>
       <button type="button" class="smallbtn" id="mapAreaRedoBtn" title="Ctrl/Cmd+Shift+Z">Gör om</button>
+      <button type="button" class="smallbtn" id="mapAreaRemoveVertexBtn" title="Delete" hidden>Ta bort punkt</button>
       <button type="button" class="smallbtn" id="mapAreaCancelBtn">Avbryt</button>
       <button type="button" class="btn primary" id="mapAreaSaveBtn">Slutför polygon</button>
     </div>`;
@@ -43,7 +44,6 @@ export function mountPolygonStudio({
       <label>Koppla till plats<select id="mapAreaLocation"></select></label>
       <label data-room-discovery>Upptäcktsstatus<select></select></label>
       <div class="room-actions"><button class="smallbtn" type="button" data-room-center>Centrera</button>
-        <button class="smallbtn" type="button" id="mapAreaRemoveVertexBtn">Ta bort punkt</button>
         <button class="smallbtn" type="button" data-room-delete>Ta bort polygon</button></div>
     </section>
     <h4 class="room-list-heading"></h4><div class="room-rows"></div>`;
@@ -55,6 +55,10 @@ export function mountPolygonStudio({
   let titles = new Map();
   const title = id => titles.get(id) || 'Polygon ' + id.slice(0, 8);
   const placeText = area => area.location_id ? (allPlaces.has(area.location_id) ? locationName(allPlaces.get(area.location_id)) : area.name || 'Kopplad plats') : 'Saknar plats';
+  const roomLabel = id => {
+    const area = getAreas().find(row => row.id === id);
+    return area?.location_id ? title(id) + ' (' + placeText(area) + ')' : title(id);
+  };
   location.replaceChildren(new Option('Ingen plats kopplad', ''), ...places.map(place =>
     new Option((place.site_id !== map.site_id ? sitePath(place.site_id) + ' › ' : '') + locationName(place), place.id)));
   discovery.replaceChildren(...Object.entries(discoveries).map(([value, label]) => new Option(label, value)));
@@ -71,12 +75,28 @@ export function mountPolygonStudio({
         sort_order: getAreas().reduce((max, row) => Math.max(max, row.sort_order ?? -1), -1) + 1 };
       return await save(() => history.commit([{ id, before: null, after }]), 'Polygonen har sparats.') ? id : false;
     },
+    async confirmBoundaryRemoval(ids, index) {
+      confirming = true;
+      panel();
+      try {
+        const rooms = ids.map(roomLabel).join(' och ');
+        return await confirm('Räta ut gemensam gräns?',
+          'Punkt ' + (index + 1) + ' tas bort. Gränsen mellan ' + rooms +
+          ' blir en rak linje mellan de två intilliggande hörnen.', 'Räta ut och ta bort', true);
+      } finally {
+        confirming = false;
+        if (!disposed) { overlay.render(); panel(); }
+      }
+    },
     onGeometry(changes, operation) {
+      let success = 'Hörnen har sparats.';
+      if (operation === 'repair') success = 'Glipan har lagats i ' + title(changes[0].id) + '.';
+      if (operation === 'remove-vertex') success = 'Punkten har tagits bort från ' + changes.map(change => title(change.id)).join(' och ') + '.';
       return save(() => history.commit(changes.map(({ id, points }) => {
         const before = getAreas().find(area => area.id === id);
         const data = before.shape_type === 'polygon' ? before.shape_data : {};
         return { id, before, after: { ...before, shape_type: 'polygon', shape_data: { ...data, points } } };
-      })), operation === 'repair' ? 'Glipan har lagats i ' + title(changes[0].id) + '.' : 'Hörnen har sparats.');
+      })), success);
     }
   });
 
@@ -169,9 +189,12 @@ export function mountPolygonStudio({
       get('[data-room-discovery]').hidden = !area.location_id;
       discovery.value = area.status || 'unknown';
       props.inert = disabled;
-      get('#mapAreaRemoveVertexBtn').hidden = state.mode !== 'edit';
-      get('#mapAreaRemoveVertexBtn').disabled = state.vertexIndex == null || areaPoints(area).length <= 3;
     }
+    const hasVertex = state.mode === 'edit' && state.vertexIndex != null && !!area;
+    const minimum = hasVertex && areaPoints(area).length <= 3;
+    const removePoint = get('#mapAreaRemoveVertexBtn');
+    removePoint.hidden = !hasVertex || !editing;
+    removePoint.disabled = disabled || minimum;
     const neighbours = state.affectedIds.filter(id => id !== state.selectedId);
     let hint = hints[state.mode];
     if (state.mode === 'edit' && !area) hint = 'Tryck på rummet du vill redigera.';
@@ -180,14 +203,19 @@ export function mountPolygonStudio({
       else if (!state.targetId) hint = title(state.sourceId) + ' ska utökas. Klicka på grannrummets motstående kant.';
       else hint = title(state.sourceId) + ' utökas fram till kanten på ' + title(state.targetId) + '. Turkos visar glipan.';
     }
-    const identity = area && ['select', 'edit'].includes(state.mode) ? title(area.id) + ' · ' + placeText(area) + '.' : '';
+    const identity = area && ['select', 'edit'].includes(state.mode) ? title(area.id) + ' · ' + placeText(area) : '';
     if (state.mode === 'select' && identity) hint = 'Tryck på Redigera för att flytta hörn.';
-    const details = neighbours.length ? 'Gemensam gräns med ' + neighbours.map(title).join(', ') + '.' : '';
+    const pointLabel = hasVertex ? 'Punkt ' + (state.vertexIndex + 1) + ' vald.' : '';
+    if (hasVertex) hint = minimum ? 'Rummet behöver minst tre punkter.' : '';
+    const details = neighbours.length ? 'Gemensam gräns med ' + neighbours.map(roomLabel).join(', ') + '.' : '';
     if (working) roomNotice.textContent = 'Sparar…';
     else if (!visible) roomNotice.textContent = 'Rumsgränserna är dolda. Välj ett rumsverktyg för att visa dem.';
     else if (navigation === 'pan') roomNotice.textContent = 'Panorera · dra för att flytta kartan. Välj ett rumsverktyg för att fortsätta.';
     else if (navigation === 'ruler') roomNotice.textContent = 'Linjal · dra för att mäta. Välj ett rumsverktyg för att fortsätta.';
-    else roomNotice.textContent = (identity ? identity + '. ' : '') + [message || hint, details].filter(Boolean).join(' ');
+    else {
+      const description = identity && !/[.!?…]$/.test(identity) ? identity + '.' : identity;
+      roomNotice.textContent = [description, pointLabel, message || hint, details].filter(Boolean).join(' ');
+    }
   }
 
   function localResult() {
@@ -294,6 +322,11 @@ export function mountPolygonStudio({
     centerOn([(Math.min(...xs) + Math.max(...xs)) / 2, (Math.min(...ys) + Math.max(...ys)) / 2]);
   });
   listen(window, 'keydown', event => {
+    if (confirming && event.key === 'Escape') {
+      cancelConfirm();
+      event.preventDefault();
+      return;
+    }
     if (event.defaultPrevented || !inRoomMode() || !isVisible() || !canPoint() || locked() ||
         event.target.closest?.('input,select,textarea,[contenteditable=true],dialog,[role=dialog]')) return;
     if (event.key === 'Escape') overlay.cancel();

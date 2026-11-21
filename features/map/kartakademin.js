@@ -1083,7 +1083,7 @@ async function openEditor(map, areas, imageUrl, roomData) {
   // On Android the first tap after dragging the map can deliver a full touch
   // sequence to a button but omit its click. Activate deliberate tool taps on
   // touchend and suppress their compatibility click. Scrolling stays native.
-  const toolButtons = '[data-room-mode], [data-gap-edges], [data-room-id], [data-pan-tool], [data-ruler-tool], [data-mode-button], [data-tool-choice], [data-mask-tool]';
+  const toolButtons = '#mapAreaRemoveVertexBtn, [data-room-mode], [data-gap-edges], [data-room-id], [data-pan-tool], [data-ruler-tool], [data-mode-button], [data-tool-choice], [data-mask-tool]';
   let toolTap = null;
   workspace.addEventListener('touchstart', event => {
     const button = event.target.closest?.(toolButtons);

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   areaPoints, hitPolygons, insertSharedVertex, mapPointer, mapScreenScale, movePreparedVertices, nearestEdge,
-  onSegment, polygonsOverlap, prepareVertexMove, snapPoint, validPolygon,
+  onSegment, planVertexRemoval, polygonsOverlap, prepareVertexMove, snapPoint, validPolygon,
 } from '../features/map/polygon-edit-geometry.js';
 
 const box = (x, y, width, height) => [[x,y], [x+width,y], [x+width,y+height], [x,y+height]];
@@ -139,5 +139,60 @@ describe('shared room walls', () => {
     const changes = movePreparedVertices(move, [9.5,3]);
     expect(onSegment([9.75,4.5], changes[0].points[move[0].index], [10,6])).toBe(true);
     expect(polygonsOverlap(changes[0].points, changes[1].points)).toBe(false);
+  });
+});
+
+describe('removing a vertex on a shared wall', () => {
+  const room = (id, points) => ({ id, points });
+  const a = room('a', [[0,0],[10,0],[10,5],[10,10],[0,10]]);
+  const b = room('b', [[10,0],[20,0],[20,10],[10,10],[10,8],[10,5],[10,3]]);
+  const without = (points, index) => points.filter((_, i) => i !== index);
+
+  it('removes the stored point on each side without borrowing unrelated intermediate anchors', () => {
+    const actual = planVertexRemoval([a, b], 'a', 2);
+    expect(actual).toEqual({ reason:null, straightensSharedBoundary:false, changes:[
+      room('a', without(a.points,2)), room('b', without(b.points,5)),
+    ] });
+    expect(a.points[2]).toEqual([10,5]);
+  });
+
+  it('does not write a triangle neighbour whose straight side contains only a virtual point', () => {
+    const triangle = room('b', [[10,0],[20,5],[10,10]]);
+    expect(planVertexRemoval([a, triangle], 'a', 2)).toEqual({
+      changes:[room('a', without(a.points,2))], reason:null, straightensSharedBoundary:false,
+    });
+  });
+
+  it.each([0.001, 2])('straightens both sides of the same bend (%s image pixels), in either winding', offset => {
+    const middle = [10 + offset,5];
+    const left = room('a', [[0,0],[10,0],middle,[10,10],[0,10]]);
+    const right = room('b', [[10,0],[20,0],[20,10],[10,10],middle].reverse());
+    const actual = planVertexRemoval([left, right], 'a', 2);
+    expect(actual).toEqual({ changes:[room('a', without(left.points,2)), room('b', without(right.points,0))],
+      reason:null, straightensSharedBoundary:true });
+    expect(polygonsOverlap(actual.changes[0].points, actual.changes[1].points)).toBe(false);
+  });
+
+  it('anchors the new chord on the nearest existing subdivision without copying further vertices', () => {
+    const middle = [11,5], nearest = [10.8,4], distant = [10.4,2];
+    const left = room('a', [[0,0],[10,0],middle,[10,10],[0,10]]);
+    const right = room('b', [[10,0],[20,0],[20,10],[10,10],middle,nearest,distant]);
+    const actual = planVertexRemoval([left,right], 'a', 2);
+    expect(actual.changes).toEqual([room('a', [[0,0],[10,0],nearest,[10,10],[0,10]]), room('b', without(right.points,4))]);
+    expect(actual.straightensSharedBoundary).toBe(true);
+  });
+
+  it('preserves junctions with a third room and the end of a partial two-room seam', () => {
+    const upper = room('upper', box(10,0,5,5));
+    const lower = room('lower', box(10,5,5,5));
+    expect(planVertexRemoval([a, upper, lower], 'a', 2)).toMatchObject({ reason:'junction', changes:[] });
+    expect(planVertexRemoval([a, upper], 'a', 2)).toMatchObject({ reason:'junction', changes:[] });
+  });
+
+  it('can remove an ordinary outer vertex, but keeps each room valid and catches newly occupied space', () => {
+    expect(planVertexRemoval([a], 'a', 1).changes).toEqual([room('a', without(a.points,1))]);
+    expect(planVertexRemoval([room('a', [[0,0],[5,0],[3,3]])], 'a', 0).reason).toBe('minimum');
+    const dented = room('a', [[0,0],[10,0],[10,10],[5,3],[0,10]]);
+    expect(planVertexRemoval([dented, room('b', box(4,7,1,1))], 'a', 3)).toMatchObject({ reason:'invalid', changes:[] });
   });
 });

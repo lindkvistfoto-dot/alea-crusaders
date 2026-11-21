@@ -229,3 +229,69 @@ export function movePreparedVertices(prepared, destination) {
     return { id, points: next };
   });
 }
+
+// The adjacent anchors on a noded ring include a neighbour's subdivisions.
+// Keep only the two anchors needed to protect pre-existing wall segments.
+function vertexNeighbours(points, index) {
+  return [points[(index + points.length - 1) % points.length], points[(index + 1) % points.length]];
+}
+
+const exactPoint = (a, b) => a[0] === b[0] && a[1] === b[1];
+
+export function planVertexRemoval(shapes, id, index) {
+  const refused = reason => ({ changes: [], reason, straightensSharedBoundary: false });
+  const selected = shapes.find(shape => shape.id === id);
+  const origin = selected?.points[index];
+  if (!origin || !Number.isInteger(index)) return refused('invalid');
+
+  const touched = prepareVertexMove(shapes, origin);
+  if (touched.length > 2) return refused('junction');
+  const sides = touched.map(node => {
+    const original = shapes.find(shape => shape.id === node.id).points;
+    const stored = original.findIndex(p => samePoint(p, origin));
+    const [before, after] = vertexNeighbours(node.points, node.index);
+    return { id: node.id, original, stored, before, after,
+      straight: onSegment(stored < 0 ? origin : original[stored], before, after) };
+  });
+  if (sides.some(side => side.stored >= 0 && side.original.length <= 3)) return refused('minimum');
+
+  const straight = sides.every(wall => wall.straight);
+  const shared = sides.length === 2;
+  if (shared) {
+    const [a, b] = sides;
+    if (straight) {
+      // An implicit point inside a straight neighbour edge has no stored
+      // coordinate to remove. Both walls must run along the same line.
+      if (side(a.before, a.after, b.before) !== 0 || side(a.before, a.after, b.after) !== 0) return refused('junction');
+    } else {
+      // Bending walls may be straightened only when BOTH are replacing the
+      // very same two segments with one identical chord.
+      const sameEnds = (exactPoint(a.before, b.after) && exactPoint(a.after, b.before)) ||
+        (exactPoint(a.before, b.before) && exactPoint(a.after, b.after));
+      if (!sameEnds || sides.some(wall => wall.stored < 0 || !exactPoint(wall.original[wall.stored], origin))) {
+        return refused('junction');
+      }
+    }
+  }
+
+  const changes = [];
+  for (const wall of sides) {
+    if (wall.stored < 0) continue;
+    const { original, stored } = wall;
+    // On an unchanged straight boundary, delete only the actual stored node.
+    // Otherwise retain the nearest subdivision on each side of the new chord.
+    const replacement = [];
+    if (!straight) {
+      const [previous, next] = vertexNeighbours(original, stored);
+      if (!exactPoint(previous, wall.before)) replacement.push(wall.before);
+      if (!exactPoint(next, wall.after)) replacement.push(wall.after);
+    }
+    const points = [...original.slice(0, stored), ...replacement, ...original.slice(stored + 1)];
+    if (!validPolygon(points) || Math.sign(signedArea(points)) !== Math.sign(signedArea(original))) return refused('invalid');
+    changes.push({ id: wall.id, points });
+  }
+  const updated = new Map(changes.map(change => [change.id, change.points]));
+  if (changes.some(change => shapes.some(other => other.id !== change.id &&
+      polygonsOverlap(change.points, updated.get(other.id) ?? other.points)))) return refused('invalid');
+  return { changes, reason: null, straightensSharedBoundary: shared && !straight };
+}
