@@ -14,14 +14,16 @@ const campaign = db.maps[0]?.campaign_id || randomUUID();
 const site = {id:randomUUID(),name:'Prövostenen',campaign_id:campaign};
 const map = {id:randomUUID(),site_id:site.id,campaign_id:campaign,name:'Geometriprov',width:400,height:400,player_visible:true};
 const location = {id:randomUUID(),site_id:site.id,campaign_id:campaign,name:'Provrum',location_key:'1'};
-db.maps.push(map); db.sites.push(site); db.locations.push(location);
+const linkedRoom = {...location,id:randomUUID(),name:'Östra rummet',location_key:'2'};
+db.maps.push(map); db.sites.push(site); db.locations.push(location,linkedRoom);
 const room = (points) => {
   const row = {id:randomUUID(),campaign_id:campaign,map_id:map.id,location_id:null,
     shape_type:'polygon',shape_data:{points},sort_order:db.areas.filter(a=>a.map_id===map.id).length};
   db.areas.push(row); return row.id;
 };
 const rectangle = (x,y,w,h) => [[x,y],[x+w,y],[x+w,y+h],[x,y+h]];
-for (const points of [rectangle(30,30,160,50),rectangle(30,140,160,50),rectangle(30,80,50,60),rectangle(140,80,50,60)]) room(points);
+const frame = [rectangle(30,30,160,50),rectangle(30,140,160,50),rectangle(30,80,50,60),rectangle(140,80,50,60)].map(room);
+db.areas.find(row=>row.id===frame[3]).location_id=linkedRoom.id;
 const neighbor = room([[240,50],[300,50],[240,120]]);
 const movable = room([[314,60],[371,60],[340,120]]);
 let revision=0;
@@ -33,6 +35,13 @@ for (const [i,points] of [rectangle(100,100,140,150),rectangle(150,150,140,150)]
   db.areas.push({id:randomUUID(),map_id:overlapMap.id,campaign_id:campaign,shape_type:'polygon',shape_data:{points},
     sort_order:i,location_id:null,updated_at:timestamp()});
 }
+const seamMap = {...map,id:randomUUID(),name:'Öppen väggskarv'};
+const seamRooms = [rectangle(80,100,100,150),rectangle(186,100,100,150)].map((points,index)=>({
+  id:randomUUID(),map_id:seamMap.id,campaign_id:campaign,shape_type:'polygon',shape_data:{points},
+  sort_order:index,location_id:index?null:linkedRoom.id,updated_at:timestamp(),
+}));
+db.maps.push(seamMap);
+db.areas.push(...seamRooms);
 const writes = [];
 const states = new Map();
 if (visibilityPath) {
@@ -135,6 +144,27 @@ async function waitFor(check,message) {
   assert.ok(check(),message);
 }
 
+const pointString = points => points.map(p=>p.join(',')).join(' ');
+const parsePoints = value => value.split(' ').map(pair=>pair.split(',').map(Number));
+function polygonArea(points) {
+  return Math.abs(points.reduce((sum,[x,y],index)=>{
+    const [nx,ny]=points[(index+1)%points.length];
+    return sum+x*ny-nx*y;
+  },0))/2;
+}
+// A repair updates exactly one existing row. Check untouched records, the
+// recipient's identity/metadata, and the number and exact value of all writes.
+function checkRepair(before, recipient, afterPoints, firstWrite) {
+  assert.deepEqual(writes.slice(firstWrite).map(op=>op.map(change=>change.id)),[[recipient]]);
+  assert.deepEqual(readRows(before[0].map_id).map(r=>r.id),before.map(r=>r.id));
+  for (const row of before) {
+    const saved=getRow(row.id);
+    if (row.id===recipient) {
+      assert.deepEqual(saved,{...row,updated_at:saved.updated_at,shape_data:{...row.shape_data,points:afterPoints}});
+    } else assert.deepEqual(saved,row);
+  }
+}
+
 try {
   const {page,ui,open,screen,click,mode,select,active,count}=await session();
   const catacombs=db.maps.find(m=>m.name==='katakomber');
@@ -165,11 +195,24 @@ try {
     await waitFor(()=>getRow(selected).shape_data.points[1][0]===729,'Återställ hörn i katakomber');
     await mode('fill');await ui('[data-gap-candidate]').first().waitFor();
     await click([807.3,464.33]);
-    await ui('[data-gap-preview]').first().waitFor();
-    const preview=await ui('[data-gap-preview]').first().getAttribute('points');
-    await ui('#mapAreaSaveBtn').click();await waitFor(()=>readRows(catacombs.id).length===12,'Katakombernas riktiga tomrum');
-    assert.equal(readRows(catacombs.id).at(-1).shape_data.points.map(p=>p.join(',')).join(' '),preview);
-    await ui('#mapAreaUndoBtn').click();await waitFor(()=>readRows(catacombs.id).length===11,'Återställ tomrum');
+    const picker=ui('[data-gap-target]');
+    await ui('[data-gap-preview]').waitFor();
+    const beforeRepair=structuredClone(readRows(catacombs.id));
+    const [roomThree,roomNine]=[2,8].map(order=>beforeRepair.find(row=>row.sort_order===order));
+    assert.deepEqual((await picker.locator('option').evaluateAll(nodes=>nodes.map(o=>o.value))).sort(),[roomThree.id,roomNine.id].sort());
+    assert.equal(await picker.inputValue(),roomNine.id,'Den längsta gemensamma gränsen föreslås');
+    await picker.selectOption(roomThree.id);
+    const preview=ui('[data-gap-repair-id="'+roomThree.id+'"]');
+    const mergedPoints=parsePoints(await preview.getAttribute('points'));
+    assert.ok(Math.abs(polygonArea(mergedPoints)-polygonArea(roomThree.shape_data.points)-147.7)<1e-6,'DEV-glipans exakta yta');
+    await page.screenshot({path:output+'/katakomber-glipa.png'});
+    const firstWrite=writes.length;
+    await ui('#mapAreaSaveBtn').click();await waitFor(()=>writes.length>firstWrite,'Laga katakombernas glipa');
+    checkRepair(beforeRepair,roomThree.id,mergedPoints,firstWrite);
+    await active(roomThree.id);
+    assert.equal(await count(),11);
+    await ui('#mapAreaUndoBtn').click();
+    await waitFor(()=>pointString(getRow(roomThree.id).shape_data.points)===pointString(roomThree.shape_data.points),'Återställ glipa');
     assert.deepEqual(readRows(catacombs.id).map(a=>a.shape_data),original.map(a=>a.shape_data));
     for (const [name,expected] of [['Skelettbyn',21],['Grottsystem',5]]) {
       const level=db.maps.find(m=>m.name===name);
@@ -209,30 +252,82 @@ try {
   await waitFor(()=>writes.length===oldWrites+1,'Flytta punkt');
   await ui('#mapAreaRemoveVertexBtn').click();await waitFor(()=>getRow(movable).shape_data.points.length===3,'Ta bort punkt');
   await ui('[data-fit-view]').click();
-  await mode('fill');await click([110,110]);await ui('[data-gap-preview]').first().waitFor();
-  assert.equal(await count(),6);
+  const [left,right]=frame.slice(2);
+  await select(left);
+  const beforeRepair=structuredClone(readRows(map.id));
+  const firstRepairWrite=writes.length;
+  await mode('fill');await click([110,110]);
+  const target=ui('[data-gap-target]');
+  assert.equal(await target.inputValue(),left,'Ett markerat angränsande rum prioriteras');
+  assert.deepEqual((await target.locator('option').evaluateAll(nodes=>nodes.map(o=>o.value))).sort(),[...frame].sort());
+  await target.selectOption(right);
+  const preview=ui('[data-gap-repair-id="'+right+'"]');
+  await preview.waitFor();
+  const repairedPoints=parsePoints(await preview.getAttribute('points'));
+  // The right frame plus gap equals [80,190] × [80,140], with any
+  // additional collinear vertices retained for the neighboring boundaries.
+  assert.equal(polygonArea(repairedPoints),110*60);
+  for(const [x,y] of repairedPoints) assert.ok(x>=80 && x<=190 && y>=80 && y<=140);
+  assert.match(await ui('#mapAreaSaveBtn').innerText(),/Polygon 4/);
   await page.screenshot({path:output+'/fill-preview.png'});
-  await ui('#mapAreaCancelBtn').click();assert.equal(await count(),6);
-  await mode('fill');await click([110,110]);await ui('#mapAreaSaveBtn').click();
-  await waitFor(()=>readRows(map.id).length===7,'Tomrum sparat');
-  const filled=readRows(map.id).at(-1);
-  assert.deepEqual(filled.shape_data.points.map(p=>p.join(',')).sort(),rectangle(80,80,60,60).map(p=>p.join(',')).sort());
-  await ui('#mapAreaUndoBtn').click();await waitFor(()=>!getRow(filled.id),'Ångra fyllning');
-  await ui('#mapAreaRedoBtn').click();await waitFor(()=>!!getRow(filled.id),'Gör om fyllning');
-  await open(map,true);assert.equal(await count(),7);await select(filled.id);await active(filled.id);
+  await ui('#mapAreaCancelBtn').click();
+  await active(left);
+  assert.equal(writes.length,firstRepairWrite);
+  assert.deepEqual(readRows(map.id),beforeRepair,'Avbruten lagning får inte skriva en enda ändring');
+
+  await mode('fill');await click([110,110]);await target.selectOption(right);
+  await ui('#mapAreaSaveBtn').click();
+  await waitFor(()=>writes.length>firstRepairWrite,'Laga östra rummets gräns');
+  checkRepair(beforeRepair,right,repairedPoints,firstRepairWrite);
+  await active(right);assert.equal(await count(),6);
+  await ui('#mapAreaUndoBtn').click();
+  const originalRight=beforeRepair.find(r=>r.id===right);
+  await waitFor(()=>pointString(getRow(right).shape_data.points)===pointString(originalRight.shape_data.points),'Ångra lagning');
+  await ui('#mapAreaRedoBtn').click();
+  await waitFor(()=>pointString(getRow(right).shape_data.points)===pointString(repairedPoints),'Gör om lagning');
+  await open(map,true);assert.equal(await count(),6);await select(right);await active(right);
+  assert.equal(await ui('#mapAreaLocation').inputValue(),linkedRoom.id);
+  assert.equal(await ui('#mapAreaRoomLayer [data-area-id="'+right+'"]').getAttribute('points'),pointString(repairedPoints));
+  await mode('fill');
+  assert.equal(await ui('[data-gap-candidate]').count(),0,'Den lagade glipan ska inte återkomma efter omladdning');
   await mode('draw');
   for (const p of [[240,255],[312,255],[312,340]])await click(p);
   await click([240,255]);
-  await waitFor(()=>readRows(map.id).length===8,'Slutför med första punkten');
+  await waitFor(()=>readRows(map.id).length===7,'Slutför med första punkten');
   const drawn=readRows(map.id).at(-1);
   await active(drawn.id);
-  await mode('draw');await click([70,300]);await page.keyboard.press('Escape');assert.equal(readRows(map.id).length,8);
+  await mode('draw');await click([70,300]);await page.keyboard.press('Escape');assert.equal(readRows(map.id).length,7);
   await select(drawn.id);await ui('[data-room-delete]').click();
   await page.locator('#appConfirm').getByRole('button',{name:'Avbryt'}).click();
   assert.ok(getRow(drawn.id),'Avbryt borttagning');
   await ui('[data-room-delete]').click();await page.locator('#appConfirmOk').click();
   await waitFor(()=>!getRow(drawn.id),'Ta bort polygon');
   await ui('#mapAreaUndoBtn').click();await waitFor(()=>!!getRow(drawn.id),'Återställ borttagen polygon');
+
+  await open(seamMap);
+  await mode('fill');assert.equal(await ui('[data-gap-candidate]').count(),0);
+  const seamSource=seamRooms[0].id;
+  const beforeSeam=structuredClone(readRows(seamMap.id)),seamWrite=writes.length;
+  async function pickSeam(){
+    await ui('[data-gap-edges]').click();
+    await click([179,175]);await ui('[data-seam-source]').waitFor({state:'attached'});
+    await click([187,175]);await ui('[data-seam-target]').waitFor({state:'attached'});
+    await ui('[data-gap-preview]').waitFor();
+  }
+  await pickSeam();await page.keyboard.press('Escape');
+  assert.equal(writes.length,seamWrite);assert.deepEqual(readRows(seamMap.id),beforeSeam);
+  await mode('fill');await pickSeam();
+  const seamPatch=parsePoints(await ui('[data-gap-preview]').getAttribute('points'));
+  assert.equal(polygonArea(seamPatch),6*150,'Laga en öppen skarv, kant till kant');
+  const seamResult=parsePoints(await ui('[data-gap-repair-id="'+seamSource+'"]').getAttribute('points'));
+  assert.equal(polygonArea(seamResult),106*150);
+  assert.ok(seamResult.some(([x,y])=>x===186 && y===100) && seamResult.some(([x,y])=>x===186 && y===250));
+  await page.screenshot({path:output+'/open-seam-preview.png'});
+  await ui('#mapAreaSaveBtn').click();await waitFor(()=>writes.length>seamWrite,'Laga öppen skarv');
+  checkRepair(beforeSeam,seamSource,seamResult,seamWrite);
+  await active(seamSource);assert.equal(await count(),2);
+  await ui('#mapAreaUndoBtn').click();
+  await waitFor(()=>pointString(getRow(seamSource).shape_data.points)===pointString(beforeSeam[0].shape_data.points),'Ångra öppen skarv');
 
   const beforeOverlap=writes.length;
   await open(overlapMap);
@@ -293,6 +388,12 @@ try {
     assert.ok(mobileLayout.tools<mobileLayout.map && mobileLayout.map<mobileLayout.inspector,'Mobilens verktyg, karta och vald polygon');
     await mobile.page.screenshot({path:output+'/katakomber-touch.png'});
   }
+  await mobile.open(seamMap);
+  await mobile.mode('fill');await mobile.ui('[data-gap-edges]').tap();
+  await mobile.click([176,175]);await mobile.ui('[data-seam-source]').waitFor({state:'attached'});
+  await mobile.click([189,175]);await mobile.ui('[data-gap-repair-id="'+seamSource+'"]').waitFor();
+  await mobile.ui('#mapAreaCancelBtn').tap();
+  assert.equal(writes.length,touchStart,'Pekförhandsvisning av väggskarv ska inte sparas');
   await mobile.open(map);
   await mobile.click([340,80]);await mobile.active(movable);
   const cdp=await mobile.page.context().newCDPSession(mobile.page);

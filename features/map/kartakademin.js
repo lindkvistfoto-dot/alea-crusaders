@@ -145,7 +145,7 @@ async function openEditor(map, areas, imageUrl, roomData) {
     title: 'Rumsverktyg',
     paragraphs: [
       'Rita minst tre hörn. Nya punkter fäster mot befintliga hörn och kanter. Tomrum mellan rum är tillåtna, men polygoner får inte överlappa.',
-      'Välj ett rum på kartan eller i listan. Under Redigera kan du dra hörn och klicka på en kant för att lägga till en punkt. Fyll föreslår slutna tomrum. Varje slutförd ändring sparas direkt.',
+      'Välj ett rum på kartan eller i listan. Under Redigera kan du dra hörn och klicka på en kant för att lägga till en punkt. Med Fyll lagar du en glipa mellan befintliga rum. Välj mottagande rum och granska den nya gränsen före sparning.',
     ],
   });
   root.innerHTML = `<div data-body>

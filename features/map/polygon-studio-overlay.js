@@ -5,7 +5,8 @@ import {
   movePreparedVertices, nearestEdge, polygonsOverlap, prepareVertexMove,
   snapPoint, validPolygon
 } from './polygon-edit-geometry.js';
-import { findHoles } from './polygon-topology.js';
+import { findHoles, gapRepairCandidates } from './polygon-topology.js';
+import { edgeGapRepair } from './polygon-edge-gap.js';
 
 const ns = 'http://www.w3.org/2000/svg';
 function node(tag, attrs = {}) {
@@ -30,14 +31,17 @@ export function createPolygonOverlay({
   svg.prepend(layer);
   let mode = 'select', selectedId = null, vertexIndex = null, candidateIds = [];
   let draft = [], gap = null, drag = null, pointerStart = null, hover = null;
+  let repairOptions = [], repair = null, choosingEdges = false, sourceEdge = null, targetEdge = null;
   let previousAreas, shapes = [], gaps, busy = false, disposed = false;
   let suppressClick = false;
   let affectedIds = [];
   const selected = () => shapes.find(shape => shape.id === selectedId);
   const state = () => ({
     mode, selectedId, vertexIndex, candidateIds: [...candidateIds], affectedIds: [...affectedIds],
-    draftCount: draft.length, canFinish: !busy && (mode === 'draw' ? draft.length >= 3 : !!gap),
-    pending: busy || !!drag || !!gap || !!draft.length, dragging: !!drag
+    gapSelected: !!gap, gapTargetId: repair?.id ?? null, gapTargetIds: repairOptions.map(option => option.id),
+    choosingEdges, sourceId: sourceEdge?.id, targetId: targetEdge?.id,
+    draftCount: draft.length, canFinish: !busy && (mode === 'draw' ? draft.length >= 3 : !!repair),
+    pending: busy || !!drag || !!sourceEdge || !!gap || !!draft.length, dragging: !!drag
   });
   function changed() { if (!disposed) onChange(state()); }
   function refreshShapes() {
@@ -46,6 +50,8 @@ export function createPolygonOverlay({
     previousAreas = areas;
     shapes = areas.map(area => ({ id: area.id, points: areaPoints(area) }));
     gaps = undefined;
+    // A conflict reload invalidates proposals built against the old boundary.
+    clearGap();
     if (selectedId && !selected()) {
       selectedId = null;
       vertexIndex = null;
@@ -62,7 +68,7 @@ export function createPolygonOverlay({
     return circle;
   }
   function paintRooms() {
-    const active = isActive();
+    const active = isActive(), highlighted = repair?.id ?? sourceEdge?.id ?? selectedId;
     const remaining = new Set(roomNodes.keys());
     for (const shape of shapes) {
       remaining.delete(shape.id);
@@ -75,11 +81,11 @@ export function createPolygonOverlay({
       const points = coords(shape.points);
       if (polygon.getAttribute('points') !== points) polygon.setAttribute('points', points);
       polygon.setAttribute('class', ['map-editor-zone', !active ? 'reference' :
-        shape.id === selectedId ? 'selected' : affectedIds.includes(shape.id) ? 'studio-neighbour' : ''].join(' '));
+        shape.id === highlighted ? 'selected' : affectedIds.includes(shape.id) ? 'studio-neighbour' : ''].join(' '));
     }
     for (const id of remaining) { roomNodes.get(id).remove(); roomNodes.delete(id); }
     // The selected contour stays visible when a later room shares an edge.
-    if (active && selectedId && roomNodes.has(selectedId)) rooms.append(roomNodes.get(selectedId));
+    if (active && roomNodes.has(highlighted)) rooms.append(roomNodes.get(highlighted));
   }
   function paintHandles(points = selected()?.points, selectedIndex = vertexIndex) {
     if (!isActive() || !points || !['edit', 'select'].includes(mode)) { handles.replaceChildren(); return; }
@@ -101,14 +107,29 @@ export function createPolygonOverlay({
   function paintGaps() {
     gapLayer.replaceChildren();
     if (!isActive() || mode !== 'fill') return;
-    gaps ??= findHoles(shapes.map(shape => shape.points));
-    for (const [index, hole] of gaps.entries()) {
+    if (repair) {
+      // A subpixel-wide patch remains visible over the full proposed room.
+      gapLayer.append(node('polygon', { 'data-gap-repair-id': repair.id, points: coords(repair.points),
+        fill: '#ffd36a36', stroke: '#ffd36a', 'stroke-width': 3, 'vector-effect': 'non-scaling-stroke' }));
+    }
+    if (choosingEdges) {
+      for (const [edge, name] of [[sourceEdge, 'source'], [targetEdge, 'target']]) {
+        if (!edge) continue;
+        const points = shapes.find(s => s.id === edge.id).points;
+        gapLayer.append(node('polyline', { ['data-seam-' + name]: edge.id,
+          points: coords([points[edge.index], points[(edge.index + 1) % points.length]]),
+          stroke: name === 'source' ? '#ffd36a' : '#def9ff', 'stroke-width': 5, 'vector-effect': 'non-scaling-stroke' }));
+      }
+    } else gaps ??= findHoles(shapes.map(shape => shape.points));
+    const visibleGaps = choosingEdges ? (gap ? [gap] : []) : gaps;
+    for (const [index, hole] of visibleGaps.entries()) {
       // A real gap may be only a fraction of a map pixel wide. Give its exact
       // boundary a fixed-width visible outline, including when zoomed out.
       const active = hole === gap;
       const candidate = node('polygon', { points: coords(hole.points), 'data-gap-candidate': index,
-        'vector-effect': 'non-scaling-stroke', fill: active ? '#ffd55988' : '#2bcde055',
-        stroke: active ? '#ffda62' : '#50e8eb', 'stroke-width': active ? 5 : 3 });
+        'vector-effect': 'non-scaling-stroke', fill: active ? '#28e7f0ab' : '#2bcde044',
+        stroke: active ? '#72fbff' : '#38bac3', 'stroke-width': active ? 5 : 3,
+        opacity: gap && !active ? .18 : 1 });
       if (active) candidate.dataset.gapPreview = '';
       gapLayer.append(candidate);
     }
@@ -160,10 +181,35 @@ export function createPolygonOverlay({
     drag = null;
     if (svg.hasPointerCapture(pointerId)) svg.releasePointerCapture(pointerId);
   }
+  function clearGap() {
+    gap = null;
+    repairOptions = [];
+    repair = null;
+    choosingEdges = false;
+    sourceEdge = targetEdge = null;
+  }
+  function setGapTarget(id) {
+    if (busy || !isActive() || !gap || mode !== 'fill' || choosingEdges) return;
+    const option = repairOptions.find(candidate => candidate.id === id);
+    if (!option) return;
+    repair = option;
+    paintRooms();
+    paintGaps();
+    changed();
+  }
+  function startEdgeRepair() {
+    if (busy || !isActive() || mode !== 'fill') return;
+    const start = !choosingEdges;
+    clearGap();
+    choosingEdges = start;
+    onNotice('');
+    render();
+    changed();
+  }
   function clearPreview() {
     releaseDrag();
     draft = [];
-    gap = null;
+    clearGap();
     hover = null;
     pointerStart = null;
     affectedIds = [];
@@ -204,7 +250,7 @@ export function createPolygonOverlay({
     return changes.some(({ id, points }) => !validPolygon(points) || all.some(other =>
       other.id !== id && polygonsOverlap(points, proposed.get(other.id) ?? other.points)));
   }
-  async function persist(changes) {
+  async function persist(changes, operation) {
     if (!changes.length || busy) return false;
     if (invalid(changes)) {
       onNotice('Punktändringen skulle ge en ogiltig polygon eller en överlappning.');
@@ -213,7 +259,7 @@ export function createPolygonOverlay({
     busy = true;
     changed();
     try {
-      return await onGeometry(changes);
+      return await onGeometry(changes, operation);
     } catch (error) {
       onNotice(error.message);
       return false;
@@ -224,8 +270,16 @@ export function createPolygonOverlay({
     }
   }
   async function finish() {
-    if (!isActive() || busy || !state().canFinish) return false;
-    const points = mode === 'fill' ? gap.points : draft;
+    refreshShapes();
+    if (!isActive() || busy || !state().canFinish) { render(); changed(); return false; }
+    if (mode === 'fill') {
+      const { id, points } = repair;
+      if (!await persist([{ id, points }], 'repair') || disposed) return false;
+      clearPreview();
+      select(id);
+      return true;
+    }
+    const points = draft;
     if (invalid([{ id: Symbol(), points }], true)) {
       onNotice('Kontrollera hörnen. Polygonen korsar sig själv, saknar yta eller överlappar ett rum.');
       return false;
@@ -284,6 +338,31 @@ export function createPolygonOverlay({
     const same = ids.length === candidateIds.length && ids.every((id, i) => id === candidateIds[i]);
     const next = same && ids.length ? (ids.indexOf(selectedId) + 1) % ids.length : 0;
     select(ids[next] ?? null, ids);
+  }
+  function pickSeamEdge(point, touch) {
+    const eligible = shapes.filter(shape => shape.id !== sourceEdge?.id && shape.points.length >= 3);
+    const scale = mapScreenScale(svg), inside = new Set(hitPolygons(point, eligible, scale));
+    const edges = eligible.map(shape => ({ id: shape.id, ...nearestEdge(point, shape.points, scale) }))
+      .filter(edge => edge.distance <= (touch ? 20 : 12))
+      .sort((a, b) => Number(inside.has(b.id)) - Number(inside.has(a.id)) ||
+        a.distance - Number(a.id === selectedId) - b.distance + Number(b.id === selectedId));
+    const edge = edges[0];
+    repair = null;
+    gap = null;
+    targetEdge = null;
+    if (!edge) onNotice(sourceEdge ? 'Klicka närmare grannrummets motstående kant.' : 'Klicka närmare kanten på rummet som ska utökas.');
+    else if (!sourceEdge) {
+      sourceEdge = edge;
+      onNotice('');
+    } else {
+      targetEdge = edge;
+      repair = edgeGapRepair(shapes, sourceEdge, targetEdge);
+      if (repair) gap = { points: repair.patch };
+      onNotice(repair ? '' : 'De två kanterna kan inte bilda en smal, fri glipa. Välj en annan motstående kant.');
+    }
+    paintRooms();
+    paintGaps();
+    changed();
   }
   async function insert(point, radius) {
     const shape = selected();
@@ -432,6 +511,7 @@ export function createPolygonOverlay({
       return;
     }
     if (mode === 'fill') {
+      if (choosingEdges) { pickSeamEdge(point, event.pointerType === 'touch'); return; }
       gaps ??= findHoles(shapes.map(shape => shape.points));
       const scale = mapScreenScale(svg);
       const direct = hitPolygons(point, gaps.map((hole, id) => ({ id, points: hole.points })));
@@ -439,8 +519,12 @@ export function createPolygonOverlay({
       const nearby = gaps.map((hole, id) => ({ id, distance: nearestEdge(point, hole.points, scale).distance }))
         .filter(hit => hit.distance <= tolerance).sort((a, b) => a.distance - b.distance);
       gap = gaps[direct[0] ?? nearby[0]?.id] ?? null;
-      onNotice(gap ? 'Tomrum med ' + gap.points.length + ' hörn. Godkänn fyllningen eller avbryt.' :
-        'Här finns inget slutet tomrum. Välj en turkos kontur för att förhandsvisa ytan.');
+      repairOptions = gap ? gapRepairCandidates(shapes, gap.points) : [];
+      repair = repairOptions.find(option => option.id === selectedId) ?? repairOptions[0] ?? null;
+      if (repair) onNotice('Guld visar rummets nya gräns. Turkos visar glipan som läggs till.');
+      else if (gap) onNotice('Glipan kan inte förenas med något angränsande rum till en giltig polygon.');
+      else onNotice('Välj en turkos glipa, eller välj två kanter om glipan är öppen.');
+      paintRooms();
       paintGaps();
       changed();
       return;
@@ -461,7 +545,7 @@ export function createPolygonOverlay({
   const resize = new ResizeObserver(() => { if (!disposed) { paintHandles(); paintPreview(); } });
   resize.observe(svg);
   return {
-    render, setMode, select, cancel, finish, removeVertex, popPoint, get state() { return state(); },
+    render, setMode, setGapTarget, startEdgeRepair, select, cancel, finish, removeVertex, popPoint, get state() { return state(); },
     destroy() {
       disposed = true;
       releaseDrag();

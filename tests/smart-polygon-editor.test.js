@@ -1,5 +1,5 @@
 import {describe,it,expect} from 'vitest';
-import {area,splitPolygons,findHoles,mergeHole,moveSharedVertex} from '../features/map/polygon-topology.js';
+import {area,splitPolygons,findHoles,mergeHole,sharedBoundaryLength,gapRepairCandidates,moveSharedVertex} from '../features/map/polygon-topology.js';
 const square=(x,y,w,h)=>[[x,y],[x+w,y],[x+w,y+h],[x,y+h]];
 describe('Smart Polygon Editor topology',()=>{
  it('never reports the exterior as a hole',()=>{
@@ -94,5 +94,54 @@ describe('Fill Gap proposes only unoccupied, closed vector faces', () => {
     const gaps = findHoles([...frame, ...other, square(12, 12, 2, 2)]);
     expect(gaps).toHaveLength(1);
     expect(gaps[0].points.every(([x]) => x >= 50)).toBe(true);
+  });
+});
+
+describe('repairing a gap by extending a neighboring room', () => {
+  const ring = square(10, 10, 10, 10);
+  const rooms = [
+    { id: 'top', points: square(0, 0, 30, 10).reverse() },
+    { id: 'right', points: square(20, 10, 10, 10) },
+    { id: 'left', points: square(0, 10, 10, 10) },
+    { id: 'bottomA', points: square(5, 20, 8, 8) },
+    { id: 'bottomB', points: square(13, 20, 14, 8) },
+    { id: 'corner', points: square(30, 20, 2, 2) },
+  ];
+
+  it('lists only edge neighbors by shared length, preserves winding, and closes the gap with the same room count', () => {
+    const original = structuredClone(rooms);
+    const [gap] = findHoles(rooms.map(x => x.points));
+    const choices = gapRepairCandidates(rooms, gap.points);
+    expect(choices.map(x => [x.id, x.sharedLength])).toEqual([
+      ['top', 10], ['right', 10], ['left', 10], ['bottomB', 7], ['bottomA', 3],
+    ]);
+    for (const option of choices) {
+      const source = rooms.find(x => x.id === option.id).points;
+      expect(option.sharedLength).toBe(sharedBoundaryLength(source, gap.points));
+      expect(Math.sign(area(option.points))).toBe(Math.sign(area(source)));
+      expect(Math.abs(area(option.points))).toBeCloseTo(Math.abs(area(source)) + gap.area, 12);
+      const withRepair = rooms.map(room => room.id === option.id ? option.points : room.points);
+      expect(findHoles(withRepair)).toEqual([]);
+      expect(rooms).toEqual(original);
+    }
+    const top = choices.find(c => c.id === 'top').points;
+    expect(top[0]).toEqual(rooms[0].points[0]);
+    for (const p of [...rooms[0].points, [10, 10], [20, 10], [13, 20]]) expect(top).toContainEqual(p);
+  });
+
+  it('excludes a point contact and rejects intersecting, disconnected or multiply bounded unions', () => {
+    const near = [{ id: 'point', points: square(0, 0, 10, 10) }];
+    expect(gapRepairCandidates(near, ring)).toEqual([]);
+    expect(mergeHole(square(10, 9, 10, 3), ring)).toBeNull();
+    const u = [[0,0],[1,0],[1,4],[4,4],[4,0],[5,0],[5,5],[0,5]];
+    expect(gapRepairCandidates([{ id: 'u', points: u }], square(0, -1, 5, 1))).toEqual([]);
+  });
+
+  it('revalidates against current neighbors when the proposed gap or the recipient has become occupied', () => {
+    expect(gapRepairCandidates([...rooms, { id: 'island', points: square(12, 12, 1, 1) }], ring)).toEqual([]);
+    const occupiedTop = [...rooms, { id: 'old-overlap', points: square(1, 1, 1, 1) }];
+    const choices = gapRepairCandidates(occupiedTop, ring);
+    expect(choices.length).toBeGreaterThan(0);
+    expect(choices.map(c => c.id)).not.toContain('top');
   });
 });

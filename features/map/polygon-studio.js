@@ -7,7 +7,7 @@ const hints = {
   select: 'Välj en polygon på kartan eller i listan.',
   draw: 'Klicka ut hörn. Slutför med första hörnet, dubbelklick eller knappen.',
   edit: 'Dra ett hörn eller klicka på en kant för att infoga en punkt.',
-  fill: 'Klicka i ett markerat tomrum och granska konturen.',
+  fill: 'Välj en turkos glipa. För en öppen glipa, välj två kanter.',
 };
 const discoveries = { unknown: 'Okänd', unexplored: 'Outforskad', explored: 'Utforskad' };
 const locationName = place => place.name || ('Plats ' + (place.location_key || ''));
@@ -28,6 +28,8 @@ export function mountPolygonStudio({
     <div class="room-tool-group" role="group" aria-label="Aktivt polygonverktyg">
       ${Object.entries(tools).map(([id, label]) => `<button type="button" class="btn" data-room-mode="${id}">${label}</button>`).join('')}
     </div>
+    <button type="button" class="smallbtn" data-gap-edges hidden>Välj två kanter</button>
+    <label class="map-area-location-label" data-gap-target-label hidden>Rum som ska utökas<select data-gap-target></select></label>
     <div class="room-actions">
       <button type="button" class="smallbtn" id="mapAreaUndoBtn" title="Ctrl/Cmd+Z">Ångra</button>
       <button type="button" class="smallbtn" id="mapAreaRedoBtn" title="Ctrl/Cmd+Shift+Z">Gör om</button>
@@ -47,6 +49,7 @@ export function mountPolygonStudio({
     <h4 class="room-list-heading"></h4><div class="room-rows"></div>`;
   const get = selector => toolbar.querySelector(selector) || roomList.querySelector(selector);
   const props = get('.room-properties'), rows = get('.room-rows'), location = get('#mapAreaLocation');
+  const gapTarget = get('[data-gap-target]'), edgeButton = get('[data-gap-edges]');
   const modeButtons = [...toolbar.querySelectorAll('[data-room-mode]')];
   const discovery = get('[data-room-discovery] select'), hitSelect = get('[data-room-hits] select');
   let titles = new Map();
@@ -68,12 +71,12 @@ export function mountPolygonStudio({
         sort_order: getAreas().reduce((max, row) => Math.max(max, row.sort_order ?? -1), -1) + 1 };
       return await save(() => history.commit([{ id, before: null, after }]), 'Polygonen har sparats.') ? id : false;
     },
-    onGeometry(changes) {
+    onGeometry(changes, operation) {
       return save(() => history.commit(changes.map(({ id, points }) => {
         const before = getAreas().find(area => area.id === id);
         const data = before.shape_type === 'polygon' ? before.shape_data : {};
         return { id, before, after: { ...before, shape_type: 'polygon', shape_data: { ...data, points } } };
-      })), 'Hörnen har sparats.');
+      })), operation === 'repair' ? 'Glipan har lagats i ' + title(changes[0].id) + '.' : 'Hörnen har sparats.');
     }
   });
 
@@ -104,27 +107,43 @@ export function mountPolygonStudio({
     toolbar.hidden = roomNotice.hidden = roomList.hidden = !active;
     if (!active) return;
     const disabled = locked() || state.dragging;
-    const preview = Boolean(state.draftCount || (state.mode === 'fill' && state.canFinish));
+    const preview = Boolean(state.draftCount || state.gapSelected || state.sourceId);
+    const highlighted = state.gapTargetId ?? state.sourceId ?? state.selectedId;
+    rebuildRows();
     modeButtons.forEach(btn => {
       btn.setAttribute('aria-pressed', String(btn.dataset.roomMode === state.mode)); btn.disabled = disabled;
     });
     get('#mapAreaSaveBtn').hidden = !['draw', 'fill'].includes(state.mode);
-    get('#mapAreaSaveBtn').textContent = state.mode === 'fill' ? 'Godkänn fyllning' : 'Slutför polygon';
+    const repairLabel = state.gapTargetId ? 'Laga glipan i ' + title(state.gapTargetId) : 'Laga glipan';
+    get('#mapAreaSaveBtn').textContent = state.mode === 'fill' ? repairLabel : 'Slutför polygon';
     get('#mapAreaSaveBtn').disabled = disabled || !state.canFinish;
-    get('#mapAreaCancelBtn').hidden = !preview && !state.dragging;
+    edgeButton.hidden = state.mode !== 'fill';
+    edgeButton.disabled = disabled;
+    edgeButton.setAttribute('aria-pressed', String(state.choosingEdges));
+    get('[data-gap-target-label]').hidden = !state.gapTargetIds.length;
+    const gapIds = state.gapTargetIds.join(',');
+    if (gapTarget.dataset.ids !== gapIds) {
+      gapTarget.replaceChildren(...state.gapTargetIds.map(id => {
+        const area = getAreas().find(row => row.id === id);
+        return new Option(title(id) + ' · ' + placeText(area), id);
+      }));
+      gapTarget.dataset.ids = gapIds;
+    }
+    gapTarget.disabled = disabled;
+    gapTarget.value = state.gapTargetId || '';
+    get('#mapAreaCancelBtn').hidden = !preview && !state.dragging && !state.choosingEdges;
     get('#mapAreaCancelBtn').disabled = locked();
     get('#mapAreaUndoBtn').disabled = disabled || (preview ? !state.draftCount : !history.canUndo);
     get('#mapAreaRedoBtn').disabled = disabled || state.pending || !history.canRedo;
-    rebuildRows();
-    if (previousSelectedId !== state.selectedId) {
-      for (const row of rows.children) row.setAttribute('aria-pressed', String(row.dataset.roomId === state.selectedId));
+    if (previousSelectedId !== highlighted) {
+      for (const row of rows.children) row.setAttribute('aria-pressed', String(row.dataset.roomId === highlighted));
       const row = rows.querySelector('[aria-pressed=true]');
       if (row) {
         const item = row.getBoundingClientRect(), box = rows.getBoundingClientRect();
         if (item.top < box.top) rows.scrollTop += item.top - box.top;
         else if (item.bottom > box.bottom) rows.scrollTop += item.bottom - box.bottom;
       }
-      previousSelectedId = state.selectedId;
+      previousSelectedId = highlighted;
     }
     rows.inert = disabled || preview;
     props.hidden = !area || preview;
@@ -151,9 +170,15 @@ export function mountPolygonStudio({
       get('#mapAreaRemoveVertexBtn').disabled = state.vertexIndex == null || areaPoints(area).length <= 3;
     }
     const neighbours = state.affectedIds.filter(id => id !== state.selectedId);
+    let hint = hints[state.mode];
+    if (state.choosingEdges) {
+      if (!state.sourceId) hint = 'Klicka på kanten i rummet som ska utökas.';
+      else if (!state.targetId) hint = title(state.sourceId) + ' ska utökas. Klicka på grannrummets motstående kant.';
+      else hint = title(state.sourceId) + ' utökas fram till kanten på ' + title(state.targetId) + '. Turkos visar glipan.';
+    }
     roomNotice.textContent = working ? 'Sparar…' : neighbours.length ?
       [message, 'Gemensam gräns med ' + neighbours.map(title).join(', ') + '.'].filter(Boolean).join(' ') :
-      message || hints[state.mode];
+      message || hint;
   }
 
   function localResult() {
@@ -233,6 +258,8 @@ export function mountPolygonStudio({
     if (['draw', 'fill'].includes(overlay.state.mode)) overlay.setMode('select');
     overlay.select(id);
   });
+  listen(gapTarget, 'change', () => overlay.setGapTarget(gapTarget.value));
+  listen(edgeButton, 'click', () => overlay.startEdgeRepair());
   listen(hitSelect, 'change', () => overlay.select(hitSelect.value, overlay.state.candidateIds));
   listen(location, 'change', () => {
     const before = selected(), id = location.value || null;

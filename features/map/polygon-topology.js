@@ -104,40 +104,79 @@ function findHoles(polygons) {
   }
   return holes.sort((a, b) => a.area - b.area);
 }
-function mergeHole(polygon,hole){
- if(!polygon||!hole||polygon.length<3||hole.length<3)return null;
- const [a,b]=splitPolygons([area(polygon)<0?[...polygon].reverse():polygon,area(hole)<0?[...hole].reverse():hole]);
- const edges=new Map();
- for(let poly of [a,b])for(let i=0;i<poly.length;i++){
-  const from=poly[i],to=poly[(i+1)%poly.length],id=edgeKey(from,to);
-  if(edges.has(id))edges.delete(id);else edges.set(id,{from,to});
- }
- const remaining=[...edges.values()];
- const output=[],used=new Set();let current=remaining[0];
- if(!current)return null;
- const first=key(current.from);
- for(let i=0;i<=remaining.length;i++){
-  if(!current||used.has(current))return null;
-  used.add(current);output.push(current.from);
-  if(key(current.to)===first)break;
-  const choices=remaining.filter(e=>!used.has(e)&&eq(e.from,current.to));
-  if(choices.length!==1)return null;current=choices[0];
- }
- if(used.size!==remaining.length||output.length<3)return null;
- const result=output.filter((p,i)=>!i||!eq(p,output[i-1]));
- if(Math.abs(area(result)-area(a)-area(b))>Math.max(.01,Math.abs(area(b))*.00001))return null;
- return result;
+
+// Positively orient both rings. Two adjacent interiors run in opposite
+// directions along every shared segment, including partial edges after noding.
+function jointBoundary(polygon, hole) {
+  const [room, gap] = splitPolygons([polygon, hole]).map(ring => area(ring) < 0 ? ring.reverse() : ring);
+  const boundary = new Map();
+  let sharedLength = 0;
+  let opposite = true;
+  for (const ring of [room, gap]) {
+    for (let i = 0; i < ring.length; i++) {
+      const from = ring[i], to = ring[(i + 1) % ring.length];
+      const id = edgeKey(from, to), previous = boundary.get(id);
+      if (!previous) {
+        boundary.set(id, { from, to });
+        continue;
+      }
+      sharedLength += Math.hypot(to[0] - from[0], to[1] - from[1]);
+      if (!eq(previous.from, to) || !eq(previous.to, from)) opposite = false;
+      boundary.delete(id);
+    }
+  }
+  return { edges: boundary.values(), opposite, sharedLength };
 }
-function sharedBoundaryLength(polygon,hole){
- const [a,b]=splitPolygons([polygon,hole]);
- const edges=new Set();
- for(let i=0;i<a.length;i++)edges.add(edgeKey(a[i],a[(i+1)%a.length]));
- let total=0;
- for(let i=0;i<b.length;i++){
-  const p=b[i],q=b[(i+1)%b.length];
-  if(edges.has(edgeKey(p,q)))total+=Math.hypot(q[0]-p[0],q[1]-p[1]);
- }
- return total;
+
+function joinedRing(polygon, hole, joint) {
+  if (!joint.sharedLength || !joint.opposite) return null;
+  const outgoing = new Map();
+  for (const edge of joint.edges) {
+    const id = key(edge.from);
+    if (outgoing.has(id)) return null; // Branch or point contact.
+    outgoing.set(id, edge);
+  }
+  // Keep the edited room's winding and first surviving original corner.
+  const start = polygon.find(point => outgoing.has(key(point))) ?? outgoing.values().next().value?.from;
+  if (!start) return null;
+  const result = [];
+  let current = start;
+  do {
+    const id = key(current), next = outgoing.get(id);
+    if (!next) return null;
+    outgoing.delete(id);
+    result.push(current.slice());
+    current = next.to;
+  } while (!eq(current, start));
+  if (outgoing.size || !validPolygon(result)) return null; // A second boundary needs a multi-ring shape.
+  const expected = Math.abs(area(polygon)) + Math.abs(area(hole));
+  const tolerance = 32 * Number.EPSILON * result.length * expected;
+  if (Math.abs(area(result) - expected) > tolerance) return null;
+  return area(polygon) < 0 ? [result[0], ...result.slice(1).reverse()] : result;
+}
+
+function mergeHole(polygon, hole) {
+  if (!validPolygon(polygon) || !validPolygon(hole) || polygonsOverlap(polygon, hole)) return null;
+  return joinedRing(polygon, hole, jointBoundary(polygon, hole));
+}
+
+function sharedBoundaryLength(polygon, hole) {
+  return jointBoundary(polygon, hole).sharedLength;
+}
+
+// The caller supplies a face from findHoles on this map. Each option replaces
+// exactly one room's geometry; IDs, place links and the neighboring rings stay intact.
+export function gapRepairCandidates(shapes, hole) {
+  if (!validPolygon(hole) || shapes.some(shape => polygonsOverlap(shape.points, hole))) return [];
+  const choices = [];
+  for (const room of shapes) {
+    const joint = jointBoundary(room.points, hole);
+    if (!joint.sharedLength || !validPolygon(room.points)) continue;
+    const points = joinedRing(room.points, hole, joint);
+    if (!points || shapes.some(other => other.id !== room.id && polygonsOverlap(points, other.points))) continue;
+    choices.push({ id: room.id, points, sharedLength: joint.sharedLength });
+  }
+  return choices.sort((a, b) => b.sharedLength - a.sharedLength);
 }
 function moveSharedVertex(polygons,origin,destination){
  return polygons.map(poly=>poly.map(p=>eq(p,origin)?destination.slice():p.slice()));
