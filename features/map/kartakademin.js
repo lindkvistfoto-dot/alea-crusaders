@@ -164,8 +164,7 @@ async function openEditor(map, areas, imageUrl) {
           <button type="button" class="btn" data-pan-tool aria-pressed="false" title="Panorera med vänster musknapp"><span aria-hidden="true">✋︎</span> Panorera</button>
           <button type="button" class="btn" data-ruler-tool aria-pressed="false"><span aria-hidden="true">📏</span> Linjal</button>
           <output data-measurement aria-label="Uppmätt avstånd" hidden></output>
-          <button type="button" class="btn" data-fit-view title="Anpassa hela kartan till vyn">Anpassa</button>
-          <button type="button" class="btn" data-reset-view title="Återställ zoom och panorering">Återställ vy</button>
+          <button type="button" class="btn" data-reset-view title="Centrera kartan och återställ zoom">Centrera</button>
         </div>
         <details class="kartakademin-layers-panel" open>
           <summary>Synliga kartlager</summary>
@@ -259,7 +258,7 @@ async function openEditor(map, areas, imageUrl) {
       </div>
       <div class="kartakademin-controls kartakademin-save-row" data-save-row>
         <output data-save-status data-status="clean" aria-live="polite">Inga ändringar</output>
-        <button type="button" class="btn primary" data-save>Spara ändringar</button>
+        <button type="button" class="btn primary" data-save>Spara</button>
         <output data-save-message aria-live="polite"></output>
       </div>
     </div>`;
@@ -984,7 +983,7 @@ async function openEditor(map, areas, imageUrl) {
   const zoomBy = (factor, x, y) => { setZoom(zoom.valueAsNumber * factor, x, y); sliderZoom = zoom.valueAsNumber; };
   get('[data-zoom-in]').onclick = () => zoomBy(1.25);
   get('[data-zoom-out]').onclick = () => zoomBy(1 / 1.25);
-  get('[data-fit-view]').onclick = get('[data-reset-view]').onclick = resetView;
+  get('[data-reset-view]').onclick = resetView;
   const updateWorkspaceHeight = () => {
     const pageTop = workspace.getBoundingClientRect().top + window.scrollY;
     workspace.style.setProperty('--kartakademin-space', `${Math.max(160, window.innerHeight - pageTop - 12)}px`);
