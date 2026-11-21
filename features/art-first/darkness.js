@@ -57,7 +57,7 @@ export function createDarkness() {
     if(!veil)veil=sheet(p.width*density,p.height*density);
     const sources=p.lamps.filter(l=>l.on).map(l=>({id:l.id,foot:l.foot,emitter:[l.x,l.y],range:l.range}));
     if(p.torch?.on)sources.push({id:8,foot:[p.torch.x,p.torch.y],emitter:[p.torch.x,p.torch.y],range:p.torch.range});
-    const key=JSON.stringify([options.ambient,options.reach,options.flicker,!!sun,time===0,
+    const key=JSON.stringify([p.role,options.ambient,options.reach,options.flicker,!!sun,time===0,
       sources.map(s=>[s.id,...s.foot])]);
     if(key!==last || land!==lastLand || (time && sources.length && options.flicker && time>=nextFrame)){
       const c=veil.getContext('2d');

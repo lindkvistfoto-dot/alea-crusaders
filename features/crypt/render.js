@@ -83,7 +83,7 @@ export async function mountCrypt(host,callbacks={},painting=null) {
       projection=null;imagesForFrame=null;sceneKey='';surface.draw([],{scale:1,x:0,y:0},0);
       painting.decodeGrant(next,remote).then(result=>{
         if(epoch!==paintRev || disposed)return;
-        remote=result;remoteSource=next.paint;downloading=null;update(next);
+        remote=result;remoteSource=next.paint;downloading=null;paintedKey='';update(next);
       }).catch(()=>{if(epoch===paintRev){downloading=null;callbacks.onError?.('Spelarbilden kunde inte läsas.');}});
       return;
     }
