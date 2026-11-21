@@ -1,4 +1,5 @@
 import '../combat/footprint.js';
+import {paintedFloorCells} from '../art-first/floor-coverage.js';
 import {heroPlacement} from './hero-class.js';
 import { clearMapSegment, contains, segments, visibilityPolygon } from '../map/kartakademin-geometry.js';
 
@@ -22,6 +23,7 @@ export const point = a => [a.x, a.y];
 export const distance = (a,b) => Math.hypot(b[0]-a[0], b[1]-a[1]);
 
 export function validateMap(map) {
+  if (map?.artFirst) return map;
   const pair = map?.rooms;
   if (!Array.isArray(pair) || pair.length !== 2 || !map.corridor || !map.door || !map.table ||
       map.width !== 1000 || map.height !== 600 || !Number.isFinite(map.pixelsPerMeter) ||
@@ -48,6 +50,10 @@ function borders(map) {
 }
 
 function leaf(map, open) {
+  if (map.artFirst) {
+    const d=map.door;
+    return open ? [[d.x,d.y],[d.x,d.y-1]] : [[d.x,d.y],[d.endX,d.endY]];
+  }
   const d = map.door;
   return [[d.x,d.y], open ? [d.x + (d.endY-d.y), d.y] : [d.endX,d.endY]];
 }
@@ -62,23 +68,30 @@ const geometryCache = new WeakMap();
 export function geometry(map) {
   let result = geometryCache.get(map);
   if (result) return result;
-  const shape = [...map.rooms, map.corridor], outer = borders(map);
-  const tiles = [];
+  const shape = map.artFirst ? [] : [...map.rooms, map.corridor];
+  const outer = map.artFirst ? segments(map.outline) : borders(map);
+  const obstacles = map.obstacles ?? [];
+  const onFloor = map.artFirst
+    ? p => contains(map.outline,p) && !obstacles.some(o=>contains(o.points,p))
+    : p => shape.some(r=>inRect(r,p));
+  const solidEdges = obstacles.filter(o=>o.sight).flatMap(o=>segments(o.points));
+  const tiles = map.artFirst ? paintedFloorCells(map,SAMPLE,onFloor,[...outer,...obstacles.flatMap(o=>segments(o.points))]) : [];
   const cols = Math.ceil(map.width/SAMPLE);
-  for(let y=0;y<map.height;y+=SAMPLE) for(let x=0;x<map.width;x+=SAMPLE) {
+  if(!map.artFirst) for(let y=0;y<map.height;y+=SAMPLE) for(let x=0;x<map.width;x+=SAMPLE) {
     const center = [x+SAMPLE/2,y+SAMPLE/2];
-    if(shape.some(r=>inRect(r,center))) tiles.push({x,y,center,key:Math.floor(y/SAMPLE)*cols+Math.floor(x/SAMPLE)});
+    if(onFloor(center)) tiles.push({x,y,center,key:Math.floor(y/SAMPLE)*cols+Math.floor(x/SAMPLE)});
   }
   const grid = globalThis.aleaMapGrid.geometry(map,{academy_map:true,pixels_per_meter:map.pixelsPerMeter,hex_m:1.5});
-  result = {outer,shape,tiles,cols,grid,sun:sunPatch(map),tableEdges:segments(rectPoints(map.table))};
+  result = {outer,shape,tiles,cols,grid,onFloor,solidEdges,sun:map.sun ?? sunPatch(map),
+    tableEdges:map.artFirst ? obstacles.flatMap(o=>segments(o.points)) : segments(rectPoints(map.table))};
   geometryCache.set(map,result);
   return result;
 }
 
-export const portal = map => [map.door.x, (map.door.y+map.door.endY)/2];
-export const side = (map,p) => p[0] < map.door.x ? 'west' : 'east';
+export const portal = map => [(map.door.x+map.door.endX)/2, (map.door.y+map.door.endY)/2];
+export const side = (map,p) => (map.artFirst ? p[1] < map.door.y : p[0] < map.door.x) ? 'west' : 'east';
 export function isFloor(map,p,radius=0) {
-  if(!Array.isArray(p) || !p.every(Number.isFinite) || !geometry(map).shape.some(r=>inRect(r,p))) return false;
+  if(!Array.isArray(p) || !p.every(Number.isFinite) || !geometry(map).onFloor(p)) return false;
   if(radius<=0) return true;
   return geometry(map).outer.every(([a,b])=>pointSegmentDistance(p,a,b)>=radius);
 }
@@ -94,7 +107,7 @@ export function doorSettlesClear(state,open) {
 export function movementClear(state,a,b,actorId) {
   const {map}=state, g=geometry(map), radius=.24*map.pixelsPerMeter;
   const edges=[...g.outer,leaf(map,state.doorOpen),...g.tableEdges];
-  if(!isFloor(map,b,radius) || inRect(map.table,b) || !clearMapSegment(a,b,edges)) return false;
+  if(!isFloor(map,b,radius) || (!map.artFirst && inRect(map.table,b)) || !clearMapSegment(a,b,edges)) return false;
   // The swept body must clear a jamb even when the centre ray passes.
   if(edges.some(([u,v])=>Math.min(pointSegmentDistance(a,u,v),pointSegmentDistance(b,u,v),
     pointSegmentDistance(u,a,b),pointSegmentDistance(v,a,b)) < radius)) return false;
@@ -121,15 +134,17 @@ export function torchSource(state) {
   const art=heroPlacement('evalin',{pixelsPerMeter:state.map.pixelsPerMeter,heightCm:host.heightCm});
   const tip=[host.x+(art.torchFlame.x-art.anchor.x)*art.width,
     host.y+(art.torchFlame.y-art.anchor.y)*art.height];
-  const edges=[...geometry(state.map).outer,leaf(state.map,state.doorOpen)];
+  const edges=[...geometry(state.map).outer,...geometry(state.map).solidEdges,leaf(state.map,state.doorOpen)];
   const [x,y]=isFloor(state.map,tip)&&clearMapSegment(from,tip,edges)?tip:from;
   return {x,y,actorId:host.id,footX:host.x,footY:host.y,on:state.torchOn,range:state.map.pixelsPerMeter*7.0};
 }
 
 export function perception(state) {
-  const map=state.map, g=geometry(map), edges=[...g.outer, leaf(map,state.doorOpen)];
+  const map=state.map, g=geometry(map), edges=[...g.outer,...g.solidEdges, leaf(map,state.doorOpen)];
   const torch=torchSource(state), source=point(torch), living=state.actors.filter(a=>a.kind==='hero' && a.hp!==0);
-  const illuminated = p => contains(g.sun,p) || (torch.on && distance(source,p)<=torch.range && clearMapSegment(source,p,edges));
+  const lights=(map.lamps ?? []).filter(lamp=>state.lamps?.[lamp.id]);
+  const illuminated = p => contains(g.sun,p) || lights.some(lamp=>distance(lamp.foot,p)<lamp.range &&
+    clearMapSegment(lamp.foot,p,edges)) || (torch.on && distance(source,p)<=torch.range && clearMapSegment(source,p,edges));
   const detects = (actor,p,light) => {
     if(!actor || actor.hp===0 || !clearMapSegment(point(actor),p,edges)) return false;
     const d=distance(point(actor),p)/map.pixelsPerMeter;
@@ -143,14 +158,14 @@ export function perception(state) {
   }
   // Sample the near frame rather than the opaque door plane.
   const [px,py]=portal(map);
-  const doorSeen=[-2,2].some(offset=>seenBy([px+offset,py]).length>0);
+  const doorSeen=[-2,2].some(offset=>seenBy(map.artFirst ? [px,py+offset] : [px+offset,py]).length>0);
   return {current,seenBy,doorSeen,edges,torch, individual:(actor,p)=>detects(actor,p,illuminated(p))};
 }
 
 function knownEdgeParts(map, known) {
   const g=geometry(map),parts=[];
   const adjacent=([x,y])=>[-3,3].some(dx=>[-3,3].some(dy=>known.has(Math.floor((y+dy)/SAMPLE)*g.cols+Math.floor((x+dx)/SAMPLE))));
-  for(const [a,b] of g.outer) {
+  for(const [a,b] of [...g.outer,...g.solidEdges]) {
     const count=Math.ceil(distance(a,b)/SAMPLE), step=i=>[a[0]+(b[0]-a[0])*i/count,a[1]+(b[1]-a[1])*i/count];
     let start=null;
     for(let i=0;i<=count;i++) {
@@ -184,15 +199,15 @@ function sunHull(points) {
 export function renderGeometry(state, info, gm) {
   const map=state.map, g=geometry(map), known=new Set(state.memory), floor=[];
   let last;
-  for(const {x,y,key} of g.tiles) {
+  for(const {x,y,key,parts} of g.tiles) {
     const visibility=info.current.has(key)?'visible':known.has(key)?'memory':gm?'hidden':null;
     if(!visibility) continue;
-    if(last && last.y===y && last.x+last.width===x && last.visibility===visibility) last.width+=SAMPLE;
-    else {last={x,y,width:SAMPLE,height:SAMPLE,visibility};floor.push(last);}
+    if(!parts && last && !last.parts && last.y===y && last.x+last.width===x && last.visibility===visibility) last.width+=SAMPLE;
+    else {last={x,y,width:SAMPLE,height:SAMPLE,visibility,...(parts?{parts}:{})};floor.push(last);}
   }
-  const wallParts = gm ? g.outer : knownEdgeParts(map,known);
+  const wallParts = gm ? [...g.outer,...g.solidEdges] : knownEdgeParts(map,known);
   const walls = wallParts.map(([[x1,y1],[x2,y2]])=>({x1,y1,x2,y2}));
-  const door = gm || state.rememberedDoor!==null ? {...map.door, open:gm || info.doorSeen?state.doorOpen:state.rememberedDoor} : null;
+  const door = gm || state.rememberedDoor!==null ? {...map.door,...(map.artFirst?{visible:gm||info.doorSeen}:{}), open:gm || info.doorSeen?state.doorOpen:state.rememberedDoor} : null;
   const torch = {...info.torch};
   // Only previously observed wall fragments can reach a member via effect geometry.
   const lightEdges = gm ? info.edges : [...wallParts,...(door ? [leaf(map,door.open)] : [])];
@@ -201,3 +216,4 @@ export function renderGeometry(state, info, gm) {
     sunHull(g.tiles.filter(t=>info.current.has(t.key) && contains(g.sun,t.center)).map(t=>t.center));
   return {width:map.width,height:map.height,pixelsPerMeter:map.pixelsPerMeter,floor,walls,door,torch,sun};
 }
+

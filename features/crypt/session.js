@@ -61,7 +61,7 @@ export async function openCryptSession({
   onView=()=>{}, onStatus=()=>{}, onError=()=>{},
   url=location.href, replaceUrl=value=>history.replaceState(null,'',value),
   storage, locks=globalThis.navigator?.locks, wireFactory=openCryptWire,
-  loadWorld=()=>import('./world.js'),
+  loadWorld=()=>import('./world.js'), decoratePlayerView=view=>view,
 }={}) {
   const locationUrl=new URL(url);
   const {role,secret,actorId=null,fresh}=roleLink(locationUrl);
@@ -108,7 +108,7 @@ export async function openCryptSession({
     const stamp=generation+':'+projection.revision;
     if (!force && previous===stamp) return;
     delivered.set(ch.id,stamp);
-    await send(ch,{type:'view',generation,view:projection});
+    await send(ch,{type:'view',generation,view:await decoratePlayerView(projection)});
   }
   async function update(command, credentials) {
     const next=await api.applyCommand(state,command,credentials);
@@ -152,7 +152,7 @@ export async function openCryptSession({
       await update(command,{role:'player',actorId:ch.id});
     } catch(reason) {error=reason.message||'Handlingen kunde inte genomföras.';}
     await send(ch,{type:'receipt',client:msg.client,id:msg.command.id,generation,
-      view:api.projectWorld(state,{role:'player',actorId:ch.id}),...(error?{error}:{})});
+      view:await decoratePlayerView(api.projectWorld(state,{role:'player',actorId:ch.id})),...(error?{error}:{})});
   }
   function handlePlayer(msg) {
     if (!['view','alive','receipt'].includes(msg.type)) return;
@@ -261,3 +261,4 @@ export async function openCryptSession({
     },
   };
 }
+

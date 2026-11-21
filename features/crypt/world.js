@@ -29,6 +29,9 @@ function remember(state, spatialChange = true) {
   const info=worldPerception(state);
   state.memory=[...new Set([...state.memory,...info.current])];
   if(info.doorSeen) state.rememberedDoor=state.doorOpen;
+  if(state.map.artFirst) {
+    for(const lamp of state.map.lamps) if(info.seenBy(lamp.foot).length) state.lampMemory[lamp.id]=state.lamps[lamp.id];
+  }
   const t=state.map.table;
   if(info.seenBy([t.x+t.width/2,t.y+t.height/2]).length) state.rememberedTable=true;
 }
@@ -52,7 +55,7 @@ export function createWorld({map = DEFAULT_CRYPT_MAP, guardPosition, heroes = {}
   }));
   // The table stays anchored to the west room. Keep Astrid's boot clear of
   // its footprint when a prepared doorway moves towards the western boundary.
-  if(base[0].x < map.table.x+map.table.width+.3*map.pixelsPerMeter)
+  if(!map.artFirst && base[0].x < map.table.x+map.table.width+.3*map.pixelsPerMeter)
     base[0].y=map.table.y+map.table.height+.6*map.pixelsPerMeter;
   for(const actor of base) {
     // Only a host can provide approved character data. Never copy private
@@ -62,12 +65,19 @@ export function createWorld({map = DEFAULT_CRYPT_MAP, guardPosition, heroes = {}
       if(Number.isFinite(record.heightCm) && record.heightCm>0) actor.heightCm=record.heightCm;
     }
   }
+  if(map.artFirst) {
+    for(const actor of base) [actor.x,actor.y]=hexCenter(map,map.starts[actor.id]);
+    const random=crypto.getRandomValues(new Uint32Array(1))[0];
+    const [x,y]=hexCenter(map,map.guardSpots[random%map.guardSpots.length]);
+    guardPosition??={x,y};
+  }
   const offset=guardPosition?null:guardOffset();
   const guard=guardPosition?{x:guardPosition.x,y:guardPosition.y}:positionAroundDoor(map,...offset);
   if(!isFloor(map,point(guard))) throw Error('Vaktens position är ogiltig.');
   const state={
     schema:SESSION_SCHEMA,revision:0,publicRevision:0,geometryRevision:0,canPrepare:true,map,
     actors:[...base,{id:'guard',name:'Kryptväktaren',kind:'guard',heightCm:175,darkvisionMeters:6,...guard}],
+    ...(map.artFirst ? {lamps:map.lamps.map(()=>true),lampMemory:map.lamps.map(()=>null)} : {}),
     phase:'adventure',doorOpen:false,torchOn:true,rememberedDoor:null,rememberedTable:false,
     memory:[],pending:[],discoveries:[],journal:[],receipts:[],battle:null
   };
@@ -95,6 +105,13 @@ export function projectWorld(state, identity = 'player') {
     pending:state.pending.filter(r=>gm || r.actorId===auth.actorId).map(({id,actorId,x,y})=>({id,actorId,x,y})),
     battle:state.battle?projectEncounter(state.battle,visibleIds):null
   };
+  if(state.map.artFirst) {
+    view.artFirst=true;
+    view.lamps=state.map.lamps.map(lamp=>({...lamp,on:gm?state.lamps[lamp.id]:state.lampMemory[lamp.id]}))
+      .filter(lamp=>lamp.on!==null);
+    // Only party members have public motion paths. An enemy's hidden travel stays with the host.
+    view.steps=state.steps ?? {};
+  }
   if(gm) {
     view.map=structuredClone(state.map);
     view.canPrepare=state.canPrepare;
@@ -149,7 +166,7 @@ function performMove(state,cmd,auth,approved=false) {
   if(guard) requireGm(auth);
   const start=point(actor);
   let end=validateDestination(cmd);
-  if(state.phase==='combat') end=hexCenter(state.map,end);
+  if(state.phase==='combat' || state.map.artFirst) end=hexCenter(state.map,end);
   if(distance(start,end)<.1) throw publicError();
   const across=side(state.map,start)!==side(state.map,end);
   if(across && actor.kind==='hero' && state.phase==='adventure' && !approved) {
@@ -172,6 +189,9 @@ function performMove(state,cmd,auth,approved=false) {
     combatAction(state,{type:'move',actorId:actor.id,cost:Math.max(1,cost)},auth);
   }
   const seenBefore=worldPerception(state).seenBy(start).length>0;
+  if(state.map.artFirst && actor.kind==='hero') {
+    state.steps={...state.steps,[actor.id]:{id:cmd.id,path:[start,...path]}};
+  }
   actor.x=end[0];actor.y=end[1];
   newSpatialRevision(state);
   const seenAfter=worldPerception(state).seenBy(end).length>0;
@@ -186,7 +206,7 @@ function search(state,cmd,auth) {
   const actor=controlled(state,cmd.actorId,auth);
   if(state.phase==='combat') combatAction(state,{type:'skill',actorId:actor.id},auth);
   const result=resolveAdventureSkill(actor,'search',auth.die);
-  const t=state.map.table, target=[t.x+t.width/2,t.y+t.height/2];
+  const t=state.map.table, target=state.map.searchPoint ?? [t.x+t.width/2,t.y+t.height/2];
   const found=result.success && distance(point(actor),target)<state.map.pixelsPerMeter*3.5 &&
     worldPerception(state).individual(actor,target) && !state.discoveries.some(d=>d.id==='seal-key');
   if(found) state.discoveries.push({id:'seal-key',name:'Kryptans bronsnyckel'});
@@ -214,13 +234,21 @@ function execute(state,cmd,auth) {
   switch(cmd.type) {
     case 'prepare': {
       requireGm(auth);
-      if(!state.canPrepare || state.phase!=='adventure') throw Error('Kartans förberedelse är redan avslutad.');
+      if(state.map.artFirst || !state.canPrepare || state.phase!=='adventure') throw Error('Kartans förberedelse är redan avslutad.');
       const fresh=createWorld({map:prepareCryptMap(DEFAULT_CRYPT_MAP,{splitX:cmd.splitX,pixelsPerMeter:cmd.pixelsPerMeter})});
       Object.assign(state,{...fresh,revision:state.revision,publicRevision:state.publicRevision,receipts:state.receipts});
       privateViews.set(state,worldPerception(fresh));
       return;
     }
     case 'door': return changeDoor(state,cmd,auth);
+    case 'lamps': {
+      requireGm(auth);
+      if(!state.map.artFirst || typeof cmd.on!=='boolean' ||
+        (cmd.lamp!=='all' && !state.map.lamps.some(l=>l.id===cmd.lamp))) throw publicError();
+      state.lamps=state.lamps.map((on,i)=>cmd.lamp==='all' || i===cmd.lamp ? cmd.on : on);
+      newSpatialRevision(state);
+      return;
+    }
     case 'torch':
       if((!isGm(auth) && auth.actorId!=='evalin') || typeof cmd.on!=='boolean' || cmd.on===state.torchOn) throw publicError();
       if(!isGm(auth)) {controlled(state,'evalin',auth);if(state.phase==='combat') combatAction(state,{type:'skill',actorId:'evalin'},auth);}
@@ -309,3 +337,4 @@ export function applyCommand(state,command,identity={}) {
   if(next.receipts.length>256) next.receipts.shift();
   return next;
 }
+
