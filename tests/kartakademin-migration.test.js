@@ -86,7 +86,7 @@ it('keeps map settings and party position changes atomic and protects access by 
     const surface = (left,right) => ({ id:'gm-only', label:'secret', closed:false, light:true,
       points:[[left,7],[right,7]], face:[[left,5],[right,5]] });
     const visible = surface(1,5); // Touches the unexplored border without crossing it.
-    await save(1, [], {...config, lightingModel:'painted', geometry:[visible,surface(3,7),surface(13,18),surface(8,9)]});
+    await save(1, [], {...config, lightingModel:'painted', geometry:[visible,surface(3,7),surface(13,18),surface(8,9),{...visible,face:null}]});
     await db.exec("set test.role = 'member'");
     const display = (await render()).rows[0].data;
     expect(display.lightingModel).toBe('painted');

@@ -934,7 +934,10 @@ async function openEditor(map, areas, imageUrl) {
     const id = state.selected || crypto.randomUUID();
     const shape = { id, points: state.points, ...flags };
     const previous = state.config.geometry.find(item => item.id === id);
-    if (previous?.face && !shape.closed) shape.face = replaceWallFoot(previous, shape.points);
+    if (previous?.face && !shape.closed) {
+      const face = replaceWallFoot(previous, shape.points);
+      if (face) shape.face = face;
+    }
     state.config.geometry = [...state.config.geometry.filter(item => item.id !== id), shape];
     markDirty();
     select(id);

@@ -130,7 +130,8 @@ begin
         ) vertices
       ) corners
       where g->'light'='true'::jsonb and g->'closed'='false'::jsonb
-        and jsonb_array_length(g->'points')=2 and jsonb_array_length(g->'face')=2
+        and jsonb_array_length(g->'points')=2
+        and case when jsonb_typeof(g->'face')='array' then jsonb_array_length(g->'face')=2 else false end
     )
     select jsonb_agg(jsonb_build_object('points',g->'points','face',g->'face')) into faces
     from strips where exists (select from unnest(rooms) r where r @> strips.region)
