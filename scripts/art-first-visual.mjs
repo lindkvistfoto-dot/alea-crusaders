@@ -51,6 +51,7 @@ try{
   await player.reload();await ready(player);await expected(player,'door-value','Stängd');
   await player.bringToFront();await player.locator('#scene canvas').screenshot({path:out+'/04-spelare.png'});
   for(const {masterRequests} of clients)assert.deepEqual(masterRequests,[]);
+  const detailInvite=player.url();
   await Promise.all(clients.map(({page})=>page.close()));
   const painted=await measure(gm);
   await gm.setViewportSize({width:390,height:844});await gm.waitForTimeout(500);const mobile=await measure(gm);
@@ -63,7 +64,27 @@ try{
     }));
     assert.ok(overflow.scroll<=width+1,JSON.stringify(overflow));
   }
-  await gm.close();
+  await gm.setViewportSize({width:390,height:844});
+  const detailPlayer=await context.newPage();
+  await detailPlayer.setViewportSize({width:390,height:844});await detailPlayer.goto(detailInvite);await ready(detailPlayer);
+  await detailPlayer.locator('[data-camera=person]').click();
+  await gm.locator('[data-hero=evalin]').click();
+  for(const [x,y,name] of [[527,475,'06-kistan'],[516,285,'07-tunnor-och-vagg']]){
+    await gm.locator('[data-camera=map]').click();
+    const canvas=gm.locator('#scene canvas');
+    const box=await canvas.boundingBox(),scale=Math.min(box.width/723.5,box.height/768);
+    const count=await gm.locator('#journal-count').textContent();
+    const playerCount=await detailPlayer.locator('#journal-count').textContent();
+    await canvas.click({position:{x:(box.width-723.5*scale)/2+x*scale,y:(box.height-768*scale)/2+y*scale}});
+    await gm.waitForFunction(n=>document.querySelector('#journal-count').textContent!==n,count);
+    await gm.locator('[data-camera=person]').click();
+    await gm.waitForTimeout(1000);
+    await canvas.screenshot({path:out+'/'+name+'.png'});
+    await detailPlayer.waitForFunction(n=>document.querySelector('#journal-count').textContent!==n,playerCount);
+    await detailPlayer.bringToFront();await detailPlayer.locator('#scene canvas').screenshot({path:out+'/'+name+'-spelare.png'});
+    await gm.bringToFront();
+  }
+  await detailPlayer.close();await gm.close();
   const original=await context.newPage();await original.setViewportSize({width:1220,height:900});
   await original.goto(root+'/kryptans-dorr.html');await ready(original);const constructed=await measure(original);
   await original.locator('#scene canvas').screenshot({path:out+'/05-kryptans-dorr.png'});

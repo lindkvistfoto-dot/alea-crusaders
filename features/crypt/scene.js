@@ -1,4 +1,5 @@
 import '../combat/footprint.js';
+import {paintedFloorCells} from '../art-first/floor-coverage.js';
 import {heroPlacement} from './hero-class.js';
 import { clearMapSegment, contains, segments, visibilityPolygon } from '../map/kartakademin-geometry.js';
 
@@ -74,9 +75,9 @@ export function geometry(map) {
     ? p => contains(map.outline,p) && !obstacles.some(o=>contains(o.points,p))
     : p => shape.some(r=>inRect(r,p));
   const solidEdges = obstacles.filter(o=>o.sight).flatMap(o=>segments(o.points));
-  const tiles = [];
+  const tiles = map.artFirst ? paintedFloorCells(map,SAMPLE,onFloor,[...outer,...obstacles.flatMap(o=>segments(o.points))]) : [];
   const cols = Math.ceil(map.width/SAMPLE);
-  for(let y=0;y<map.height;y+=SAMPLE) for(let x=0;x<map.width;x+=SAMPLE) {
+  if(!map.artFirst) for(let y=0;y<map.height;y+=SAMPLE) for(let x=0;x<map.width;x+=SAMPLE) {
     const center = [x+SAMPLE/2,y+SAMPLE/2];
     if(onFloor(center)) tiles.push({x,y,center,key:Math.floor(y/SAMPLE)*cols+Math.floor(x/SAMPLE)});
   }
@@ -198,11 +199,11 @@ function sunHull(points) {
 export function renderGeometry(state, info, gm) {
   const map=state.map, g=geometry(map), known=new Set(state.memory), floor=[];
   let last;
-  for(const {x,y,key} of g.tiles) {
+  for(const {x,y,key,parts} of g.tiles) {
     const visibility=info.current.has(key)?'visible':known.has(key)?'memory':gm?'hidden':null;
     if(!visibility) continue;
-    if(last && last.y===y && last.x+last.width===x && last.visibility===visibility) last.width+=SAMPLE;
-    else {last={x,y,width:SAMPLE,height:SAMPLE,visibility};floor.push(last);}
+    if(!parts && last && !last.parts && last.y===y && last.x+last.width===x && last.visibility===visibility) last.width+=SAMPLE;
+    else {last={x,y,width:SAMPLE,height:SAMPLE,visibility,...(parts?{parts}:{})};floor.push(last);}
   }
   const wallParts = gm ? [...g.outer,...g.solidEdges] : knownEdgeParts(map,known);
   const walls = wallParts.map(([[x1,y1],[x2,y2]])=>({x1,y1,x2,y2}));

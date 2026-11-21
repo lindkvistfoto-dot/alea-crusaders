@@ -6,11 +6,20 @@ const doorPath = new Path2D('M315 666 L315 604 Q316 572 347 561 Q360 555 375 561
 const stoneFront = new Path2D('M270 583 L296 550 Q361 492 421 549 L450 586 L450 687 L407 687 L407 606 Q407 575 377 564 Q360 556 345 564 Q316 575 314 605 L314 688 L270 688 Z');
 const image = async url => {const img=new Image();img.src=url;await img.decode();return img;};
 
+function appendFloor(path,tile) {
+  if(!tile.parts){path.rect(tile.x,tile.y,tile.width,tile.height);return;}
+  for(const points of tile.parts){
+    path.moveTo(points[0],points[1]);
+    for(let i=2;i<points.length;i+=2)path.lineTo(points[i],points[i+1]);
+    path.closePath();
+  }
+}
+
 function floorPaths(p) {
   const seen=new Path2D(),memory=new Path2D();
   for(const tile of p.floor) {
-    if(tile.visibility==='visible')seen.rect(tile.x,tile.y,tile.width,tile.height);
-    if(tile.visibility==='memory')memory.rect(tile.x,tile.y,tile.width,tile.height);
+    if(p.role==='gm'||tile.visibility==='visible')appendFloor(seen,tile);
+    else if(tile.visibility==='memory')appendFloor(memory,tile);
   }
   return {seen,memory};
 }
@@ -26,27 +35,32 @@ const faces=[
   {at:[[466,215],[500,231]],shape:'M431 204 L435 67 485 62 500 45 522 46 535 75 564 89 582 111 584 176 561 220 529 224 494 231 465 216 Z'},
   {at:[[544,244],[564,269]],shape:'M542 208 L545 106 579 92 602 112 628 128 642 172 663 181 672 219 651 248 617 282 576 278 Z'},
   {at:[[338,291],[419,292]],shape:'M276 282 L278 249 285 242 287 197 434 195 439 241 446 247 446 283 434 287 283 287 Z'},
-  {at:[[264,445],[274,465]],shape:'M103 509 L108 404 130 399 131 382 149 374 162 379 173 396 218 387 235 390 261 421 255 448 249 455 250 480 266 485 265 514 110 516 Z'},
+  {receivesTorch:true,at:[[264,445],[274,465]],shape:'M103 509 L108 404 130 399 131 382 149 374 162 379 173 396 218 387 235 390 261 421 255 448 249 455 250 480 266 485 265 514 110 516 Z'},
   {at:[[164,287],[132,307]],shape:'M78 298 L75 243 102 214 138 192 163 211 163 277 148 291 103 308 Z'},
-  {at:[[535,476],[552,459]],shape:'M545 482 L549 452 566 431 581 427 608 439 625 452 621 467 613 495 602 509 577 501 Z'},
-  {at:[[121,330],[116,345]],shape:'M74 320 Q73 290 92 286 Q111 284 120 299 L119 319 113 336 Q92 351 78 335 Z'},
-  {at:[[566,360],[574,380]],shape:'M571 313 Q569 282 587 278 Q607 269 616 288 L618 313 615 319 Q631 333 623 358 Q622 374 608 380 Q583 383 579 364 L574 341 Z'}
+  {receivesTorch:true,at:[[535,476],[552,459]],shape:'M545 482 L549 452 566 431 581 427 608 439 625 452 621 467 613 495 602 509 577 501 Z'},
+  {receivesTorch:true,at:[[121,330],[116,345]],shape:'M74 320 Q73 290 92 286 Q111 284 120 299 L119 319 113 336 Q92 351 78 335 Z'},
+  {receivesTorch:true,at:[[566,360],[574,380]],shape:'M571 313 Q569 282 587 278 Q607 269 616 288 L618 313 615 319 Q631 333 623 358 Q622 374 608 380 Q583 383 579 364 L574 341 Z'}
 ];
 function visibleMasks(p) {
   const floor=floorPaths(p);
   const visible=new Path2D(floor.seen), known=new Path2D(floor.memory);
+  const light=new Path2D(floor.seen);
   const probe=sheet(1,1).getContext('2d');
   for(const face of faces) {
-    const target=face.at.some(point=>probe.isPointInPath(floor.seen,...point)) ? visible
+    const target=p.role==='gm'||face.at.some(point=>probe.isPointInPath(floor.seen,...point)) ? visible
       : face.at.some(point=>probe.isPointInPath(floor.memory,...point)) ? known : null;
-    if(target)target.addPath(new Path2D(face.shape));
+    if(target){
+      const shape=new Path2D(face.shape);
+      target.addPath(shape);
+      if(face.receivesTorch && target===visible)light.addPath(shape);
+    }
   }
   if(p.door) {
     const target=p.door.visible===false?known:visible;
     target.addPath(stoneFront);
     target.addPath(doorPath);
   }
-  return {visible,known,...floor};
+  return {visible,known,light,...floor};
 }
 
 function writeMasked(ctx,img,mask,w,h,opacity=1) {
@@ -111,13 +125,13 @@ export async function hostPainting() {
   }
   function build(p) {
     const {art,leaves}=plate(p);
-    const {visible,known,seen}=visibleMasks(p);
-    if(p.role==='gm')return {terrain:art,leaves,seen:walkPath(p)};
+    const {visible,known,seen,light}=visibleMasks(p);
+    if(p.role==='gm')return {terrain:art,leaves,seen,light};
     const s=sheet(p.width*1.35,p.height*1.35),ctx=s.getContext('2d');
     ctx.scale(s.width/p.width,s.height/p.height);ctx.fillStyle='#0a0f12';ctx.fillRect(0,0,p.width,p.height);
     writeMasked(ctx,neutral,known,p.width,p.height,.31);
     writeMasked(ctx,art,visible,p.width,p.height);
-    return {terrain:s,leaves:p.door?leaves:null,seen};
+    return {terrain:s,leaves:p.door?leaves:null,seen,light};
   }
   function decorate(p) {
     const key=JSON.stringify([p.floor,p.lamps,p.door]);
@@ -134,16 +148,12 @@ export async function hostPainting() {
   }
   return {build,decorate};
 }
-function walkPath(p) {
-  const path=new Path2D();
-  for(const cell of p.floor)path.rect(cell.x,cell.y,cell.width,cell.height);
-  return path;
-}
 export async function decodeGrant(p,previous) {
   if(!p?.paint)return null;
-  if(previous?.key===p.paint.terrain && previous?.leafKey===p.paint.leaves)return {...previous,seen:floorPaths(p).seen};
+  const {seen,light}=visibleMasks(p);
+  if(previous?.key===p.paint.terrain && previous?.leafKey===p.paint.leaves)return {...previous,seen,light};
   const [terrain,leaves]=await Promise.all([image(p.paint.terrain),p.paint.leaves?image(p.paint.leaves):null]);
-  return {terrain,leaves,seen:floorPaths(p).seen,key:p.paint.terrain,leafKey:p.paint.leaves};
+  return {terrain,leaves,seen,light,key:p.paint.terrain,leafKey:p.paint.leaves};
 }
 
 export function leafSlices(source) {

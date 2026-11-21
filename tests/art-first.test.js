@@ -2,11 +2,37 @@ import {describe,it,expect} from 'vitest';
 import {chamber} from '../features/art-first/chamber.js';
 import {followPath} from '../features/art-first/motion.js';
 import {createWorld,applyCommand,projectWorld} from '../features/crypt/world.js';
-import {hexCenter,route,perception} from '../features/crypt/scene.js';
+import {contains} from '../features/map/kartakademin-geometry.js';
+import {geometry,hexCenter,route,perception} from '../features/crypt/scene.js';
 const gm={role:'gm',die:()=>6}, member={role:'player',actorId:'lyra',die:()=>6};
 function act(s,input,who=gm){return applyCommand(s,{...input,id:crypto.randomUUID(),expectedRevision:who.role==='gm'?s.revision:s.publicRevision},who);}
 function room(){const [x,y]=hexCenter(chamber,[376,748]);return createWorld({map:chamber,guardPosition:{x,y}});}
 describe('Art First chamber on the crypt encounter',()=>{
+  it('light follows the diagonal chest, barrels and north-east wall on both sides of the old sample boundary',()=>{
+    const s=room(), g=geometry(chamber), gmView=projectWorld(s,'gm'), player=projectWorld(s,member);
+    for(const [x0,y0,w,h] of [[540,420,90,96],[565,270,70,110],[510,190,95,96]]){
+      let recovered=0, clipped=0;
+      for(let y=y0+.271;y<y0+h;y+=2)for(let x=x0+.413;x<x0+w;x+=2){
+        const tile=gmView.floor.find(t=>x>=t.x && x<t.x+t.width && y>=t.y && y<t.y+t.height);
+        const drawn=!!tile && (!tile.parts || tile.parts.some(flat=>{
+          const vertices=[];
+          for(let i=0;i<flat.length;i+=2)vertices.push([flat[i],flat[i+1]]);
+          return contains(vertices,[x,y]);
+        }));
+        expect(drawn).toBe(g.onFloor([x,y]));
+        const old=g.onFloor([Math.floor(x/10)*10+5,Math.floor(y/10)*10+5]);
+        if(drawn && !old)recovered++;
+        if(!drawn && old)clipped++;
+      }
+      expect(recovered).toBeGreaterThan(0);expect(clipped).toBeGreaterThan(0);
+    }
+    for(const t of player.floor.filter(t=>t.parts)){
+      expect(gmView.floor.find(g=>g.x===t.x && g.y===t.y)?.parts).toEqual(t.parts);
+      expect(t.visibility).toBe('visible');
+    }
+    expect(gmView.floor.some(t=>t.parts && t.visibility==='hidden' &&
+      !player.floor.some(p=>p.x===t.x && p.y===t.y))).toBe(true);
+  });
   it('snaps every foot, emits a traversable path and retains positions and wounds across modes',()=>{
     let s=room();
     for(const a of s.actors)expect([a.x,a.y]).toEqual(hexCenter(chamber,[a.x,a.y]));

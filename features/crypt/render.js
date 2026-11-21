@@ -11,17 +11,18 @@ const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
 const layer=(id,src,x=0,y=0,w=src.width,h=src.height,extra={})=>({id,src,x,y,w,h,...extra});
 const FLOOR_PITCH=1.5;
 
-function dustInShaft(proj) {
+function dustInShaft(proj,seen) {
   if(!proj.sun?.polygon?.length)return [];
   const hull=proj.sun.polygon,xs=hull.map(v=>v[0]),ys=hull.map(v=>v[1]);
   const x0=Math.min(...xs),y0=Math.min(...ys),dx=Math.max(...xs)-x0,dy=Math.max(...ys)-y0;
   const visible=proj.floor.filter(cell=>cell.visibility==='visible');
+  const probe=document.createElement('canvas').getContext('2d');
   const dots=[];
   for(let i=0;i<44;i++){
     const x=x0+dx*((i*.75487767+.13)%1),y=y0+dy*((i*.56984029+.31)%1);
     // The particle never wanders beyond its authorized footprint (+/- 1.2 px).
     const allowed=[[-1.5,-1.5],[1.5,-1.5],[1.5,1.5],[-1.5,1.5]].every(([ox,oy])=>
-      contains(hull,[x+ox,y+oy])&&visible.some(r=>x+ox>=r.x&&x+ox<=r.x+r.width&&y+oy>=r.y&&y+oy<=r.y+r.height));
+      contains(hull,[x+ox,y+oy])&&probe.isPointInPath(seen,x+ox,y+oy)&&visible.some(r=>x+ox>=r.x&&x+ox<=r.x+r.width&&y+oy>=r.y&&y+oy<=r.y+r.height));
     if(allowed)dots.push({x,y,phase:i*1.7});
   }
   return dots;
@@ -116,13 +117,13 @@ export async function mountCrypt(host,callbacks={},painting=null) {
         land=paintedLand;
       } else land=materials.floor(next,options);
       const cast=figures(next,images);
-      imagesForFrame={terrain:land.terrain,cast,seen:land.seen,
+      imagesForFrame={terrain:land.terrain,cast,seen:land.seen,light:land.light??land.seen,
         leaves:painting?painting.leafSlices(land.leaves):[],
         front:painting && next.door?painting.foreground(next,land.terrain):null,
         grid:painting && options.grid?painting.gridOverlay(next,land.seen):null,shadows:castShadows(next,cast,land.seen),
-        lit:torchPool(next.width,next.height,next.torch,land.seen),
+        lit:torchPool(next.width,next.height,next.torch,land.light??land.seen),
         sun:options.sunlight?sunShaft(next.width,next.height,next.sun,land.seen):null,
-        dust:options.sunlight?dustInShaft(next):[]};
+        dust:options.sunlight?dustInShaft(next,land.seen):[]};
       sceneKey=key;
     }
     invalidate();
@@ -147,7 +148,7 @@ export async function mountCrypt(host,callbacks={},painting=null) {
         const foot=[evalin.x,evalin.y],source=clearMapSegment(foot,[tip.x,tip.y],edges)?[tip.x,tip.y]:foot;
         torch={...torch,x:source[0],y:source[1],polygon:visibilityPolygon(source,torch.range,edges)};
         cast=cast.map(a=>({...a,power:contains(torch.polygon,[a.x,a.y])?Math.max(0,1-Math.hypot(a.x-torch.x,a.y-torch.y)/torch.range):0}));
-        lit=torchPool(p.width,p.height,torch,layers.seen);
+        lit=torchPool(p.width,p.height,torch,layers.light);
       }
       p={...p,actors:cast,torch};shadows=castShadows(p,cast,layers.seen);
     }
