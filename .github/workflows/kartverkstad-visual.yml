@@ -4,6 +4,7 @@ on:
     paths:
       - 'features/map/kartakademin*'
       - 'scripts/kartverkstad*visual.mjs'
+      - 'scripts/kartakademin-surface-visual.mjs'
       - '.github/workflows/kartverkstad-visual.yml'
 permissions:
   contents: read
@@ -40,6 +41,15 @@ jobs:
           python -m http.server 4181 --bind 127.0.0.1 --directory dist > "$RUNNER_TEMP/kart-http.log" 2>&1 &
           node scripts/kartverkstad-visual.mjs http://127.0.0.1:4181 visual-results/after
           node scripts/kartverkstad-shadow-visual.mjs http://127.0.0.1:4181 dist visual-results/after/shadows
+      - name: Read the approved painted crypt fixture
+        uses: actions/checkout@v4
+        with:
+          ref: 50e116696aa47a8f4179874638a149e4cc510fd0
+          path: crypt-fixture
+          sparse-checkout: preview/art-first
+          persist-credentials: false
+      - name: Exercise wall receivers in the ordinary GM editor
+        run: node scripts/kartakademin-surface-visual.mjs http://127.0.0.1:4181 crypt-fixture/preview/art-first/warm-floor.webp visual-results/after/walls
       - uses: actions/upload-artifact@v4
         if: always()
         with:

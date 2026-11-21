@@ -162,7 +162,7 @@ it('uses independent, scoped confirmation copy for each current deletion action'
 
 it('keeps editor tools specific to their active mode', () => {
   expect(toolsForMode('sight').map(tool => tool.value)).toEqual(['mask', 'geometry', 'pan']);
-  expect(toolsForMode('lights').map(tool => tool.value)).toEqual(['light', 'position', 'pan']);
+  expect(toolsForMode('lights').map(tool => tool.value)).toEqual(['light', 'position', 'surface', 'pan']);
   expect(toolsForMode('rooms').map(tool => tool.value)).toEqual(['room', 'pan']);
   expect(toolsForMode('effects')).toEqual([]);
   expect(toolsForMode('objects')).toEqual([]);
