@@ -123,7 +123,10 @@ async function session(touch=false) {
   }
   const ui=selector=>page.locator('#mapAreaEditor '+selector);
   async function screen(point) {
-    await ui('.map-area-map-stage').scrollIntoViewIfNeeded();
+    // Mobile's sticky header can cover a map that Chromium otherwise considers visible.
+    const stage=ui('.map-area-map-stage');
+    if (touch) await stage.evaluate(el=>el.scrollIntoView({block:'center',behavior:'instant'}));
+    else await stage.scrollIntoViewIfNeeded();
     return ui('#mapAreaSvg').evaluate((svg,[x,y])=>{
       const p=new DOMPoint(x,y).matrixTransform(svg.getScreenCTM());
       const el=document.elementFromPoint(p.x,p.y);
@@ -373,30 +376,118 @@ try {
   const mobile=await session(true);
   await mobile.open(catacombs||map);
   const touchStart=writes.length;
-  if (catacombs) {
-    await mobile.click([550,180]);await mobile.ui('[data-room-id][aria-pressed=true]').waitFor();
-    await mobile.ui('[data-room-center]').click();
-    await mobile.ui('.room-tool-group').evaluate(el=>{
-      el.style.scrollMarginTop=Math.ceil(document.querySelector('.alea-app-header').getBoundingClientRect().height+12)+'px';
-      el.scrollIntoView({block:'start',behavior:'instant'});
-    });
-    const mobileLayout=await mobile.page.evaluate(()=>{
-      const top=selector=>Math.round(document.querySelector(selector).getBoundingClientRect().top);
-      return {tools:top('.room-tool-group'),map:top('.map-area-map-stage'),inspector:top('.room-properties')};
-    });
-    console.log('Mobil (CSS px)', mobileLayout);
-    assert.ok(mobileLayout.tools<mobileLayout.map && mobileLayout.map<mobileLayout.inspector,'Mobilens verktyg, karta och vald polygon');
-    await mobile.page.screenshot({path:output+'/katakomber-touch.png'});
+  const cdp=await mobile.page.context().newCDPSession(mobile.page);
+  const mobileUi=mobile.ui;
+  const panButton=mobileUi('[data-pan-tool]'),rulerButton=mobileUi('[data-ruler-tool]');
+  const notice=mobileUi('#mapAreaNotice');
+  const touchMode=key=>mobileUi('[data-room-mode='+key+']').tap();
+  async function dragMap(point,dx,dy) {
+    const [x,y]=await mobile.screen(point);
+    await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y}]});
+    await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:x+dx,y:y+dy}]});
+    await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
   }
+
+  // A tap on the already current Välj tool must take the pointer back from
+  // Panorera, even when a zoom redraw has turned each room into a reference.
+  const level=catacombs || map;
+  const targetRoom=catacombs ? readRows(level.id).find(r=>r.sort_order===4) : getRow(frame[1]);
+  const targetPoint=catacombs ? [560,520] : [119,165];
+  const originalMobileRows=structuredClone(readRows(level.id));
+  await touchMode('edit');
+  assert.match(await notice.innerText(),/Tryck på rummet/i,'Redigera visar hur första rummet väljs');
+  await touchMode('select');
+  await panButton.tap();
+  await mobileUi('[data-zoom-in]').tap();await mobileUi('[data-zoom-in]').tap();
+  assert.equal(await mobileUi('[data-zoom-percent]').textContent(),'156 %');
+  assert.equal(await panButton.getAttribute('aria-pressed'),'true');
+  assert.equal(await mobileUi('[data-room-mode][aria-pressed=true]').count(),0,'Endast kameraverktyget ska visas aktivt');
+  assert.match(await notice.innerText(),/Panorera/i);
+  await touchMode('select');
+  assert.equal(await panButton.getAttribute('aria-pressed'),'false','Välj måste återta pekaren från Panorera');
+  assert.equal(await mobileUi('[data-room-mode=select]').getAttribute('aria-pressed'),'true');
+  await mobile.click(targetPoint);await mobile.active(targetRoom.id);
+  const selectedName='Polygon '+(targetRoom.sort_order+1);
+  assert.ok((await notice.innerText()).includes(selectedName),'Vald polygons identitet behövs direkt intill kartan');
+  assert.ok((await notice.innerText()).includes(targetRoom.location_id?'Rum':'Saknar plats'));
+  assert.equal(await mobileUi('.map-editor-zone.reference').count(),0);
+  assert.equal(await mobileUi('.map-editor-zone.selected').getAttribute('data-area-id'),targetRoom.id);
+  assert.deepEqual(readRows(level.id),originalMobileRows);
+
+  // The room above stays selected while the camera moves. Tile coordinates,
+  // the zoom setting and stored geometry are independent of the camera offset.
+  await panButton.tap();
+  const canvas=mobileUi('#mapAreaCanvas'),leftBefore=await canvas.evaluate(el=>el.style.left);
+  await dragMap(targetPoint,25,16);
+  assert.notEqual(await canvas.evaluate(el=>el.style.left),leftBefore,'Pekdragning med handen panorerar kartan');
+  await touchMode('edit');
+  assert.equal(await panButton.getAttribute('aria-pressed'),'false');
+  await mobileUi('[data-vertex-index]').first().waitFor({state:'attached'});
+  assert.ok((await notice.innerText()).includes(selectedName));
+  // A nudge or a cancelled touch over a tool must not take a pan gesture.
+  await panButton.tap();
+  const selectTool=mobileUi('[data-room-mode=select]');
+  await selectTool.scrollIntoViewIfNeeded();
+  const box=await selectTool.boundingBox(),bx=box.x+box.width/2,by=box.y+box.height/2;
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:bx,y:by}]});
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:bx+25,y:by}]});
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+  assert.equal(await panButton.getAttribute('aria-pressed'),'true');
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:bx,y:by}]});
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchCancel',touchPoints:[]});
+  assert.equal(await panButton.getAttribute('aria-pressed'),'true');
+  await mobileUi('[data-room-id="'+targetRoom.id+'"]').tap();
+  assert.equal(await panButton.getAttribute('aria-pressed'),'false','Listval tar tillbaka pekaren');
+  await mobileUi('[data-layer=rooms]').uncheck();await touchMode('select');
+  assert.ok(await mobileUi('[data-layer=rooms]').isChecked());
+  await mobileUi('[data-light-only]').check();await touchMode('select');
+  assert.equal(await mobileUi('[data-light-only]').isChecked(),false);
+  await rulerButton.tap();
+  assert.equal(await rulerButton.getAttribute('aria-pressed'),'true');
+  assert.match(await notice.innerText(),/Linjal/i);
+  await touchMode('fill');
+  assert.equal(await rulerButton.getAttribute('aria-pressed'),'false');
+  assert.equal(await mobileUi('[data-room-mode=fill]').getAttribute('aria-pressed'),'true');
+  await touchMode('select');
+  assert.equal(writes.length,touchStart);
+  assert.deepEqual(readRows(level.id),originalMobileRows);
+
+  await mobileUi('.room-tool-group').evaluate(el=>{
+    el.style.scrollMarginTop=Math.ceil(document.querySelector('.alea-app-header').getBoundingClientRect().height+12)+'px';
+    el.scrollIntoView({block:'start',behavior:'instant'});
+  });
+  const mobileLayout=await mobile.page.evaluate(()=>{
+    const bounds=selector=>{
+      const {top,bottom}=document.querySelector(selector).getBoundingClientRect();
+      return {top:Math.round(top),bottom:Math.round(bottom)};
+    };
+    return {toolbar:bounds('#mapAreaToolbar'),notice:bounds('#mapAreaNotice'),map:bounds('.map-area-map-stage'),
+      inspector:bounds('.room-properties'),height:innerHeight};
+  });
+  console.log('Mobil (CSS px)', mobileLayout);
+  assert.ok(mobileLayout.toolbar.bottom<=mobileLayout.notice.top+1 && mobileLayout.notice.bottom<=mobileLayout.map.top+1 &&
+    mobileLayout.map.bottom<=mobileLayout.inspector.top+1 && mobileLayout.notice.top>=0 && mobileLayout.notice.bottom<mobileLayout.height,
+    'Mobil visar verktygen, vald polygon och kartan i den ordningen utan att de överlappar');
+  await mobile.page.screenshot({path:output+(catacombs?'/katakomber-touch.png':'/verktyg-touch.png')});
+
   await mobile.open(seamMap);
-  await mobile.mode('fill');await mobile.ui('[data-gap-edges]').tap();
-  await mobile.click([176,175]);await mobile.ui('[data-seam-source]').waitFor({state:'attached'});
-  await mobile.click([189,175]);await mobile.ui('[data-gap-repair-id="'+seamSource+'"]').waitFor();
-  await mobile.ui('#mapAreaCancelBtn').tap();
+  await touchMode('draw');await mobile.click([100,315]);await mobile.click([190,315]);
+  const draft=mobileUi('[data-draft-vertex]');
+  assert.equal(await draft.count(),2);
+  await panButton.tap();await dragMap([140,215],22,12);await touchMode('draw');
+  assert.equal(await draft.count(),2,'Tillfällig panorering ska bevara ett påbörjat utkast');
+  await mobileUi('#mapAreaCancelBtn').tap();
+  await touchMode('fill');await panButton.tap();await mobileUi('[data-gap-edges]').tap();
+  assert.equal(await panButton.getAttribute('aria-pressed'),'false');
+  await mobile.click([176,175]);await mobileUi('[data-seam-source]').waitFor({state:'attached'});
+  await panButton.tap();await mobileUi('[data-gap-edges]').tap();
+  assert.equal(await panButton.getAttribute('aria-pressed'),'false');
+  await mobileUi('[data-seam-source]').waitFor({state:'attached'});
+  await mobile.click([189,175]);await mobileUi('[data-gap-repair-id="'+seamSource+'"]').waitFor();
+  await mobileUi('#mapAreaCancelBtn').tap();
   assert.equal(writes.length,touchStart,'Pekförhandsvisning av väggskarv ska inte sparas');
   await mobile.open(map);
   await mobile.click([340,80]);await mobile.active(movable);
-  const cdp=await mobile.page.context().newCDPSession(mobile.page);
   const [x,y]=await mobile.screen([300,50]);
   await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y}]});
   await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:x+18,y:y+12}]});

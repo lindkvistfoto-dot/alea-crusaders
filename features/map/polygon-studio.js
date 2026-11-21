@@ -14,7 +14,7 @@ const locationName = place => place.name || ('Plats ' + (place.location_key || '
 
 export function mountPolygonStudio({
   map, svg, toolbar, roomList, roomNotice, sites, locations, sitePath, reload, changed, setStatus,
-  confirm, dbJson, getAreas, getWalls, inRoomMode, isVisible, canPoint, centerOn
+  confirm, dbJson, getAreas, getWalls, inRoomMode, isVisible, canPoint, pointerTool, claimRoomPointer, centerOn
 }) {
   const events = new AbortController();
   const listen = (element, type, fn) => element.addEventListener(type, fn, { signal: events.signal });
@@ -103,23 +103,26 @@ export function mountPolygonStudio({
   }
   function panel() {
     if (disposed) return;
-    const state = overlay.state, area = selected(), active = inRoomMode() && isVisible();
-    toolbar.hidden = roomNotice.hidden = roomList.hidden = !active;
-    if (!active) return;
+    const state = overlay.state, area = selected(), visible = isVisible();
+    toolbar.hidden = roomNotice.hidden = !inRoomMode();
+    roomList.hidden = toolbar.hidden || !visible;
+    if (toolbar.hidden) return;
+    const navigation = pointerTool();
+    const editing = visible && !navigation;
     const disabled = locked() || state.dragging;
     const preview = Boolean(state.draftCount || state.gapSelected || state.sourceId);
     const highlighted = state.gapTargetId ?? state.sourceId ?? state.selectedId;
     rebuildRows();
     modeButtons.forEach(btn => {
-      btn.setAttribute('aria-pressed', String(btn.dataset.roomMode === state.mode)); btn.disabled = disabled;
+      btn.setAttribute('aria-pressed', String(editing && btn.dataset.roomMode === state.mode)); btn.disabled = disabled;
     });
     get('#mapAreaSaveBtn').hidden = !['draw', 'fill'].includes(state.mode);
     const repairLabel = state.gapTargetId ? 'Laga glipan i ' + title(state.gapTargetId) : 'Laga glipan';
     get('#mapAreaSaveBtn').textContent = state.mode === 'fill' ? repairLabel : 'Slutför polygon';
-    get('#mapAreaSaveBtn').disabled = disabled || !state.canFinish;
+    get('#mapAreaSaveBtn').disabled = disabled || !editing || !state.canFinish;
     edgeButton.hidden = state.mode !== 'fill';
     edgeButton.disabled = disabled;
-    edgeButton.setAttribute('aria-pressed', String(state.choosingEdges));
+    edgeButton.setAttribute('aria-pressed', String(editing && state.choosingEdges));
     get('[data-gap-target-label]').hidden = !state.gapTargetIds.length;
     const gapIds = state.gapTargetIds.join(',');
     if (gapTarget.dataset.ids !== gapIds) {
@@ -129,11 +132,11 @@ export function mountPolygonStudio({
       }));
       gapTarget.dataset.ids = gapIds;
     }
-    gapTarget.disabled = disabled;
+    gapTarget.disabled = disabled || !editing;
     gapTarget.value = state.gapTargetId || '';
     get('#mapAreaCancelBtn').hidden = !preview && !state.dragging && !state.choosingEdges;
     get('#mapAreaCancelBtn').disabled = locked();
-    get('#mapAreaUndoBtn').disabled = disabled || (preview ? !state.draftCount : !history.canUndo);
+    get('#mapAreaUndoBtn').disabled = disabled || (preview ? !editing || !state.draftCount : !history.canUndo);
     get('#mapAreaRedoBtn').disabled = disabled || state.pending || !history.canRedo;
     if (previousSelectedId !== highlighted) {
       for (const row of rows.children) row.setAttribute('aria-pressed', String(row.dataset.roomId === highlighted));
@@ -171,14 +174,20 @@ export function mountPolygonStudio({
     }
     const neighbours = state.affectedIds.filter(id => id !== state.selectedId);
     let hint = hints[state.mode];
+    if (state.mode === 'edit' && !area) hint = 'Tryck på rummet du vill redigera.';
     if (state.choosingEdges) {
       if (!state.sourceId) hint = 'Klicka på kanten i rummet som ska utökas.';
       else if (!state.targetId) hint = title(state.sourceId) + ' ska utökas. Klicka på grannrummets motstående kant.';
       else hint = title(state.sourceId) + ' utökas fram till kanten på ' + title(state.targetId) + '. Turkos visar glipan.';
     }
-    roomNotice.textContent = working ? 'Sparar…' : neighbours.length ?
-      [message, 'Gemensam gräns med ' + neighbours.map(title).join(', ') + '.'].filter(Boolean).join(' ') :
-      message || hint;
+    const identity = area && ['select', 'edit'].includes(state.mode) ? title(area.id) + ' · ' + placeText(area) + '.' : '';
+    if (state.mode === 'select' && identity) hint = 'Tryck på Redigera för att flytta hörn.';
+    const details = neighbours.length ? 'Gemensam gräns med ' + neighbours.map(title).join(', ') + '.' : '';
+    if (working) roomNotice.textContent = 'Sparar…';
+    else if (!visible) roomNotice.textContent = 'Rumsgränserna är dolda. Välj ett rumsverktyg för att visa dem.';
+    else if (navigation === 'pan') roomNotice.textContent = 'Panorera · dra för att flytta kartan. Välj ett rumsverktyg för att fortsätta.';
+    else if (navigation === 'ruler') roomNotice.textContent = 'Linjal · dra för att mäta. Välj ett rumsverktyg för att fortsätta.';
+    else roomNotice.textContent = (identity ? identity + '. ' : '') + [message || hint, details].filter(Boolean).join(' ');
   }
 
   function localResult() {
@@ -245,6 +254,7 @@ export function mountPolygonStudio({
     const btn = event.target.closest('button');
     if (!btn || btn.disabled || locked()) return;
     if (btn.dataset.roomMode) {
+      claimRoomPointer();
       if (btn.dataset.roomMode !== overlay.state.mode) overlay.setMode(btn.dataset.roomMode);
     } else if (btn.id === 'mapAreaSaveBtn') void overlay.finish();
     else if (btn.id === 'mapAreaCancelBtn') overlay.cancel();
@@ -254,12 +264,17 @@ export function mountPolygonStudio({
   listen(rows, 'click', event => {
     const id = event.target.closest('[data-room-id]')?.dataset.roomId;
     if (!id || locked() || overlay.state.pending) return;
+    claimRoomPointer();
     message = '';
     if (['draw', 'fill'].includes(overlay.state.mode)) overlay.setMode('select');
     overlay.select(id);
   });
   listen(gapTarget, 'change', () => overlay.setGapTarget(gapTarget.value));
-  listen(edgeButton, 'click', () => overlay.startEdgeRepair());
+  listen(edgeButton, 'click', () => {
+    const resume = !canPoint() && overlay.state.choosingEdges;
+    claimRoomPointer();
+    if (!resume) overlay.startEdgeRepair();
+  });
   listen(hitSelect, 'change', () => overlay.select(hitSelect.value, overlay.state.candidateIds));
   listen(location, 'change', () => {
     const before = selected(), id = location.value || null;

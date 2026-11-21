@@ -24,6 +24,8 @@ SVG tar emot pekaren och visar lokal förhandsvisning. Den geometriska kärnan a
 
 Kartakademin äger kamera, synliga lager och SL-förhandsvisning. Egenskapspanelen visar identitet och plats för den valda polygonen. Rita skapar en polygon. Fyll utvidgar ett befintligt grannrum över en oavsiktlig glipa. Förhandsvisningen visar ytan som tillkommer och rummets nya kontur. Vid godkännande sparas en geometriändring på det valda rummet. ID, platskoppling och upptäcktsstatus hör fortfarande till samma rum. Kartinställningar och ljus har kvar sin befintliga sparfunktion.
 
+Efter panorering eller mätning kan SL trycka direkt på Välj, Rita, Redigera eller Fyll för att arbeta i kartan igen. På mobil visar texten ovanför kartan vilket verktyg som tar emot nästa tryck. I Välj visas det markerade rummets identitet och platskoppling där.
+
 Dela och sammanfoga kräver beslut om vilken plats och upptäcktsstatus de resulterande ytorna ska tillhöra. Duplicering behöver en särskild placeringsgest för att kopian ska kunna lämna originalytan innan den sparas. Första versionen prioriterar markering, hörn, gemensam gräns och fyllning.
 
 ## Provunderlag och begränsningar

@@ -263,9 +263,9 @@
     & .kartakademin-mode-nav { order:-8 }
     & .kartakademin-panel-heading { order:-7 }
     & .map-area-toolbar { order:-6; margin:0 }
-    & .map-area-map-stage { order:-5; height:clamp(220px,46dvh,480px) }
-    & .kartakademin-center > .kartakademin-footer { order:-4 }
-    & .map-area-notice { order:-3 }
+    & .map-area-notice { order:-5 }
+    & .map-area-map-stage { order:-4; height:clamp(220px,46dvh,480px) }
+    & .kartakademin-center > .kartakademin-footer { order:-3 }
     & .map-area-list { order:-2 }
   }
   #mapAreaEditor .room-tool-group button, #mapAreaEditor .room-rows button { min-height:44px }
