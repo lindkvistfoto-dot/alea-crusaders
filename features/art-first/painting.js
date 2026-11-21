@@ -43,13 +43,20 @@ const faces=[
 ];
 // World-space faces receive light sampled at their accessible edge. The player
 // still clips the result to the independently authorized visible region.
-export const paintedFaces=faces.map(face=>({at:face.at,path:new Path2D(face.shape)}));
+const sideWalls=[
+  {at:[[626,377],[635,412]], shape:'M625 353 L624 315 645 279 674 251 683 252 683 414 664 453 649 455 Z'},
+  {at:[[633,459],[622,479]], shape:'M649 453 L666 418 680 413 677 479 639 511 622 510 Z'},
+  {at:[[100,356],[90,382]], shape:'M47 312 L80 284 91 297 99 351 80 394 62 393 48 358 Z'},
+  {at:[[89,440],[88,481]], shape:'M48 359 L79 386 82 527 61 523 45 505 Z'},
+  {at:[[286,563],[446,563]],shape:'M242 550 L274 568 297 546 Q360 485 424 548 L450 576 485 550 505 554 464 603 411 601 Q395 546 360 546 Q324 549 310 604 L268 609 238 582 Z'}
+];
+export const paintedFaces=[...faces,...sideWalls].map(face=>({at:face.at,path:new Path2D(face.shape)}));
 function visibleMasks(p) {
   const floor=floorPaths(p);
   const visible=new Path2D(floor.seen), known=new Path2D(floor.memory);
   const light=new Path2D(floor.seen);
   const probe=sheet(1,1).getContext('2d');
-  for(const face of faces) {
+  for(const face of [...faces,...(p.lightBlockers?sideWalls:[])]) {
     const target=p.role==='gm'||face.at.some(point=>probe.isPointInPath(floor.seen,...point)) ? visible
       : face.at.some(point=>probe.isPointInPath(floor.memory,...point)) ? known : null;
     if(target){
@@ -147,17 +154,22 @@ export async function hostPainting(experiment=false) {
     ctx.scale(s.width/p.width,s.height/p.height);ctx.fillStyle='#0a0f12';ctx.fillRect(0,0,p.width,p.height);
     writeMasked(ctx,overlay?warm:neutral,known,p.width,p.height,.31);
     writeMasked(ctx,art,visible,p.width,p.height);
-    return {terrain:s,leaves:p.door?leaves:null,seen,light,visible};
+    let doorLeaves=p.door?leaves:null;
+    if(overlay && doorLeaves && p.door.visible===false){
+      doorLeaves=sheet(leaves.width,leaves.height);
+      const c=doorLeaves.getContext('2d');c.filter='brightness(.31)';c.drawImage(leaves,0,0);
+    }
+    return {terrain:s,leaves:doorLeaves,seen,light,visible};
   }
   function decorate(p) {
     const key=JSON.stringify([p.floor,p.lamps,p.door]);
     if(key!==previousGrant){
       function encode(local){
-      // Lossy codecs can retain adjacent hidden colors. Encode only the opaque, pre-masked surface.
-      const thumb=sheet(p.width,p.height),tc=thumb.getContext('2d');
-      tc.drawImage(local.terrain,0,0,thumb.width,thumb.height);
-      return {terrain:thumb.toDataURL('image/webp',.68),
-        leaves:local.leaves?.toDataURL('image/webp',.78)??null};
+        // Compress only the already masked, opaque player surface.
+        const thumb=sheet(p.width,p.height),tc=thumb.getContext('2d');
+        tc.drawImage(local.terrain,0,0,thumb.width,thumb.height);
+        return {terrain:thumb.toDataURL('image/webp',.68),
+          leaves:local.leaves?.toDataURL('image/webp',.78)??null};
       }
       grant=encode(build(p));
       if(experiment)grant.overlay=encode(build(p,true));

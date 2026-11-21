@@ -81,5 +81,24 @@ export function createDarkness() {
     }
     return {src:veil,revision};
   }
-  return {draw};
+  let portalCanvas,portalKey,portalVersion=0;
+  function shadePortal(p,front,leaves){
+    // The arch is depth-sorted across the cast. Only reapply the veil over
+    // pixels repainted by the front and the two folding timber leaves.
+    const key=[revision,leaves[0]?.w??0].join(',');
+    if(!portalCanvas)portalCanvas=sheet(front.w,front.h);
+    if(key!==portalKey || front.src!==lastFront){
+      const c=portalCanvas.getContext('2d');
+      c.clearRect(0,0,front.w,front.h);
+      c.drawImage(front.src,0,0,front.w,front.h);
+      for(const leaf of leaves)c.drawImage(leaf.src,leaf.x-front.x,leaf.y-front.y,leaf.w,leaf.h);
+      c.globalCompositeOperation='source-in';
+      c.drawImage(veil,-front.x,-front.y,p.width,p.height);
+      c.globalCompositeOperation='source-over';
+      portalKey=key;lastFront=front.src;portalVersion++;
+    }
+    return {src:portalCanvas,revision:portalVersion};
+  }
+  let lastFront;
+  return {draw,shadePortal};
 }

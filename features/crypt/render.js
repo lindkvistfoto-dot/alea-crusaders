@@ -157,6 +157,11 @@ export async function mountCrypt(host,callbacks={},painting=null) {
     shownCast=cast;
     camera=cameraFor(p,options,width,height);
     const list=[layer('floor',layers.terrain,0,0,p.width,p.height)];
+    const overlay=options.model==='b' && darkness;
+    if(overlay){
+      const {src,revision}=darkness.draw(p,layers.land,options,t,layers.sun);
+      list.push(layer('darkness',src,0,0,p.width,p.height,{revision}));
+    }
     if(layers.grid)list.push(layer('hex-grid',layers.grid,0,0,p.width,p.height));
     const weights=flameWeights(t*6.1,still?0:.1,flames.fackla);
     if(layers.sun && options.model!=='b'){
@@ -227,16 +232,12 @@ export async function mountCrypt(host,callbacks={},painting=null) {
       const f=layers.front;
       const outside=cast.filter(a=>a.y>=p.door.y).map(a=>'actor-'+a.id);
       const at=list.findIndex(v=>outside.includes(v.id));
-      list.splice(at<0?list.length:at,0,...paintedLeaves,layer('painted-arch',f.src,f.x,f.y,f.w,f.h));
-    }
-    if(options.model==='b' && darkness){
-      const {src,revision}=darkness.draw(p,layers.land,options,t,layers.sun);
-      // Apply once, after depth-sorted architecture and figures. Emissive fire
-      // remains in front when it is not covered by the foreground arch.
-      const front=list.findIndex(item=>item.id==='painted-arch');
-      const glow=list.filter((item,index)=>index>front && (item.id==='torch-flame'||item.id.startsWith('spark')));
-      for(const item of glow)list.splice(list.indexOf(item),1);
-      list.push(layer('darkness',src,0,0,p.width,p.height,{revision}),...glow);
+      const portal=[...paintedLeaves,layer('painted-arch',f.src,f.x,f.y,f.w,f.h)];
+      if(overlay){
+        const {src,revision}=darkness.shadePortal(p,f,paintedLeaves);
+        portal.push(layer('darkened-arch',src,f.x,f.y,f.w,f.h,{revision}));
+      }
+      list.splice(at<0?list.length:at,0,...portal);
     }
     surface.draw(list,camera,t);
     globalThis.aleaCryptFrameProbe?.();

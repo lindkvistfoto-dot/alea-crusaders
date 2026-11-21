@@ -47,6 +47,24 @@ try{
     assert.equal(await page.locator('[data-light-model=b]').getAttribute('aria-pressed'),'true');
     if(device==='desktop'){
       await page.emulateMedia({reducedMotion:'reduce'});
+      const maskSamples=await page.evaluate(async()=>{
+        const {createDarkness}=await import('/features/art-first/darkness.js');
+        const engine=createDarkness(),visible=new Path2D();visible.rect(0,0,85,100);
+        const land={visible},lamp={id:0,on:true,foot:[32,50],range:65};
+        const p={role:'gm',width:120,height:100,walls:[{x1:60,y1:0,x2:60,y2:100}],lamps:[lamp]};
+        const options={ambient:.8,reach:1,flicker:0};
+        function alpha(view,x,y){
+          const {src}=engine.draw(view,land,options,0,null);
+          return src.getContext('2d').getImageData(Math.floor(x*src.width/120),Math.floor(y*src.height/100),1,1).data[3];
+        }
+        const near=alpha(p,32,50),falloff=alpha(p,48,68),behind=alpha(p,74,50);
+        const memory=alpha({...p,role:'player',walls:[...p.walls]},96,45);
+        const dark=alpha({...p,lamps:[]},32,50);
+        return {near,falloff,behind,memory,dark};
+      });
+      assert.ok(maskSamples.near<10 && maskSamples.falloff>maskSamples.near && maskSamples.behind>190);
+      assert.equal(maskSamples.memory,0);assert.ok(maskSamples.dark>=200);
+      console.log('Overlay alpha (0–255)',maskSamples);
       const canvas=page.locator('#scene canvas');
       await page.locator('[data-hero=evalin]').click();
       for(const state of ['all','torch']){
@@ -57,7 +75,7 @@ try{
         }
       }
       const journal=await page.locator('#journal-count').textContent();
-      await page.locator('[data-camera=group],[data-camera=party]').first().click();
+      await page.locator('[data-camera=party]').click();
       for(const id of ['a','b']){
         await model(page,id);
         await canvas.screenshot({path:out+'/detail-'+id+'.png'});
