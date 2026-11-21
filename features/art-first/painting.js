@@ -41,6 +41,9 @@ const faces=[
   {receivesTorch:true,at:[[121,330],[116,345]],shape:'M74 320 Q73 290 92 286 Q111 284 120 299 L119 319 113 336 Q92 351 78 335 Z'},
   {receivesTorch:true,at:[[566,360],[574,380]],shape:'M571 313 Q569 282 587 278 Q607 269 616 288 L618 313 615 319 Q631 333 623 358 Q622 374 608 380 Q583 383 579 364 L574 341 Z'}
 ];
+// World-space faces receive light sampled at their accessible edge. The player
+// still clips the result to the independently authorized visible region.
+export const paintedFaces=faces.map(face=>({at:face.at,path:new Path2D(face.shape)}));
 function visibleMasks(p) {
   const floor=floorPaths(p);
   const visible=new Path2D(floor.seen), known=new Path2D(floor.memory);
@@ -82,10 +85,11 @@ export function gridOverlay(p,seen) {
   ctx.stroke();return s;
 }
 
-export async function hostPainting() {
-  const [lit,neutral]=await Promise.all([
+export async function hostPainting(experiment=false) {
+  const [lit,neutral,warm]=await Promise.all([
     image(new URL('../../preview/art-first/chamber.jpg',import.meta.url)),
-    image(new URL('../../preview/art-first/unlit.webp',import.meta.url))
+    image(new URL('../../preview/art-first/unlit.webp',import.meta.url)),
+    experiment?image(new URL('../../preview/art-first/warm-floor.webp',import.meta.url)):null
   ]);
   let cachedKey='',cachedPlate,previousGrant='';
   let grant=null;
@@ -123,25 +127,40 @@ export async function hostPainting() {
     lc.drawImage(lit,0,0,w,h);
     cachedKey=key;cachedPlate={art,leaves};return cachedPlate;
   }
-  function build(p) {
-    const {art,leaves}=plate(p);
+  let warmPlate;
+  function warmRoom(p){
+    if(warmPlate)return warmPlate;
+    const art=sheet(warm.naturalWidth,warm.naturalHeight),ctx=art.getContext('2d');
+    ctx.drawImage(warm,0,0);
+    ctx.scale(art.width/p.width,art.height/p.height);
+    ctx.clip(doorPath);ctx.drawImage(neutral,0,0,p.width,p.height);
+    const leaves=sheet(aperture.w*2,aperture.h*2),leaf=leaves.getContext('2d');
+    leaf.scale(2,2);leaf.translate(-aperture.x,-aperture.y);
+    leaf.clip(doorPath);leaf.drawImage(warm,0,0,p.width,p.height);
+    return warmPlate={art,leaves};
+  }
+  function build(p,overlay=false) {
+    const {art,leaves}=overlay?warmRoom(p):plate(p);
     const {visible,known,seen,light}=visibleMasks(p);
-    if(p.role==='gm')return {terrain:art,leaves,seen,light};
+    if(p.role==='gm')return {terrain:art,leaves,seen,light,visible};
     const s=sheet(p.width*1.35,p.height*1.35),ctx=s.getContext('2d');
     ctx.scale(s.width/p.width,s.height/p.height);ctx.fillStyle='#0a0f12';ctx.fillRect(0,0,p.width,p.height);
-    writeMasked(ctx,neutral,known,p.width,p.height,.31);
+    writeMasked(ctx,overlay?warm:neutral,known,p.width,p.height,.31);
     writeMasked(ctx,art,visible,p.width,p.height);
-    return {terrain:s,leaves:p.door?leaves:null,seen,light};
+    return {terrain:s,leaves:p.door?leaves:null,seen,light,visible};
   }
   function decorate(p) {
     const key=JSON.stringify([p.floor,p.lamps,p.door]);
     if(key!==previousGrant){
-      const local=build(p);
+      function encode(local){
       // Lossy codecs can retain adjacent hidden colors. Encode only the opaque, pre-masked surface.
       const thumb=sheet(p.width,p.height),tc=thumb.getContext('2d');
       tc.drawImage(local.terrain,0,0,thumb.width,thumb.height);
-      grant={terrain:thumb.toDataURL('image/webp',.68),
+      return {terrain:thumb.toDataURL('image/webp',.68),
         leaves:local.leaves?.toDataURL('image/webp',.78)??null};
+      }
+      grant=encode(build(p));
+      if(experiment)grant.overlay=encode(build(p,true));
       previousGrant=key;
     }
     return {...p,paint:grant};
@@ -150,10 +169,15 @@ export async function hostPainting() {
 }
 export async function decodeGrant(p,previous) {
   if(!p?.paint)return null;
-  const {seen,light}=visibleMasks(p);
-  if(previous?.key===p.paint.terrain && previous?.leafKey===p.paint.leaves)return {...previous,seen,light};
-  const [terrain,leaves]=await Promise.all([image(p.paint.terrain),p.paint.leaves?image(p.paint.leaves):null]);
-  return {terrain,leaves,seen,light,key:p.paint.terrain,leafKey:p.paint.leaves};
+  const masks=visibleMasks(p);
+  async function decode(art,prior){
+    if(prior?.key===art.terrain && prior.leafKey===art.leaves)return {...prior,...masks};
+    const [terrain,leaves]=await Promise.all([image(art.terrain),art.leaves?image(art.leaves):null]);
+    return {terrain,leaves,...masks,key:art.terrain,leafKey:art.leaves};
+  }
+  const [base,overlay]=await Promise.all([decode(p.paint,previous),
+    p.paint.overlay?decode(p.paint.overlay,previous?.overlay):null]);
+  return {...base,overlay};
 }
 
 export function leafSlices(source) {

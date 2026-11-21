@@ -6,6 +6,8 @@ on:
       - 'features/crypt/**'
       - 'preview/art-first/**'
       - 'scripts/art-first-visual.mjs'
+      - 'scripts/living-darkness-visual.mjs'
+      - 'kryptans-dorr.html'
       - '.github/workflows/art-first-preview.yml'
 permissions:
   contents: read
@@ -30,6 +32,14 @@ jobs:
         run: |
           python -m http.server 4182 --bind 127.0.0.1 --directory dist > "$RUNNER_TEMP/art-first-http.log" 2>&1 &
           node scripts/art-first-visual.mjs
+      - name: Exercise both lighting models in a shared game
+        run: node scripts/living-darkness-visual.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: living-darkness-comparison
+          path: visual-results/living-darkness/
+          retention-days: 14
       - uses: actions/upload-artifact@v4
         if: always()
         with:

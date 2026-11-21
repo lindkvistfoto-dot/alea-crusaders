@@ -3,6 +3,7 @@ import { HERO_PROFILES, heroPortraitStyle } from './hero-class.js';
 import { mountCrypt } from './render.js';
 
 const artFirst=new URLSearchParams(location.search).get('art')==='1';
+const livingDarkness=artFirst && new URLSearchParams(location.search).get('darkness')==='1';
 let painting;
 const $ = id => document.getElementById(id);
 const motionPreference = matchMedia('(prefers-reduced-motion: reduce)');
@@ -460,15 +461,29 @@ async function start() {
     };
     const module=await import('../art-first/painting.js');
     const host=!new URLSearchParams(location.hash.slice(1)).has('player');
-    const studio=host?await module.hostPainting():null;
-    painting={...module,studio};
+    if(livingDarkness){
+      Object.assign(settings,{model:'b',ambient:.78,reach:1,flicker:.35,sunlight:false});
+      $('sunlight').checked=false;
+      $('light-lab').hidden=false;
+      for(const button of document.querySelectorAll('[data-light-model]'))button.onclick=()=>{
+        settings.model=button.dataset.lightModel;
+        for(const b of document.querySelectorAll('[data-light-model]'))b.setAttribute('aria-pressed',String(b===button));
+        $('light-controls').hidden=settings.model!=='b';drawMap();
+      };
+      for(const id of ['ambient','reach','flicker'])$(id).oninput=()=>{
+        settings[id]=Number($(id).value)/100;
+        document.querySelector('output[for="'+id+'"]').value=$(id).value+' %';drawMap();
+      };
+    }
+    const studio=host?await module.hostPainting(livingDarkness):null;
+    painting={...module,studio,experiment:livingDarkness};
   } else if(new URLSearchParams(location.search).has('compare')) {
     $('compare').href='./kryptans-dorr?art=1';$('compare').textContent='Till den målade kryptan';$('compare').hidden=false;
   }
   const startup = openCryptSession({
     ...(artFirst?{loadWorld:async()=>{
       const [world,{chamber}]=await Promise.all([import('./world.js'),import('../art-first/chamber.js')]);
-      return {...world,createWorld:()=>world.createWorld({map:chamber})};
+      return {...world,createWorld:()=>world.createWorld({map:livingDarkness?{...chamber,livingDarkness:true}:chamber})};
     },decoratePlayerView:view=>painting.studio.decorate(view)}:{}),
     onView: showProjection,
     onStatus: text => {

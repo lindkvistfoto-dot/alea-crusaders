@@ -39,6 +39,7 @@ export async function mountCrypt(host,callbacks={},painting=null) {
   canvas.style.display='block';canvas.style.width='100%';canvas.style.height='100%';canvas.style.touchAction='manipulation';
   canvas.setAttribute('aria-label','Kryptans spelkarta');canvas.dataset.renderer=surface.kind;
   const follow=painting?(await import('../art-first/motion.js')).followPath:null;
+  const darkness=painting?.experiment?(await import('../art-first/darkness.js')).createDarkness():null;
   const moves=new Map();
   let paintRev=0,remote=null,remoteSource=null,downloading=null,shownCast=[],lastState=null;
   let paintedLand=null,paintedKey='';
@@ -72,7 +73,7 @@ export async function mountCrypt(host,callbacks={},painting=null) {
     if(disposed)return;
     if(!next){clear();return;}
     options={...options,...nextOptions};
-    if(next.paint && remote?.key===next.paint.terrain && remote?.leafKey===next.paint.leaves){
+    if(next.paint && remote?.key===next.paint.terrain && remote?.leafKey===next.paint.leaves && remote?.overlay?.key===next.paint.overlay?.terrain && remote?.overlay?.leafKey===next.paint.overlay?.leaves){
       if(downloading && downloading!==next.paint){paintRev++;downloading=null;}
       remoteSource=next.paint;
     }
@@ -105,23 +106,24 @@ export async function mountCrypt(host,callbacks={},painting=null) {
       lastState=next;
     }
     const key=JSON.stringify([next.role,next.lamps,next.door,next.floor,next.walls,next.actors,next.objects,next.torch,next.sun,
-      next.pixelsPerMeter,options.wallMode,options.grid,options.sunlight]);
+      next.pixelsPerMeter,options.wallMode,options.grid,options.sunlight,options.model]);
     if(key!==sceneKey){
       let land;
       if(painting){
-        const key=JSON.stringify([next.role,next.lamps,next.floor,next.door?.visible,!!next.door]);
+        const key=JSON.stringify([next.role,next.lamps,next.floor,next.door?.visible,!!next.door,options.model]);
         if(key!==paintedKey || !paintedLand) {
-          paintedLand=next.paint && next.paint===remoteSource ? remote : painting.studio.build(next);
+          const overlay=options.model==='b';
+          paintedLand=next.paint && next.paint===remoteSource ? (overlay?remote.overlay:remote) : painting.studio.build(next,overlay);
           paintedKey=key;
         }
         land=paintedLand;
       } else land=materials.floor(next,options);
       const cast=figures(next,images);
-      imagesForFrame={terrain:land.terrain,cast,seen:land.seen,light:land.light??land.seen,
+      imagesForFrame={land,terrain:land.terrain,cast,seen:land.seen,light:land.light??land.seen,
         leaves:painting?painting.leafSlices(land.leaves):[],
         front:painting && next.door?painting.foreground(next,land.terrain):null,
         grid:painting && options.grid?painting.gridOverlay(next,land.seen):null,shadows:castShadows(next,cast,land.seen),
-        lit:torchPool(next.width,next.height,next.torch,land.light??land.seen),
+        lit:options.model==='b'?null:torchPool(next.width,next.height,next.torch,land.light??land.seen),
         sun:options.sunlight?sunShaft(next.width,next.height,next.sun,land.seen):null,
         dust:options.sunlight?dustInShaft(next,land.seen):[]};
       sceneKey=key;
@@ -148,7 +150,7 @@ export async function mountCrypt(host,callbacks={},painting=null) {
         const foot=[evalin.x,evalin.y],source=clearMapSegment(foot,[tip.x,tip.y],edges)?[tip.x,tip.y]:foot;
         torch={...torch,x:source[0],y:source[1],polygon:visibilityPolygon(source,torch.range,edges)};
         cast=cast.map(a=>({...a,power:contains(torch.polygon,[a.x,a.y])?Math.max(0,1-Math.hypot(a.x-torch.x,a.y-torch.y)/torch.range):0}));
-        lit=torchPool(p.width,p.height,torch,layers.light);
+        if(options.model!=='b')lit=torchPool(p.width,p.height,torch,layers.light);
       }
       p={...p,actors:cast,torch};shadows=castShadows(p,cast,layers.seen);
     }
@@ -157,7 +159,7 @@ export async function mountCrypt(host,callbacks={},painting=null) {
     const list=[layer('floor',layers.terrain,0,0,p.width,p.height)];
     if(layers.grid)list.push(layer('hex-grid',layers.grid,0,0,p.width,p.height));
     const weights=flameWeights(t*6.1,still?0:.1,flames.fackla);
-    if(layers.sun){
+    if(layers.sun && options.model!=='b'){
       list.push(layer('sun',layers.sun,0,0,p.width,p.height,{add:true,alpha:(painting ? .46 : .86)+.06*Math.sin(t*.45)}));
       for(let i=0;i<layers.dust.length;i++){
         const dot=layers.dust[i],u=dot.phase+t*.33,s=1.6+(i%3)*.55;
@@ -226,6 +228,15 @@ export async function mountCrypt(host,callbacks={},painting=null) {
       const outside=cast.filter(a=>a.y>=p.door.y).map(a=>'actor-'+a.id);
       const at=list.findIndex(v=>outside.includes(v.id));
       list.splice(at<0?list.length:at,0,...paintedLeaves,layer('painted-arch',f.src,f.x,f.y,f.w,f.h));
+    }
+    if(options.model==='b' && darkness){
+      const {src,revision}=darkness.draw(p,layers.land,options,t,layers.sun);
+      // Apply once, after depth-sorted architecture and figures. Emissive fire
+      // remains in front when it is not covered by the foreground arch.
+      const front=list.findIndex(item=>item.id==='painted-arch');
+      const glow=list.filter((item,index)=>index>front && (item.id==='torch-flame'||item.id.startsWith('spark')));
+      for(const item of glow)list.splice(list.indexOf(item),1);
+      list.push(layer('darkness',src,0,0,p.width,p.height,{revision}),...glow);
     }
     surface.draw(list,camera,t);
     globalThis.aleaCryptFrameProbe?.();
