@@ -1254,7 +1254,139 @@ function storeSession(x){supabaseSession=x?{...x}:null;if(supabaseSession&&!Numb
 async function loginUser(){let email=$('loginEmail').value.trim(),password=$('loginPassword').value,b=$('loginScreen').querySelector('.login-submit');$('loginError').textContent='';b.disabled=true;b.textContent='Loggar in…';try{let r=await authFetch('/auth/v1/token?grant_type=password',{method:'POST',body:JSON.stringify({email,password})});let x=await r.json();if(!r.ok)throw new Error(x.error_description||x.msg||'Fel e-postadress eller lösenord.');storeSession(x);await loadProfile();if(!supabaseProfile)throw new Error('Användarprofil saknas.');$('loginPassword').value='';enterApp()}catch(e){storeSession(null);supabaseProfile=null;$('loginError').textContent=e.message||'Inloggningen misslyckades.'}finally{b.disabled=false;b.textContent='Logga in'}}
 async function logoutUser(){try{if(supabaseSession?.access_token)await authFetch('/auth/v1/logout',{method:'POST',headers:{'Authorization':'Bearer '+supabaseSession.access_token}})}catch(e){}window.aleaRefreshLocation?.clear?.();revokeMapImageUrls();revokeCombatIconUrls();revokeNpcPortraitUrls();storeSession(null);supabaseProfile=null;centralReady=false;centralCampaignId=null;centralCampaignRole=null;campaignDayState=null;campaignErfAwards=[];campaignCharacterRestStates=[];campaignLocationEventLinks=[];activeCombat=null;combatants=[];combatHexes=[];combatActions=[];combatLogRows=[];combatSelectedTargetId=null;campaignMaps=[];campaignActiveMapId=null;activeCampaignMap=null;current=null;editing=false;showLogin()}
 async function restoreSession(){supabaseSession=projectSession();if(!supabaseSession?.refresh_token)return false;try{let r=await authFetch('/auth/v1/token?grant_type=refresh_token',{method:'POST',body:JSON.stringify({refresh_token:supabaseSession.refresh_token})});let x=await r.json();if(!r.ok)throw 0;storeSession(x);await loadProfile();return !!supabaseProfile}catch(e){storeSession(null);supabaseProfile=null;return false}}
-async function initLogin(){if(await restoreSession())enterApp();else showLogin()}
+// Recovery uses the token from the email redirect, independently of any
+// regular ALEA session already stored in this browser.
+function recoveryUserRequest(token, password){
+ const headers={apikey:SUPABASE_KEY,Authorization:'Bearer '+token};
+ const options={headers,cache:'no-store',redirect:'error'};
+ if(password!==undefined){
+  headers['Content-Type']='application/json';
+  options.method='PUT';
+  options.body=JSON.stringify({password});
+ }
+ return fetch(ALEA_SUPABASE_CONFIG.endpoint('/auth/v1/user'),options);
+}
+
+async function startPasswordRecovery(){
+ if(ALEA_SUPABASE_CONFIG.name!=='development')return false;
+ const url=new URL(window.location.href);
+ const fragment=new URLSearchParams(url.hash.slice(1));
+ const type=fragment.get('type')||url.searchParams.get('type');
+ const errorCode=fragment.get('error_code')||url.searchParams.get('error_code');
+ const expired=errorCode==='otp_expired';
+ if(type!=='recovery'&&!expired&&errorCode!=='otp_disabled')return false;
+
+ let token=fragment.get('access_token');
+ const hasLinkError=expired||errorCode||fragment.has('error')||url.searchParams.has('error');
+ // Remove the Supabase callback fields while preserving unrelated query parameters.
+ for(const key of ['type','access_token','refresh_token','expires_at','expires_in','token_type',
+  'provider_token','provider_refresh_token','error','error_code','error_description','sb']){
+  url.searchParams.delete(key);
+  fragment.delete(key);
+ }
+ url.hash=fragment.toString();
+ window.history.replaceState(window.history.state,'',url);
+
+ const panel=$('passwordRecovery'), form=$('passwordRecoveryForm');
+ const status=$('passwordRecoveryStatus'), error=$('passwordRecoveryError');
+ const back=$('passwordRecoveryBack'), button=form.querySelector('button[type="submit"]');
+ const loginForm=$('loginForm'), subtitle=$('loginScreen').querySelector('.login-sub');
+ const login=()=>{
+  token=null;
+  form.reset();
+  form.onsubmit=null;
+  panel.classList.add('hidden');
+  loginForm.classList.remove('hidden');
+  subtitle.classList.remove('hidden');
+  showLogin();
+ };
+ const finish=message=>{
+  token=null;
+  form.reset();
+  form.onsubmit=null;
+  form.classList.add('hidden');
+  status.textContent=message;
+  back.disabled=false;
+  back.focus();
+ };
+ const invalid='Återställningslänken är ogiltig eller har redan använts. Be om en ny länk.';
+ const expiredMessage='Återställningslänken har gått ut eller har redan använts. Be om en ny länk.';
+ showLogin();
+ loginForm.classList.add('hidden');
+ subtitle.classList.add('hidden');
+ panel.classList.remove('hidden');
+ back.onclick=login;
+ back.disabled=true;
+ status.textContent='Kontrollerar återställningslänken …';
+ if(hasLinkError||!token){
+  finish(expired?expiredMessage:invalid);
+  return true;
+ }
+
+ try{
+  const response=await recoveryUserRequest(token);
+  if(response.status>=500)throw new Error();
+  const user=response.ok?await response.json():null;
+  if(!user?.id){
+   finish(response.status===401?expiredMessage:invalid);
+   return true;
+  }
+  $('passwordRecoveryEmail').value=user.email||'';
+  status.textContent=user.email?'Välj ett nytt lösenord för '+user.email+'.':'Välj ett nytt lösenord.';
+ }catch{
+  finish('Återställningslänken kunde inte kontrolleras just nu. Öppna länken i mejlet igen.');
+  return true;
+ }
+
+ form.classList.remove('hidden');
+ back.disabled=false;
+ const passwordInput=form.elements.namedItem('password');
+ const confirmationInput=form.elements.namedItem('confirmation');
+ passwordInput.focus();
+ form.onsubmit=async event=>{
+  event.preventDefault();
+  if(button.disabled||!token)return;
+  error.textContent='';
+  if(passwordInput.value!==confirmationInput.value){
+   error.textContent='Lösenorden måste vara identiska.';
+   confirmationInput.focus();
+   return;
+  }
+  button.disabled=true;
+  back.disabled=true;
+  try{
+   const response=await recoveryUserRequest(token,passwordInput.value);
+   if(response.ok){
+    finish('Ditt lösenord har ändrats. Du kan nu logga in med det nya lösenordet.');
+    return;
+   }
+   const details=await response.json().catch(()=>({}));
+   if(response.status===401||['session_expired','session_not_found','bad_jwt'].includes(details.code)){
+    finish(expiredMessage);
+    return;
+   }
+   if(details.code==='same_password'){
+    error.textContent='Välj ett lösenord som skiljer sig från det nuvarande.';
+   }else if(details.code==='weak_password'||details.code==='validation_failed'){
+    error.textContent='Lösenordet uppfyller inte kraven. Prova ett längre lösenord med en blandning av tecken.';
+   }else{
+    error.textContent='Lösenordet kunde inte sparas. Försök igen.';
+   }
+  }catch{
+   error.textContent='Anslutningen avbröts. Försök igen.';
+  }finally{
+   button.disabled=false;
+   back.disabled=false;
+  }
+ };
+ return true;
+}
+
+async function initLogin(){
+ if(await startPasswordRecovery())return;
+ if(await restoreSession())enterApp();
+ else showLogin();
+}
 function saveAdmin(){localStorage.setItem('dod_admin_v014',JSON.stringify(adminData))}
 function uid(prefix){return prefix+'_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,7)}
 function newEquipItemId(kind='item'){return (globalThis.crypto&&typeof crypto.randomUUID==='function')?crypto.randomUUID():'eq_'+kind+'_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,9)}
