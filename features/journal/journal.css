@@ -72,3 +72,10 @@
  .journal-outcome,.journal-private{font-size:.6rem;padding:2px 4px}
  .journal-row-details{margin-left:22px}
 }
+
+/* The campaign-wide activity feed does not belong in Admin → Platser or the map editor.
+   Keep the journal page and the feed on other views unchanged. */
+main:has(> #admin:not(.hidden)) > #journalFeed,
+main:has(> #mapPage:not(.hidden)) > #journalFeed {
+ display:none !important;
+}
