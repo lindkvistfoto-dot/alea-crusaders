@@ -24,14 +24,29 @@ export function isBlocked(geometry, point, property) {
   return geometry.some(shape => shape.closed && shape[property] && contains(shape.points, point));
 }
 
-function intersection(origin, dx, dy, [[ax, ay], [bx, by]]) {
+function intersection(origin, dx, dy, [[ax, ay], [bx, by]], includeCollinear = false) {
   const sx = bx - ax, sy = by - ay;
   const divisor = dx * sy - dy * sx;
-  if (Math.abs(divisor) < EPSILON) return Infinity;
   const ox = ax - origin[0], oy = ay - origin[1];
+  if (Math.abs(divisor) < EPSILON) {
+    if (!includeCollinear || Math.abs(ox * dy - oy * dx) >= EPSILON) return Infinity;
+    const a = ox * dx + oy * dy, b = a + sx * dx + sy * dy;
+    return Math.max(a, b) < 0 ? Infinity : Math.max(0, Math.min(a, b));
+  }
   const distance = (ox * sy - oy * sx) / divisor;
   const along = (ox * dy - oy * dx) / divisor;
   return distance >= 0 && along >= -EPSILON && along <= 1 + EPSILON ? distance : Infinity;
+}
+
+// A tactical step/ray stops on contact with the wall, including an endpoint
+// or a collinear length of wall. Decorative light keeps its silhouette rules.
+export function clearMapSegment(origin, destination, edges, freeSight = null) {
+  const vx = destination[0] - origin[0], vy = destination[1] - origin[1];
+  const distance = Math.hypot(vx, vy);
+  if (!distance) return true;
+  const dx = vx / distance, dy = vy / distance;
+  return edges.every(edge => intersection(origin, dx, dy, edge, true) > distance + EPSILON) &&
+    (!freeSight || traceFree(freeSight, origin, dx, dy, distance) >= distance - EPSILON);
 }
 
 export function unobstructedDistance(origin, dx, dy, limit, edges, freeSight) {
@@ -112,6 +127,23 @@ export function roomVisibility(status) {
   if (status === 'explored') return 'sharp';
   if (status === 'unexplored') return 'blur';
   return 'black';
+}
+
+// The most restrictive overlapping room wins, matching the discovery masks.
+export function pointIsExplored(areas, point) {
+  let explored = false;
+  for (const { shape_type, shape_data, status } of areas) {
+    if (!shape_data) continue;
+    const [px, py] = point;
+    const { x, y, width, height, points } = shape_data;
+    const hit = shape_type === 'rect'
+      ? px >= x && py >= y && px < x + width && py < y + height
+      : Array.isArray(points) && points.length >= 3 && contains(points, point);
+    if (!hit) continue;
+    if (status !== 'explored') return false;
+    explored = true;
+  }
+  return explored;
 }
 
 export function knownAreas(areas) {

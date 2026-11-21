@@ -1,7 +1,8 @@
 import './kartakademin.css';
+import '../combat/battle-map-effects.js';
 import { createMask, findSmallSolidIslands, isFree, maskHistory, paintMask, polygonMask, prepareFreeSight, serializeMask } from './kartakademin-mask.js';
 import { FREE_SIGHT_RESET_CONFIRMATION, FREE_SIGHT_RESET_LABEL, removalConfirmation, resetFreeSight, toolsForMode } from './kartakademin-actions.js';
-import { blockers, canMove, contains, isBlocked, mapDistanceMeters, visibilityPolygon } from './kartakademin-geometry.js';
+import { blockers, canMove, contains, isBlocked, mapDistanceMeters, pointIsExplored, visibilityPolygon } from './kartakademin-geometry.js';
 
 const types = {
   fackla: { name: 'Fackla', color: '#ffb060', motion: .18 },
@@ -24,14 +25,15 @@ async function load(map, manager = canManageCampaignMaps()) {
       const config = await dbJson('rpc/read_campaign_map_academy_player', {
         method: 'POST', body: JSON.stringify({ p_map_id: map.id }),
       });
-      return { config, positions: [] };
+      return { config: config && Number(map.pixels_per_meter) > 0 ? { ...config, pixelsPerMeter: Number(map.pixels_per_meter) } : config, positions: [] };
     }
     rows = await dbJson('campaign_map_academy?' + filter(map.id) + '&select=configuration,revision');
   } catch (error) {
     if (ignoredMissingTable(error)) return { config: null, positions: [] };
     throw error;
   }
-  const config = rows[0]?.configuration ?? null;
+  const saved = rows[0]?.configuration ?? null;
+  const config = saved && Number(map.pixels_per_meter) > 0 ? { ...saved, pixelsPerMeter: Number(map.pixels_per_meter) } : saved;
   const positions = config ? await dbJson('campaign_map_character_positions?' + filter(map.id) + '&select=character_id,position') : [];
   return { config, positions, revision: rows[0]?.revision ?? 0 };
 }
@@ -116,7 +118,7 @@ function closeEditor() {
   editor.disposeFlood?.();
   dispose(editor.view);
   editor.root.closest('.map-area-editor')?.querySelector('[data-mask-overlay]')?.remove();
-  editor.root.closest('.map-area-editor')?.querySelectorAll('#mapAreaSvg :is([data-academy-layer],[data-character-token-layer],[data-ruler-layer])').forEach(layer => layer.remove());
+  editor.root.closest('.map-area-editor')?.querySelectorAll('#mapAreaSvg :is([data-object-layer],[data-academy-layer],[data-character-token-layer],[data-ruler-layer])').forEach(layer => layer.remove());
   const canvas = editor.root.closest('.map-area-editor')?.querySelector('#mapAreaCanvas');
   for (const property of ['width', 'left', 'top']) canvas?.style.removeProperty(property);
   canvas?.classList.remove('kartakademin-light-only');
@@ -311,6 +313,34 @@ async function openEditor(map, areas, imageUrl) {
   const state = editor = { root, workspace, settings, roomToolbar: toolbar, roomNotice, roomList, mapBoard: board, view: null, config: defaults(), positions: [], changedPositions: new Set(), points: [], selected: '', saving: false, dirty: false, mode: 'rooms', tool: 'room', layers: { rooms: true, effects: true, sight: true, solid: false, lights: true, characters: true, objects: true } };
   const academyLayer = document.createElementNS(svgNS, 'g'); academyLayer.dataset.academyLayer = ''; svg.append(academyLayer);
 
+  const objectLayer = node('g', { 'data-object-layer': '', 'pointer-events': 'none' });
+  academyLayer.before(objectLayer);
+  let objectMarkup = '', objectRequest = 0;
+  function updateObjectLayer() {
+    const discovery = get('[data-player]').checked;
+    if (discovery) {
+      objectLayer.innerHTML = window.aleaMapBattleObjects.discoveryMask(areas, map, 'academyObjectDiscovery')
+        + `<g mask="url(#academyObjectDiscovery)">${objectMarkup}</g>`;
+    } else {
+      objectLayer.innerHTML = objectMarkup;
+    }
+  }
+  async function reloadObjects() {
+    const request = ++objectRequest;
+    if (!(Number(map.pixels_per_meter) > 0)) return;
+    try {
+      const objects = await window.aleaMapBattleObjects.load(map);
+      if (editor !== state || objectRequest !== request) return;
+      objectMarkup = window.aleaMapBattleObjects.render(objects);
+      updateObjectLayer();
+    } catch (error) {
+      if (editor !== state || objectRequest !== request) return;
+      objectMarkup = '';
+      updateObjectLayer();
+      announce('Kunde inte visa kartobjekten: ' + error.message);
+    }
+  }
+
   const tokenLayer = node('g', { 'data-character-token-layer': '' });
   const rulerLayer = node('g', { 'data-ruler-layer': '', 'aria-hidden': 'true' });
   academyLayer.after(tokenLayer, rulerLayer);
@@ -498,7 +528,21 @@ async function openEditor(map, areas, imageUrl) {
     get('[data-tool-picker]').hidden = !get('[data-tool-picker]').childElementCount;
     get('[data-tool-controls]').hidden = !['sight', 'lights'].includes(modeKey) || state.tool === 'pan' || drawingMask;
     get('[data-mode-note]')?.remove();
-    if (modeKey === 'effects' || modeKey === 'objects') { const note=document.createElement('p'); note.dataset.modeNote=''; note.className='muted'; note.textContent=modeKey === 'effects' ? 'Förberett läge. PR #916 innehåller ingen kartbunden effektmodell.' : 'Förberett läge. Objektfunktioner ingår inte i den här versionen.'; body.append(note); }
+    if (modeKey === 'objects') {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'btn';
+      button.dataset.modeNote = '';
+      button.textContent = 'Öppna objektbiblioteket';
+      button.onclick = () => window.openArcaneObjectLibrary(map.id);
+      body.append(button);
+    } else if (modeKey === 'effects') {
+      const note = document.createElement('p');
+      note.dataset.modeNote = '';
+      note.className = 'muted';
+      note.textContent = 'Förberett läge. PR #916 innehåller ingen kartbunden effektmodell.';
+      body.append(note);
+    }
     let elements;
     if (tool.value === 'light') elements = state.config.lights.map(light => option(light.id, light.name));
     else if (tool.value === 'geometry') elements = state.config.geometry.map((shape, i) => option(shape.id, 'Form ' + (i + 1)));
@@ -575,7 +619,7 @@ async function openEditor(map, areas, imageUrl) {
 
   state.updateAreas = next => {
     areas = next;
-    if (get('[data-player]').checked) draw();
+    if (get('[data-player]').checked) { updateObjectLayer(); draw(); }
   };
   function drawCharacterTokens() {
     tokenLayer.replaceChildren();
@@ -593,7 +637,7 @@ async function openEditor(map, areas, imageUrl) {
       const name = characterName(character);
       const selected = interactive && state.selected === id;
       const marker = node('g', { transform: `translate(${x} ${y})`, 'data-character-token': id });
-      const width = .60 * state.config.pixelsPerMeter;
+      const width = window.aleaCombatPaperDollMap?.mapBaseWidth?.(state.config.pixelsPerMeter);
       const art = tokenStyle(id) === 'battlepose' ? window.aleaCombatPaperDollMap?.renderMapToken(id, width) : '';
       if (art) {
         marker.innerHTML = art;
@@ -637,6 +681,7 @@ async function openEditor(map, areas, imageUrl) {
   function draw(moving = null) {
     const lightOnly = get('[data-light-only]').checked;
     const discovery = get('[data-player]').checked;
+    objectLayer.style.display = state.layers.objects && !lightOnly ? '' : 'none';
     board.classList.toggle('kartakademin-light-only', lightOnly);
     state.view?.renderer?.update(state.config, areas, state.positions, lightOnly || !discovery, moving);
     get('[data-map-scale]').textContent = `${state.config.pixelsPerMeter.toLocaleString('sv-SE', { maximumFractionDigits: 2 })} px/m`;
@@ -788,6 +833,8 @@ async function openEditor(map, areas, imageUrl) {
         const data = await load(map);
         if (editor !== state) return;
         state.config = { ...defaults(), ...data.config };
+        if (Number(map.pixels_per_meter) > 0) state.config.pixelsPerMeter = Number(map.pixels_per_meter);
+        state.mapScaleAtOpen = map.pixels_per_meter;
         state.revision = data.revision ?? 0;
         state.positions = data.positions;
         mask = createMask(map.width, map.height, state.config.freeSight);
@@ -817,6 +864,22 @@ async function openEditor(map, areas, imageUrl) {
       state.initializing = false;
     }
   };
+
+  window.addEventListener('alea:map-object-scale', async ({ detail }) => {
+    if (editor !== state || detail.mapId !== map.id) return;
+    map.pixels_per_meter = detail.pixelsPerMeter;
+    if (!state.loaded || state.saving) return;
+    if (state.dirty) {
+      state.scaleConflict = true;
+      announce('Kartskalan ändrades i objektbiblioteket. Öppna kartan igen före sparning.');
+      return;
+    }
+    // Reload the whole revision, including changes made by another GM.
+    dispose(state.view);
+    state.view = null;
+    state.loaded = false;
+    await initialize();
+  }, { signal: viewEvents.signal });
 
   const onChange = event => {
     const input = event.target;
@@ -1000,6 +1063,13 @@ async function openEditor(map, areas, imageUrl) {
   updateWorkspaceHeight();
   positionBoard();
   const viewOptions = { signal: viewEvents.signal };
+  get('[data-player]').addEventListener('change', updateObjectLayer, viewOptions);
+  for (const eventName of ['alea:map-objects-changed', 'alea:map-object-scale']) {
+    window.addEventListener(eventName, event => {
+      if (event.detail?.mapId === map.id) void reloadObjects();
+    }, viewOptions);
+  }
+  void reloadObjects();
   window.addEventListener('resize', updateWorkspaceHeight, viewOptions);
   const hand = get('[data-pan-tool]');
   let handEnabled = false;
@@ -1278,6 +1348,7 @@ async function openEditor(map, areas, imageUrl) {
     draw();
   });
   get('[data-save]').onclick = async () => {
+    if (state.scaleConflict) return announce('Öppna kartan igen för att läsa den nya skalan.');
     if (!state.loaded || state.saving || [...opener.querySelectorAll('input[type=number]:enabled')].filter(input => input.getClientRects().length).some(input => !input.reportValidity())) return;
     if (floodPoint) return announce('Vänta tills fyllningen har slutförts.');
     if (state.points.length || maskPoints.length || stroke || lightDrag) return announce('Slutför eller ångra den påbörjade formen före sparning.');
@@ -1294,10 +1365,17 @@ async function openEditor(map, areas, imageUrl) {
       state.revision = await dbJson('rpc/save_campaign_map_academy', {
         method: 'POST',
         body: JSON.stringify({
-          p_map_id: map.id, p_campaign_id: map.campaign_id, p_configuration: state.config,
+          p_map_id: map.id, p_campaign_id: map.campaign_id, p_configuration: state.mapScaleAtOpen === undefined ? state.config
+            : { ...state.config, expectedMapScale: state.mapScaleAtOpen },
           p_revision: state.revision, p_positions: changes,
         }),
       });
+      const calibrated = Number(Number(state.config.pixelsPerMeter).toFixed(4));
+      map.pixels_per_meter = calibrated;
+      state.mapScaleAtOpen = calibrated;
+      state.config.pixelsPerMeter = calibrated;
+      const listedMap = typeof campaignMaps !== 'undefined' && campaignMaps.find(row => row.id === map.id);
+      if (listedMap) listedMap.pixels_per_meter = calibrated;
       state.changedPositions.clear();
       state.dirty = false;
       setSaveStatus('Sparat', 'saved');
@@ -1313,4 +1391,4 @@ async function openEditor(map, areas, imageUrl) {
   };
 }
 
-window.aleaKartakademin = { openEditor, closeEditor, syncCampaign, clearCampaign, getEditMode: () => editor?.mode ?? null, getTool: () => editor?.tool ?? null, isLayerVisible: name => editor?.layers?.[name] ?? true, setLayer: (name, visible) => editor?.setLayer?.(name, visible), updateEditorAreas: areas => editor?.updateAreas?.(areas), hasPendingChanges: () => Boolean(editor?.dirty || editor?.saving), isSaving: () => Boolean(editor?.saving) };
+window.aleaKartakademin = { pointIsExplored, openEditor, closeEditor, syncCampaign, clearCampaign, getEditMode: () => editor?.mode ?? null, getTool: () => editor?.tool ?? null, isLayerVisible: name => editor?.layers?.[name] ?? true, setLayer: (name, visible) => editor?.setLayer?.(name, visible), updateEditorAreas: areas => editor?.updateAreas?.(areas), hasPendingChanges: () => Boolean(editor?.dirty || editor?.saving), isSaving: () => Boolean(editor?.saving) };

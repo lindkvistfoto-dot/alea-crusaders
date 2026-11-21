@@ -5,6 +5,7 @@ const source=readFileSync(new URL('../features/combat/runtime.js',import.meta.ur
 const a=source.indexOf('function combatSceneSelectionIsPreview('),b=source.indexOf('function renderCombatGmControls(',a);
 const ctx={combatSelectedSceneId:'sceneA',activeCombat:{id:'liveCombat',settings:{scene_id:'sceneB'},name:'Bron'},campaignCombatScenes:[{id:'sceneA',name:'Byn skelettpatrill',settings:{rows:10,hex_m:1.5},background_width:1254,background_height:1254}],combatScenePreviewRequest:0,combatScenePreview:null,combatScenePreviewSceneId:'',combatScenePreviewLoading:false,combatScenePreviewError:'',
  combatHexPoints:()=>'',combatTokenInitials:()=> 'X',escAttr:x=>String(x),$:(id)=>({innerHTML:'',textContent:''}),renderCombat:()=>{ctx.renders++},renders:0};
+runInNewContext(readFileSync(new URL('../features/combat/footprint.js',import.meta.url),'utf8'),ctx);
 runInNewContext(source.slice(source.indexOf('function combatSceneFromId('),b),ctx);
 describe('Byte av stridsscen förhandsvisar utan att förlora aktiv strid',()=>{
  test('scenval skiljer sig från aktiv strid och ger en omrendering',()=>{

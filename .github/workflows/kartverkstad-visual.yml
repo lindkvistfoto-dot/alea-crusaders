@@ -3,6 +3,7 @@ on:
   pull_request:
     paths:
       - 'features/map/kartakademin*'
+      - 'features/combat/battle-map-*.js'
       - 'scripts/kartverkstad*visual.mjs'
       - '.github/workflows/kartverkstad-visual.yml'
 permissions:
@@ -40,6 +41,7 @@ jobs:
           python -m http.server 4181 --bind 127.0.0.1 --directory dist > "$RUNNER_TEMP/kart-http.log" 2>&1 &
           node scripts/kartverkstad-visual.mjs http://127.0.0.1:4181 visual-results/after
           node scripts/kartverkstad-shadow-visual.mjs http://127.0.0.1:4181 dist visual-results/after/shadows
+          node scripts/kartverkstad-battle-visual.mjs http://127.0.0.1:4181
       - uses: actions/upload-artifact@v4
         if: always()
         with:

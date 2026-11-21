@@ -3,7 +3,7 @@ import { bakeFlameParts, flames, flameWeights } from './kartakademin-flame.js';
 import { isFree, prepareFreeSight } from './kartakademin-mask.js';
 import { blockers, directionalReach, isBlocked, parallelBeamQuads, resolveOrigin, roomVisibility, visibilityPolygon } from './kartakademin-geometry.js';
 
-export async function mountLighting(host, map) {
+export async function mountLighting(host, map, createEffects) {
   const app = new Application();
   let lightTexture, target, frame, imageTexture;
   let destroyed = false;
@@ -67,6 +67,7 @@ export async function mountLighting(host, map) {
     shade.height = map.height;
     shade.blendMode = 'multiply';
     world.addChild(shade);
+    const effects = createEffects?.(world, lightTexture, map);
     const discovery = new Graphics();
     world.addChild(discovery);
     world.mask = discovery;
@@ -89,10 +90,11 @@ export async function mountLighting(host, map) {
     const ambient = new Graphics();
     lightmap.addChild(ambient);
     let lights = [];
+    let lightmapDirty = true, lightsInMotion = false;
     app.canvas.className = 'kartakademin-canvas';
     app.canvas.setAttribute('aria-hidden', 'true');
 
-    function paint(time) {
+    function paintLightmap(time) {
       for (const { sprites, light, flame } of lights) {
         const magic = light.type === 'magiskt';
         const phase = time / (magic ? 1250 : light.type === 'eldstad' ? 93 : 140);
@@ -106,7 +108,26 @@ export async function mountLighting(host, map) {
 
       }
       app.renderer.render({ container: lightmap, target, clear: true });
+      lightmapDirty = false;
+    }
+
+    function paint(time) {
+      // Moving weather and transient sprites do not invalidate a static lightmap.
+      if (lightmapDirty || lightsInMotion) paintLightmap(time);
+      effects?.paint(time);
       app.render();
+    }
+
+    function redraw() {
+      cancelAnimationFrame(frame);
+      paint(performance.now());
+      if (!lightsInMotion && !effects?.animated()) return;
+      const tick = time => {
+        if (destroyed || !app.canvas.isConnected) return;
+        if (!document.hidden) paint(time);
+        if (lightsInMotion || effects?.animated()) frame = requestAnimationFrame(tick);
+      };
+      frame = requestAnimationFrame(tick);
     }
 
     function update(config, areas, positions, previewAll = false, moving = null) {
@@ -227,15 +248,9 @@ export async function mountLighting(host, map) {
           projections.delete(id);
         }
       }
-      paint(performance.now());
-      if (lights.some(({ light }) => light.motion > 0)) {
-        const tick = time => {
-          if (destroyed || !app.canvas.isConnected) return;
-          if (!document.hidden) paint(time);
-          frame = requestAnimationFrame(tick);
-        };
-        frame = requestAnimationFrame(tick);
-      }
+      lightmapDirty = true;
+      lightsInMotion = lights.some(({ light }) => light.motion > 0);
+      redraw();
     }
 
     function destroy() {
@@ -253,7 +268,12 @@ export async function mountLighting(host, map) {
     }
 
     host.prepend(app.canvas);
-    return { update, destroy };
+    return {
+      update, destroy, canvas: app.canvas,
+      setEffects(weather, cues, pixelsPerMeter, reset = false) {
+        if (effects?.update(weather, cues, pixelsPerMeter, reset)) redraw();
+      },
+    };
   } catch (error) {
     if (app.renderer) app.destroy({ removeView: true }, { children: true });
     target?.destroy(true);
