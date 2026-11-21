@@ -12,23 +12,27 @@ function polygon(points) {
 }
 
 function footprint(source,edges,radius) {
-  const [x,y]=source.foot,left=Math.floor(x-radius),top=Math.floor(y-radius);
+  const [x,y]=source.foot,[sx,sy]=source.emitter;
+  const left=Math.floor(sx-radius),top=Math.floor(sy-radius);
   const size=Math.ceil(radius*2)+2;
   const stencil=sheet(size*density,size*density),ctx=stencil.getContext('2d');
   ctx.scale(density,density);ctx.translate(-left,-top);
-  const hull=visibilityPolygon([x,y],radius,edges);
+  // A fixture can sit above the walkable floor, e.g. on the portal wall.
+  // Rays leave its registered floor contact; intensity peaks at its painted socket.
+  const hull=visibilityPolygon([x,y],radius+Math.hypot(sx-x,sy-y),edges);
   ctx.fillStyle='white';ctx.fill(polygon(hull));
   // Painted vertical faces are raised above their floor footprints. Admit a face
   // from its facing side only; its back still blocks the underlying floor rays.
   for(const face of paintedFaces){
-    if(face.at.some(at=>Math.hypot(at[0]-x,at[1]-y)<radius && clearMapSegment([x,y],at,edges)))ctx.fill(face.path);
+    const hostsEmitter=ctx.isPointInPath(face.path,(sx-left)*density,(sy-top)*density);
+    if(hostsEmitter || face.at.some(at=>Math.hypot(at[0]-sx,at[1]-sy)<radius && clearMapSegment([x,y],at,edges)))ctx.fill(face.path);
   }
   const mask=sheet(stencil.width,stencil.height),m=mask.getContext('2d');
   // Feather a continuous vector silhouette before radial attenuation. The narrow
   // penumbra has a fixed world-space width, independent of zoom or hex cells.
   m.filter='blur(2.5px)';m.drawImage(stencil,0,0);m.filter='none';
   m.globalCompositeOperation='destination-in';
-  const cx=(x-left)*density,cy=(y-top)*density,r=radius*density;
+  const cx=(sx-left)*density,cy=(sy-top)*density,r=radius*density;
   const fall=m.createRadialGradient(cx,cy,0,cx,cy,r);
   for(const [stop,alpha] of [[0,1],[.16,.98],[.4,.82],[.65,.45],[.86,.12],[1,0]])
     fall.addColorStop(stop,'rgba(0,0,0,'+alpha+')');
@@ -51,8 +55,8 @@ export function createDarkness() {
       }
     }
     if(!veil)veil=sheet(p.width*density,p.height*density);
-    const sources=p.lamps.filter(l=>l.on).map(l=>({id:l.id,foot:l.foot,range:l.range}));
-    if(p.torch?.on)sources.push({id:8,foot:[p.torch.x,p.torch.y],range:p.torch.range});
+    const sources=p.lamps.filter(l=>l.on).map(l=>({id:l.id,foot:l.foot,emitter:[l.x,l.y],range:l.range}));
+    if(p.torch?.on)sources.push({id:8,foot:[p.torch.x,p.torch.y],emitter:[p.torch.x,p.torch.y],range:p.torch.range});
     const key=JSON.stringify([options.ambient,options.reach,options.flicker,!!sun,time===0,
       sources.map(s=>[s.id,...s.foot])]);
     if(key!==last || land!==lastLand || (time && sources.length && options.flicker && time>=nextFrame)){
@@ -65,10 +69,11 @@ export function createDarkness() {
       for(const source of sources){
         const radius=source.range*options.reach;
         // Subpixel movement need not retrace every ray. Never quantize the actor itself.
-        const at=source.foot.map(v=>Math.round(v/2)*2),signature=[...at,radius].join(',');
+        const at=source.id===8 ? source.foot.map(v=>Math.round(v/2)*2) : source.foot;
+        const emitter=source.id===8?at:source.emitter,signature=[...at,...emitter,radius].join(',');
         let patch=footprints.get(source.id);
         if(patch?.signature!==signature){
-          patch={...footprint({...source,foot:at},edges,radius),signature};
+          patch={...footprint({...source,foot:at,emitter},edges,radius),signature};
           footprints.set(source.id,patch);
         }
         const phase=source.id*2.39996;

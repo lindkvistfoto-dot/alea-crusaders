@@ -50,7 +50,7 @@ try{
       const maskSamples=await page.evaluate(async()=>{
         const {createDarkness}=await import('/features/art-first/darkness.js');
         const engine=createDarkness(),visible=new Path2D();visible.rect(0,0,85,100);
-        const land={visible},lamp={id:0,on:true,foot:[32,50],range:65};
+        const land={visible},lamp={id:0,on:true,x:32,y:50,foot:[32,50],range:65};
         const p={role:'gm',width:120,height:100,walls:[{x1:60,y1:0,x2:60,y2:100}],lamps:[lamp]};
         const options={ambient:.8,reach:1,flicker:0};
         function alpha(view,x,y){
