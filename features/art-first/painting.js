@@ -177,7 +177,7 @@ export async function hostPainting(experiment=false) {
     }
     return {...p,paint:grant};
   }
-  return {build,decorate};
+  return {build,decorate,aspect:warm?warm.naturalWidth/warm.naturalHeight:null};
 }
 export async function decodeGrant(p,previous) {
   if(!p?.paint)return null;

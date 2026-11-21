@@ -483,7 +483,10 @@ async function start() {
   const startup = openCryptSession({
     ...(artFirst?{loadWorld:async()=>{
       const [world,{chamber}]=await Promise.all([import('./world.js'),import('../art-first/chamber.js')]);
-      return {...world,createWorld:()=>world.createWorld({map:livingDarkness?{...chamber,livingDarkness:true}:chamber})};
+      // Register both models on the warm master’s exact aspect. The common
+      // height keeps every existing foot anchor, hex and wall in world units.
+      const map=livingDarkness?{...chamber,livingDarkness:true,width:chamber.height*painting.studio.aspect}:chamber;
+      return {...world,createWorld:()=>world.createWorld({map})};
     },decoratePlayerView:view=>painting.studio.decorate(view)}:{}),
     onView: showProjection,
     onStatus: text => {
