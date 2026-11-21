@@ -25,7 +25,7 @@ Schema 3 selects a repository-owned image profile:
 }
 ```
 
-The trusted [CORE image contract](../../features/hermes-core/contract.json) binds each profile to approved processing rules and a server-side adapter. Profiles currently cover unrestricted system assets, spell/skill/symbol icons and illustrations, honors/reliefs, and private NPC portraits. Profile rules preserve format, aspect, dimensions, alpha behavior, size budgets, archive location, Storage privacy and registered application references.
+The trusted [CORE image contract](../../../features/hermes-core/contract.json) lists the available profiles and binds each profile to its processing rules and server-side adapter. For a new DEV campaign map under an existing place, follow the [campaign map procedure](../../../features/hermes-core/OPERATIONAL_ACCEPTANCE.md#new-campaign-map-in-dev).
 
 A request may select a profile and an existing target key. Any caller-supplied bucket, table, column, path or SQL identifier is ignored; the publisher resolves these only from the checked-in contract. Unknown profiles, profile/target mismatches and missing target rows fail closed. Do not create a new publisher or workflow to add a profile.
 
@@ -35,4 +35,6 @@ The publisher validates that Inbox and archive IDs are distinct, belong to their
 
 The publisher never accepts client-selected storage or database destinations. It does not delete originals or prior published objects. Profile adapters that cannot safely preserve the current target's semantics remain unconnected until their adapter is implemented and verified.
 
-DEV submissions use `hermes/core/queue/dev/<request>.json` and the DEV-only workflow on `development`. The top-level queue and LIVE publisher remain restricted to `main`; this DEV change does not trigger or alter LIVE publication.
+DEV submissions use `hermes/core/queue/dev/<request>.json` on `development` and run [HERMES CORE – DEV image publication](../../../.github/workflows/hermes-core-publish-dev.yml). The top-level queue is for LIVE on `main`.
+
+Use the repository Actions runs endpoint with `event=push&head_sha=<queue-commit-sha>` to find the matching run. Read its `publish` job and require a successful `HERMES_CORE_ACTIVE` record with the expected target and image reference.
