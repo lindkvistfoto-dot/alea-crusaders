@@ -71,6 +71,7 @@ async function gpuSurface(host) {
     const space=new Container();app.stage.addChild(space);host.append(app.canvas);
     let width=10,height=10;
     const records=new Map(),textures=new Map();
+    const revisions=new WeakMap();
     const textureFor=src=>{
       let t=textures.get(src);
       if(!t){t=Texture.from(src);textures.set(src,t);}
@@ -84,6 +85,9 @@ async function gpuSurface(host) {
       for(const [index,item] of items.entries()){
         const {id,src}=item;used.add(id);sources.add(src);
         const tex=textureFor(src);
+        if(item.revision!==undefined && revisions.get(src)!==item.revision){
+          tex.source.update();revisions.set(src,item.revision);
+        }
         let display=records.get(id);
         if(!display){
           display=item.hero ? new MeshPlane({texture:tex,verticesX:GRID_X,verticesY:GRID_Y}) : new Sprite(tex);

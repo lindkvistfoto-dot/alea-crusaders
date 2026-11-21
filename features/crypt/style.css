@@ -161,3 +161,11 @@ dialog>.dialog-close{margin-top:.45rem}
   .art-first #torch-item{grid-column:1 / -1;border-left:0;border-top:1px solid var(--line);grid-template-columns:1fr auto}
   .art-first #torch-action{grid-column:2;grid-row:1 / 3}
 }
+
+.light-lab {display:flex;align-items:start;flex-wrap:wrap;gap:.6rem 1.3rem;padding:.7rem 0}
+.light-lab[hidden],.light-lab details[hidden]{display:none}
+.light-lab summary{cursor:pointer;padding:.4rem 0}
+.light-sliders{display:flex;flex-wrap:wrap;gap:.7rem 1.3rem;padding:.5rem 0}
+.light-sliders label{display:grid;grid-template-columns:auto auto;gap:.2rem .5rem;font-size:.85rem}
+.light-sliders output{justify-self:end;font-variant-numeric:tabular-nums}
+.light-sliders input{grid-column:span 2;max-width:100%;accent-color:#c49552}

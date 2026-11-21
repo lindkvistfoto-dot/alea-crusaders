@@ -46,6 +46,19 @@
           <div class="map-corner map-corner-sw" aria-hidden="true"></div>
           <div class="map-corner map-corner-se" aria-hidden="true"></div>
         </div>
+        <section class="light-lab" id="light-lab" aria-label="Jämför belysning" hidden>
+          <div class="segmented" role="group" aria-label="Ljusmodell">
+            <button type="button" data-light-model="a" aria-pressed="false">A · Ljus på mörk bild</button>
+            <button type="button" data-light-model="b" aria-pressed="true">B · Mörker över målning</button>
+          </div>
+          <details id="light-controls"><summary>Justera mörkerlagret</summary>
+            <div class="light-sliders">
+              <label>Grundmörker <output for="ambient">78 %</output><input id="ambient" type="range" min="0" max="100" value="78"></label>
+              <label>Ljusradie <output for="reach">100 %</output><input id="reach" type="range" min="45" max="160" value="100"></label>
+              <label>Fladder <output for="flicker">35 %</output><input id="flicker" type="range" min="0" max="100" value="35"></label>
+            </div>
+          </details>
+        </section>
         <div class="map-tools">
           <span class="toolbar-label">Kamera</span>
           <div class="segmented" role="group" aria-label="Kamera">

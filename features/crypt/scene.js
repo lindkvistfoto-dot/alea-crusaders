@@ -162,10 +162,10 @@ export function perception(state) {
   return {current,seenBy,doorSeen,edges,torch, individual:(actor,p)=>detects(actor,p,illuminated(p))};
 }
 
-function knownEdgeParts(map, known) {
+function knownEdgeParts(map, known, edges) {
   const g=geometry(map),parts=[];
   const adjacent=([x,y])=>[-3,3].some(dx=>[-3,3].some(dy=>known.has(Math.floor((y+dy)/SAMPLE)*g.cols+Math.floor((x+dx)/SAMPLE))));
-  for(const [a,b] of [...g.outer,...g.solidEdges]) {
+  for(const [a,b] of edges ?? [...g.outer,...g.solidEdges]) {
     const count=Math.ceil(distance(a,b)/SAMPLE), step=i=>[a[0]+(b[0]-a[0])*i/count,a[1]+(b[1]-a[1])*i/count];
     let start=null;
     for(let i=0;i<=count;i++) {
@@ -214,6 +214,11 @@ export function renderGeometry(state, info, gm) {
   torch.polygon = torch.on ? visibilityPolygon(point(torch),torch.range,lightEdges) : [];
   const sun = gm ? {polygon:g.sun.map(p=>p.slice())} :
     sunHull(g.tiles.filter(t=>info.current.has(t.key) && contains(g.sun,t.center)).map(t=>t.center));
-  return {width:map.width,height:map.height,pixelsPerMeter:map.pixelsPerMeter,floor,walls,door,torch,sun};
+  const projection={width:map.width,height:map.height,pixelsPerMeter:map.pixelsPerMeter,floor,walls,door,torch,sun};
+  if(map.livingDarkness){
+    const furniture=map.obstacles.filter(o=>!o.sight).flatMap(o=>segments(o.points));
+    projection.lightBlockers=gm?furniture:knownEdgeParts(map,known,furniture);
+  }
+  return projection;
 }
 
