@@ -1,0 +1,12 @@
+{
+  "schema": 3,
+  "label": "Kryptkammaren",
+  "target": {
+    "kind": "profile",
+    "profile_id": "campaign-map",
+    "id": "bcfab454-8a14-52c0-ab25-8a7717781150"
+  },
+  "drive_file_id": "1UPUfTIMPLmwOXfS3BIuRftKcH7sAR2-P",
+  "archive_file_id": "1Wpc-OxJzv8jboMP6P3h9y4BMdgI_Skt6",
+  "source_sha256": "0dddf13da33cb0980e0ae613e5079e249643f49bd4d3bcee2dbfbd2530a92dcf"
+}
