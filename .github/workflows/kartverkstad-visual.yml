@@ -3,6 +3,8 @@ on:
   pull_request:
     paths:
       - 'features/map/kartakademin*'
+      - 'features/map/polygon-*.js'
+      - 'scripts/polygon-studio-visual.mjs'
       - 'scripts/kartverkstad*visual.mjs'
       - 'scripts/kartakademin-surface-visual.mjs'
       - '.github/workflows/kartverkstad-visual.yml'
@@ -40,6 +42,7 @@ jobs:
           npm run build
           python -m http.server 4181 --bind 127.0.0.1 --directory dist > "$RUNNER_TEMP/kart-http.log" 2>&1 &
           node scripts/kartverkstad-visual.mjs http://127.0.0.1:4181 visual-results/after
+          node scripts/polygon-studio-visual.mjs http://127.0.0.1:4181 visual-results/after/polygons
           node scripts/kartverkstad-shadow-visual.mjs http://127.0.0.1:4181 dist visual-results/after/shadows
       - name: Read the approved painted crypt fixture
         uses: actions/checkout@v4

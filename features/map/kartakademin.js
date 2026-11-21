@@ -1,4 +1,6 @@
 import './kartakademin.css';
+import { mountPolygonStudio } from './polygon-studio.js';
+import { mapPointer } from './polygon-edit-geometry.js';
 import { createMask, findSmallSolidIslands, isFree, maskHistory, paintMask, polygonMask, prepareFreeSight, serializeMask } from './kartakademin-mask.js';
 import { FREE_SIGHT_RESET_CONFIRMATION, FREE_SIGHT_RESET_LABEL, removalConfirmation, resetFreeSight, toolsForMode } from './kartakademin-actions.js';
 import { paintedEdge, replaceWallFoot } from './kartakademin-surfaces.js';
@@ -114,6 +116,7 @@ function option(value, text) {
 
 function closeEditor() {
   if (!editor) return;
+  editor.studio?.destroy();
   editor.disposeFlood?.();
   dispose(editor.view);
   editor.root.closest('.map-area-editor')?.querySelector('[data-mask-overlay]')?.remove();
@@ -131,7 +134,7 @@ function closeEditor() {
   editor = null;
 }
 
-async function openEditor(map, areas, imageUrl) {
+async function openEditor(map, areas, imageUrl, roomData) {
   const opener = document.getElementById('mapAreaEditor');
   closeEditor();
   if (!canManageCampaignMaps() || !opener) return;
@@ -142,7 +145,7 @@ async function openEditor(map, areas, imageUrl) {
     title: 'Rumsverktyg',
     paragraphs: [
       'Rita minst tre hörn. Nya punkter fäster mot befintliga hörn och kanter. Tomrum mellan rum är tillåtna, men polygoner får inte överlappa.',
-      'Välj Infoga punkt och klicka nära en kant. Dra ett hörn för att flytta det. Koppla sedan polygonen till en plats i rumslistan.',
+      'Välj ett rum på kartan eller i listan. Under Redigera kan du dra hörn och klicka på en kant för att lägga till en punkt. Fyll föreslår slutna tomrum. Varje slutförd ändring sparas direkt.',
     ],
   });
   root.innerHTML = `<div data-body>
@@ -452,9 +455,9 @@ async function openEditor(map, areas, imageUrl) {
   }
 
   function brushPoint(event, clamp = false) {
-    const inverse = svg.getScreenCTM()?.inverse();
-    if (!inverse) return null;
-    const { x, y } = new DOMPoint(event.clientX, event.clientY).matrixTransform(inverse);
+    const point = mapPointer(event, svg);
+    if (!point) return null;
+    const [x, y] = point;
     if (!clamp && (x < 0 || y < 0 || x >= map.width || y >= map.height)) return null;
     return [Math.min(map.width - .001, Math.max(0, x)), Math.min(map.height - .001, Math.max(0, y))];
   }
@@ -496,7 +499,7 @@ async function openEditor(map, areas, imageUrl) {
 
   function refreshList() {
     const modeKey = state.mode;
-    toolHeader.querySelector('h3').textContent = modeKey === 'rooms' ? 'Rumsverktyg' :
+    toolHeader.querySelector('h3').textContent = modeKey === 'rooms' ? 'Polygonverkstad' :
       modeButtons.find(button => button.dataset.modeButton === modeKey)?.textContent;
     const help = toolHeader.querySelector('button');
     if (help) help.hidden = modeKey !== 'rooms';
@@ -599,6 +602,7 @@ async function openEditor(map, areas, imageUrl) {
 
   state.updateAreas = next => {
     areas = next;
+    state.studio?.render();
     if (get('[data-player]').checked) draw();
   };
   function drawCharacterTokens() {
@@ -841,7 +845,7 @@ async function openEditor(map, areas, imageUrl) {
         else input.value = input.dataset.config === 'darkness' ? value * 100 : value ?? 0;
       }
       refreshList();
-      window.renderMapAreaEditor?.();
+      state.studio?.render();
       if (!body.hidden) {
         state.view = mount(board, { ...map, image_url: imageUrl });
         await state.view.ready;
@@ -865,7 +869,7 @@ async function openEditor(map, areas, imageUrl) {
       state.points = [];
       maskPoints.length = 0;
       resetFlood();
-      refreshList(); draw(); window.renderMapAreaEditor?.(); return;
+      refreshList(); draw(); state.studio?.render(); return;
     }
     if (input.dataset.layer) return state.setLayer(input.dataset.layer, input.checked);
     if (input === maskMode || input === zoom || input.dataset.flood) return;
@@ -873,7 +877,7 @@ async function openEditor(map, areas, imageUrl) {
       refreshToolPicker(tool.value);
       if (tool.value !== 'mask') resetFlood();
       maskPoints.length = 0;
-      refreshList(); draw(); window.renderMapAreaEditor?.();
+      refreshList(); draw(); state.studio?.render();
       return select('');
     }
     const key = input.dataset.config;
@@ -912,6 +916,7 @@ async function openEditor(map, areas, imageUrl) {
     const active = get('[data-light-only]').checked;
     toolPanel.inert = active;
     draw();
+    state.studio?.render();
   };
   get('[data-reset-north]').onclick = () => {
     const north = get('[data-config="north"]');
@@ -1014,7 +1019,7 @@ async function openEditor(map, areas, imageUrl) {
     if (!input) return;
     state.layers[layer] = input.checked = visible;
     draw();
-    window.renderMapAreaEditor?.();
+    state.studio?.render();
   };
   let offsetX = 0, offsetY = 0;
   const fitScale = () => Math.min(viewport.clientWidth / map.width, viewport.clientHeight / map.height);
@@ -1039,14 +1044,14 @@ async function openEditor(map, areas, imageUrl) {
     offsetX = (offsetX + centerX - (x ?? centerX)) * ratio - centerX + (x ?? centerX);
     offsetY = (offsetY + centerY - (y ?? centerY)) * ratio - centerY + (y ?? centerY);
     positionBoard();
-    window.renderMapAreaEditor?.();
+    state.studio?.render();
   }
   let sliderZoom = 1;
   function resetView() {
     zoom.value = String(sliderZoom = 1);
     offsetX = offsetY = 0;
     positionBoard();
-    window.renderMapAreaEditor?.();
+    state.studio?.render();
   }
   zoom.oninput = () => { setZoom(zoom.valueAsNumber, undefined, undefined, sliderZoom); sliderZoom = zoom.valueAsNumber; };
   const zoomBy = (factor, x, y) => { setZoom(zoom.valueAsNumber * factor, x, y); sliderZoom = zoom.valueAsNumber; };
@@ -1203,6 +1208,27 @@ async function openEditor(map, areas, imageUrl) {
   viewport.addEventListener('pointerdown', event => {
     if (get('[data-light-only]').checked) event.stopPropagation();
   }, { ...viewOptions, capture: true });
+  if (roomData) {
+    state.studio = mountPolygonStudio({
+      map, svg, toolbar, roomList, roomNotice, ...roomData, dbJson,
+      getAreas: () => areas,
+      getWalls: () => state.layers.sight ? state.config.geometry.filter(shape => shape.points?.length >= 2) : [],
+      inRoomMode: () => state.mode === 'rooms' && state.tool === 'room',
+      isVisible: () => state.layers.rooms && !get('[data-light-only]').checked,
+      canPoint: () => !state.saving && !rulerEnabled && !handEnabled && !spaceDown,
+      changed(next) {
+        state.updateAreas(next);
+        roomData.changed(next);
+      },
+      centerOn([x, y]) {
+        const scale = fitScale() * zoom.valueAsNumber;
+        offsetX = (map.width / 2 - x) * scale;
+        offsetY = (map.height / 2 - y) * scale;
+        positionBoard();
+      }
+    });
+    state.studio.render();
+  }
   refreshToolPicker('room');
   for (const button of modeButtons) button.setAttribute('aria-selected', String(button.dataset.modeButton === state.mode));
   refreshList();
@@ -1392,4 +1418,4 @@ async function openEditor(map, areas, imageUrl) {
   };
 }
 
-window.aleaKartakademin = { openEditor, closeEditor, syncCampaign, clearCampaign, getEditMode: () => editor?.mode ?? null, getTool: () => editor?.tool ?? null, isLayerVisible: name => editor?.layers?.[name] ?? true, setLayer: (name, visible) => editor?.setLayer?.(name, visible), updateEditorAreas: areas => editor?.updateAreas?.(areas), hasPendingChanges: () => Boolean(editor?.dirty || editor?.saving), isSaving: () => Boolean(editor?.saving) };
+window.aleaKartakademin = { openEditor, closeEditor, syncCampaign, clearCampaign, getEditMode: () => editor?.mode ?? null, getTool: () => editor?.tool ?? null, isLayerVisible: name => editor?.layers?.[name] ?? true, setLayer: (name, visible) => editor?.setLayer?.(name, visible), updateEditorAreas: areas => editor?.updateAreas?.(areas), hasPendingChanges: () => Boolean(editor?.dirty || editor?.saving || editor?.studio?.pending), isSaving: () => Boolean(editor?.saving || editor?.studio?.busy) };

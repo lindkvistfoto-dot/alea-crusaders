@@ -46,3 +46,53 @@ describe('Smart Polygon Editor topology',()=>{
   expect(mergeHole(square(0,0,10,10),square(20,20,5,5))).toBeNull();
  });
 });
+
+describe('Fill Gap proposes only unoccupied, closed vector faces', () => {
+  const frame = [
+    square(0, 0, 30, 10), square(0, 20, 30, 10),
+    square(0, 10, 10, 10), square(20, 10, 10, 10),
+  ];
+
+  it('leaves a real narrow opening open even below the previous node-rounding precision', () => {
+    const open = [...frame.slice(0, 3), square(20, 10.000003, 10, 9.999997)];
+    expect(findHoles(open)).toEqual([]);
+  });
+
+  it('does not cover an occupied island or a room crossing the candidate boundary', () => {
+    expect(findHoles([...frame, square(12, 12, 2, 2)])).toEqual([]);
+    expect(findHoles([...frame, square(17, 13, 10, 4)])).toEqual([]);
+  });
+
+  it('follows a concave recess and a T-junction without rounding source coordinates', () => {
+    const shifted = [...frame, square(12, 10, 2, 2)]
+      .map((ring, index) => {
+        const points = ring.map(([x, y]) => [x + 0.00381639, y + 0.00000123]);
+        return index % 2 ? points.reverse() : points;
+      });
+    const before = structuredClone(shifted);
+    const gaps = findHoles(shifted);
+    expect(gaps).toHaveLength(1);
+    expect(gaps[0].points).toHaveLength(8);
+    expect(gaps[0].area).toBeCloseTo(96, 10);
+    const sourceCoordinates = new Set(shifted.flat().map(point => point.join(',')));
+    expect(gaps[0].points.every(point => sourceCoordinates.has(point.join(',')))).toBe(true);
+    expect(findHoles([...shifted, gaps[0].points])).toEqual([]);
+    expect(shifted).toEqual(before);
+  });
+
+  it('detects a triangular void between rooms touching at individual vertices', () => {
+    const a = [13, 21], b = [19, 21], c = [16, 25];
+    const rings = [[a, b, [16, 15]], [b, c, [24, 23]], [c, a, [9, 24]]];
+    const gaps = findHoles(rings);
+    expect(gaps).toHaveLength(1);
+    expect(gaps[0].area).toBeCloseTo(12);
+    expect(gaps[0].points).toEqual(expect.arrayContaining([a, b, c]));
+  });
+
+  it('keeps separate candidates when one hole has an occupied island', () => {
+    const other = frame.map(poly => poly.map(([x, y]) => [x + 40, y]));
+    const gaps = findHoles([...frame, ...other, square(12, 12, 2, 2)]);
+    expect(gaps).toHaveLength(1);
+    expect(gaps[0].points.every(([x]) => x >= 50)).toBe(true);
+  });
+});

@@ -8,7 +8,7 @@ assert.equal(new URL(origin).hostname, '127.0.0.1');
 await mkdir(output, { recursive: true });
 const bundle = (await readdir(dist + '/assets')).find(name => /^kartakademin-renderer-.*\.js$/.test(name));
 assert.ok(bundle);
-const browser = await chromium.launch({ channel:'chrome', args:['--enable-unsafe-swiftshader'] });
+const browser = await chromium.launch({ ...(process.env.CHROME_BIN ? {executablePath:process.env.CHROME_BIN} : {channel:'chrome'}), args:['--enable-unsafe-swiftshader'] });
 try {
   const page = await browser.newPage({viewport:{width:1000,height:800}});
   await page.route(/^https?:/, r => new URL(r.request().url()).origin === origin ? r.continue() : r.abort());
