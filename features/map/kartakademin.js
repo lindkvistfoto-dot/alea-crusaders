@@ -713,7 +713,7 @@ async function openEditor(map, areas, imageUrl) {
     });
     const markers = state.layers.lights ? [...state.config.lights.filter(light => !light.characterId).map(light => ({
       id: light.id, lightIds: [light.id], position: light.position, color: light.color,
-    })), ...(tool.value === 'position' ? [] : characterMarkers)] : [];
+    })), ...(tool.value === 'position' ? [] : characterMarkers.filter(marker => marker.lightIds.length))] : [];
     for (const marker of markers) {
       const markerNode = node('circle', { cx: marker.position[0], cy: marker.position[1], r: map.width / 130,
         fill: marker.color, stroke: marker.lightIds.includes(state.selected) ? '#fff' : '#36312b', 'stroke-width': 2,

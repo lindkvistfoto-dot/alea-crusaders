@@ -56,17 +56,26 @@ try {
   },image);
   const ui=selector=>page.locator('#mapAreaEditor '+selector);
   const click=selector=>ui(selector).click();
-  async function mapClick(x,y) {
-    const p=await ui('#mapAreaSvg').evaluate((svg,[x,y])=>{
+  async function screenPoint(x,y) {
+    await ui('#mapAreaSvg').scrollIntoViewIfNeeded();
+    return await ui('#mapAreaSvg').evaluate((svg,[x,y])=>{
       const point=new DOMPoint(x,y).matrixTransform(svg.getScreenCTM());return [point.x,point.y];
     },[x,y]);
-    await page.mouse.click(...p);
+  }
+  async function mapClick(x,y) {
+    await page.mouse.click(...await screenPoint(x,y));
   }
   async function ready(){await ui('.kartakademin-canvas').waitFor();await page.waitForFunction(()=>document.querySelector('[data-map-scale]')?.textContent.includes('px/m'));}
   const reopen=async()=>{await page.evaluate(()=>openMapAreaEditor(window.surfaceFixture.map.id));await ready();};
   const surface=async()=>{await click('[data-mode-button=lights]');await click('[data-tool-choice=surface]');};
   const save=async()=>{await click('[data-save]');await ui('[data-save-status][data-status=saved]').waitFor();};
-  await ready();await surface();
+  await ready();
+  await click('[data-ruler-tool]');
+  const start=await screenPoint(125,180),end=await screenPoint(295,180);
+  await page.mouse.move(...start);await page.mouse.down();await page.mouse.move(...end);await page.mouse.up();
+  await click('[data-calibrate-ten]');await click('[data-ruler-tool]');await save();
+  assert.ok(Math.abs(await page.evaluate(()=>window.surfaceFixture.config().pixelsPerMeter)-17)<.15);
+  await surface();
   for(const [x,y] of [[125,118],[315,118],[240,51],[50,323],[50,195],[27,254]]){
     if(x===50&&y===323)await ui('[data-items]').selectOption('');
     await mapClick(x,y);
@@ -121,14 +130,28 @@ try {
   assert.ok(results[2][1]>results[1][1]+5 && results[2][0]<results[1][0]-5);
   assert.ok(Math.abs(results[3][0]-results[0][0])<1 && Math.abs(results[1][3]-results[0][3])<1);
   assert.ok(results[4][2]>results[0][2]+6 && results[5][0]>results[4][0]+6 && results[5][2]>results[0][2]+6);
+  const frameTimes=()=>page.evaluate(()=>new Promise(resolve=>{
+    const intervals=[];let last;
+    function tick(t){
+      if(last!==undefined)intervals.push(t-last);
+      last=t;
+      if(intervals.length<91)requestAnimationFrame(tick);
+      else {intervals.shift();intervals.sort((a,b)=>a-b);resolve({median:intervals[45],p95:intervals[85]});}
+    }
+    requestAnimationFrame(tick);
+  }));
+  await ui('[data-light-only]').check();const withSurfaces=await frameTimes();await ui('[data-light-only]').uncheck();
   await surface();await ui('[data-items]').selectOption({index:1});await click('[data-surface-remove]');await save();await reopen();
   const removed=await page.evaluate(()=>window.surfaceFixture.config().geometry);
   assert.equal(removed.filter(w=>w.face).length,1);assert.ok(removed.every(w=>w.light));
+  await surface();await ui('[data-items]').selectOption({index:2});await click('[data-surface-remove]');
+  await ui('[data-light-only]').check();const floorOnly=await frameTimes();await ui('[data-light-only]').uncheck();
+  console.log('Two-torch admin frame intervals in ms',JSON.stringify({withSurfaces,floorOnly}));
   await page.setViewportSize({width:390,height:844});await surface();
   for(const selector of ['[data-tool-choice=surface]','[data-items]','[data-save]']){
     await ui(selector).scrollIntoViewIfNeeded();
     assert.ok(await ui(selector).evaluate(el=>{const r=el.getBoundingClientRect();return r.width>0 && r.x>=-1 && r.right<=innerWidth+1;}));
   }
   await page.screenshot({path:output+'/mobil.png'});
-  await writeFile(output+'/results.json',JSON.stringify({samples:results},null,2));
+  await writeFile(output+'/results.json',JSON.stringify({samples:results,withSurfaces,floorOnly},null,2));
 } finally {await browser.close();}
