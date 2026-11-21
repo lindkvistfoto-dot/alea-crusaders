@@ -44,6 +44,7 @@ const modeTools = {
   lights: [
     { value: 'light', label: 'Ljuskällor' },
     { value: 'position', label: 'Flytta rollperson' },
+    { value: 'surface', label: 'Belyst väggyta' },
     { value: 'pan', label: 'Panorera' },
   ],
   effects: [],

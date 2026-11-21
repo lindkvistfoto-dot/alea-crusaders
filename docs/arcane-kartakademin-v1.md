@@ -46,3 +46,33 @@ Spelarnas RPC returnerar en rastermask inom utforskade rum och godkända ljuspar
 Kartverkstaden öppnas i **Admin → Platser** från platsstrukturen eller sexkantsknappen på en befintlig karta. Nivåväljaren använder kartor kopplade till samma platsstruktur. **Lägg till kartbild** och **Lägg till nivå** öppnar det befintliga flödet för att skapa en karta. Kartbildsbyte kräver ett kartmål i HERMES ALEA med dimensionskontroll före aktivering.
 
 Kartans viewport anpassas efter arbetsytans bredd och höjd. Kartbild, PixiJS, SVG och mask ligger i samma förflyttade kartyta. Kartans norr anges i grader medurs från kartans överkant. Befintliga kartor utan sparad norr behåller sina tidigare ljusriktningar. Spelar-RPC:n räknar om riktningen endast för sol- och månljus som den redan lämnar ut. ARCANE COMPASS ROSE V1.0 behöver levereras som godkänd RGBA-originalfil genom HERMES CORE.
+
+## Målade väggytor och mästerskapsprovet
+
+Välj **Admin → Platser → Kartverkstad → Ljus → Belyst väggyta**. Markera väggens fot mot golvet med två klick. Klicka sedan på väggens bortre kant. Remsan mellan linjerna är de målade pixlar som kan ta emot ljus. Ljuset kommer från golvsidan. Välj en befintlig rak, ljusblockerande sträcka i listan för att använda dess fotlinje. Dela upp böjda väggar i raka sträckor.
+
+En ny sträcka får de vanliga inställningarna för ljus, sikt och rörelse. Spelledaren kan ändra dem i **Sikt → Hindergeometri**. I väggverktyget kan man ändra djup och sida med ett klick, rita om fotlinjen eller ta bort enbart den målade ytan. **Visa endast ljusresultat** visar målningen utan ritstöd. **Linjal → Sträckan motsvarar 10 m** kalibrerar efter en referens i bilden. Spara kartan efter ändringarna.
+
+Spelarens projektion kräver en delad och tänd ljuskälla i ett utforskat rum. Inkludera den målade väggsidan i rumspolygonen. En väggremsa som korsar en dold yta utelämnas. Gemensamma rumsgränser kan mötas kant mot kant. Den befintliga kartbilden och rummens upptäckt har fortsatt egna åtkomst- och visningsregler.
+
+### Verifiering och återstående arbetsmoment
+
+Underlaget är development `0b976f9`, en läsning av DEV-projektet `wkiuyklzzroavclnsxna` och Chrome-prov med en isolerad kampanj i ordinarie SL-redigerare. Spelarens inbjudan och upplevelse provas separat av Zeus.
+
+| Område | Befintligt stöd och prov | Före provet i Katakomberna |
+|---|---|---|
+| Art First | Den målade kryptans original används i bildprovet. Kartans bild, mask och ritlager delar koordinater och kamera. Befintligt Pixi-tak är 2 048 px på längsta sidan. | Kontrollera den slutliga målningens skärpa vid spelzoom. DEV innehöll ingen karta med Katakomberna i namnet. |
+| Skala | Kalibrering mot 10 m med linjalen testad genom SL-gränssnittet. För 1,5 m per hex är motsvarande steg 1,5 gånger px/m. | Kalibrera den valda målningen. Objektbiblioteket har ett eget äldre skalfält. |
+| Rum | Befintlig polygonredigering, delade hörn, lagring och status. Topologitester och redigerarens flerrumsprov körs i CI. | Rita och spara de riktiga rumspolygonerna. Ljusprovet använde en befintlig testyta. |
+| Sikt | Fri-sikt-mask och vektorhinder. Separata testfall för penumbra, Solid och blockerande segment passerade. | Rita fri golvyta och markera hinder på målningen. |
+| Utforskning | Okänd svart, outforskat med oskärpa, utforskat skarpt. RPC-test med överlapp och WebGL-test av okänt område. | Verifiera upptäckten på den riktiga kartan. |
+| Modell B | Nya kartor och kartor där en väggyta skapas använder målningens färg för vanliga varma facklor. Äldre konfigurationer behåller sin ljussättning. Månljuset har sin befintliga färgton. | SL kan prova direkt i preview. |
+| Vertikala ytor | Skapa, spara, öppna om, ändra och ta bort via Admin. Bildprov med två väggorienteringar vid 78 % mörker, en buren fackla och sedan två ljus. | Placera fotlinjen vid kanten till fri sikt. |
+| Dörrar | Objektbibliotekets befintliga definitionstyper är bord, stol och kista. En klickbar dörr med tillstånd och kopplad blockeringsgeometri saknas i Kartakademin. | Separat dörr- och passagefunktion krävs. |
+| Hemliga passager | Upptäcktsstatus kan dölja ett rum. En vanlig målad mur och ett separat hinder fungerar i stängt läge. Generell bildväxling och gemensamt öppningstillstånd för bild, ljus, sikt och rörelse saknas. | Separat PR för dolt, upptäckt/stängt och öppet med lokal bildväxling. |
+| Objekt | Separat objektredigerare finns i källkoden. DEV saknade tabellerna för definitioner och placeringar samt kartans objekt-skalfält. Befintlig definition för kista, ingen för gravplatta. | Samordna migrationshistoriken, använd befintligt bibliotek från Kartakademin och verifiera publicerade objekt samt gemensam skala. |
+| Förflyttning | Spelledaren kan flytta en rollpersons kartposition. Segmentprov för passage i 1,8 m korridor och stopp vid väggen passerade. Kartpositionen är en punkt. | Spel med figurens fulla fotavtryck och hexrörelse hör till stridsintegrationen. |
+| Spelarvy | Samma Pixi-renderare. PostgreSQL-prov med medlem, utomstående, anonym och utforskade/dolda gränser. Renderingsprov för fog. | Medlemsprojektionen i denna PR behöver migreras i DEV. Zeus gör det inbjudna spelarprovet. |
+| Mobil | Layoutprov samt öppna väggverktyget, välja sträcka och nå Spara vid 390 × 844 i Chrome. | Fysisk mobil och touchkänsla återstår att spela på. |
+
+Den driftsatta spelarproceduren hade stöd för mask och delade ljus men saknade uppdateringarna för kartnorr och strålbredd från källkoden. Framåtmigrationen uppdaterar samma procedur och behåller dess behörigheter. Vid inventeringen hade tre tidigare migrationer olika tidsstämplar i DEV och Git (behörighetsbaslinje, CORE-mål och Kartakademin). Kontrollera och stäm av deras faktiska innehåll innan den vanliga migreringskedjan körs. Ingen förändring av historiken ingår i väggverktyget.

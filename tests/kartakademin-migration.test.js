@@ -40,6 +40,7 @@ it('keeps map settings and party position changes atomic and protects access by 
       grant select on campaign_maps, characters to authenticated;
     `);
     await db.exec(migration);
+    await db.exec(readFileSync(new URL('../supabase/migrations/20261121143000_kartakademin_light_surfaces.sql', import.meta.url), 'utf8'));
     const config = {
       version: 1, darkness: .7, pixelsPerMeter: 40, north: 115,
       secretObjects: ['hidden'],
@@ -81,6 +82,16 @@ it('keeps map settings and party position changes atomic and protects access by 
     const cells = new Set(data.freeSight.runs.flatMap(([start,len]) => Array.from({length:len}, (_, i) => start+i)));
     expect(cells.has(2)).toBe(true);
     for (const hidden of [5,8,9,10,18]) expect(cells.has(hidden)).toBe(false);
+    await db.exec("set test.role = 'gm'");
+    const surface = (left,right) => ({ id:'gm-only', label:'secret', closed:false, light:true,
+      points:[[left,7],[right,7]], face:[[left,5],[right,5]] });
+    const visible = surface(1,5); // Touches the unexplored border without crossing it.
+    await save(1, [], {...config, lightingModel:'painted', geometry:[visible,surface(3,7),surface(13,18),surface(8,9),{...visible,face:null}]});
+    await db.exec("set test.role = 'member'");
+    const display = (await render()).rows[0].data;
+    expect(display.lightingModel).toBe('painted');
+    expect(display.visibleFaces).toEqual([{points:visible.points,face:visible.face}]);
+    expect(display.geometry).toEqual([]);
     await expect(save(1, [])).rejects.toThrow(/ändrats/);
     await db.exec("set test.role = 'outsider'");
     expect((await render()).rows).toEqual([{ data: null }]);

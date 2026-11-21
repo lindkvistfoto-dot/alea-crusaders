@@ -1,6 +1,7 @@
 import './kartakademin.css';
 import { createMask, findSmallSolidIslands, isFree, maskHistory, paintMask, polygonMask, prepareFreeSight, serializeMask } from './kartakademin-mask.js';
 import { FREE_SIGHT_RESET_CONFIRMATION, FREE_SIGHT_RESET_LABEL, removalConfirmation, resetFreeSight, toolsForMode } from './kartakademin-actions.js';
+import { paintedEdge, replaceWallFoot } from './kartakademin-surfaces.js';
 import { blockers, canMove, contains, isBlocked, mapDistanceMeters, visibilityPolygon } from './kartakademin-geometry.js';
 
 const types = {
@@ -164,6 +165,7 @@ async function openEditor(map, areas, imageUrl) {
           <button type="button" class="btn" data-pan-tool aria-pressed="false" title="Panorera med vänster musknapp"><span aria-hidden="true">✋︎</span> Panorera</button>
           <button type="button" class="btn" data-ruler-tool aria-pressed="false"><span aria-hidden="true">📏</span> Linjal</button>
           <output data-measurement aria-label="Uppmätt avstånd" hidden></output>
+          <button type="button" class="btn" data-calibrate-ten hidden>Sträckan motsvarar 10 m</button>
           <button type="button" class="btn" data-fit-view title="Anpassa hela kartan till vyn">Anpassa</button>
           <button type="button" class="btn" data-reset-view title="Återställ zoom och panorering">Återställ vy</button>
         </div>
@@ -211,6 +213,12 @@ async function openEditor(map, areas, imageUrl) {
         <label>Bärs av<select name="characterId"></select></label>
         <label><input name="on" type="checkbox"> Tänd</label>
         <label><input name="playerVisible" type="checkbox"> Dela ljuset i utforskade rum</label>
+      </div>
+      <div data-surface class="kartakademin-controls" hidden>
+        <p data-surface-step aria-live="polite"></p>
+        <button class="btn" type="button" data-surface-undo>Ångra punkt</button>
+        <button class="btn" type="button" data-surface-redraw>Rita om väggsträckan</button>
+        <button class="btn" type="button" data-surface-remove>Ta bort väggytan</button>
       </div>
       <div data-geometry class="kartakademin-controls" hidden>
         <h3>Hindergeometri</h3>
@@ -309,6 +317,7 @@ async function openEditor(map, areas, imageUrl) {
   svg.setAttribute('viewBox', `0 0 ${map.width} ${map.height}`);
   document.getElementById('mapAreaImage').src = imageUrl;
   const state = editor = { root, workspace, settings, roomToolbar: toolbar, roomNotice, roomList, mapBoard: board, view: null, config: defaults(), positions: [], changedPositions: new Set(), points: [], selected: '', saving: false, dirty: false, mode: 'rooms', tool: 'room', layers: { rooms: true, effects: true, sight: true, solid: false, lights: true, characters: true, objects: true } };
+  let redrawingSurface = false;
   const academyLayer = document.createElementNS(svgNS, 'g'); academyLayer.dataset.academyLayer = ''; svg.append(academyLayer);
 
   const tokenLayer = node('g', { 'data-character-token-layer': '' });
@@ -501,6 +510,9 @@ async function openEditor(map, areas, imageUrl) {
     if (modeKey === 'effects' || modeKey === 'objects') { const note=document.createElement('p'); note.dataset.modeNote=''; note.className='muted'; note.textContent=modeKey === 'effects' ? 'Förberett läge. PR #916 innehåller ingen kartbunden effektmodell.' : 'Förberett läge. Objektfunktioner ingår inte i den här versionen.'; body.append(note); }
     let elements;
     if (tool.value === 'light') elements = state.config.lights.map(light => option(light.id, light.name));
+    else if (tool.value === 'surface') elements = state.config.geometry
+      .filter(shape => shape.light && !shape.closed && shape.points.length === 2)
+      .map((shape, i) => option(shape.id, (shape.face ? 'Väggyta ' : 'Ljusblockerande sträcka ') + (i + 1)));
     else if (tool.value === 'geometry') elements = state.config.geometry.map((shape, i) => option(shape.id, 'Form ' + (i + 1)));
     else elements = roster.map(c => option(c._dbId, c.name || c.identity?.namn || c._dbId));
     menu.replaceChildren(option('', tool.value === 'position' ? 'Välj rollperson' : 'Ny'), ...elements);
@@ -541,6 +553,18 @@ async function openEditor(map, areas, imageUrl) {
     get('[data-mask-undo]').textContent = polygonMaskMode && maskPoints.length ? 'Ångra polygonpunkt' : 'Ångra maskändring';
     const light = state.config.lights.find(item => item.id === state.selected);
     lightForm.hidden = !light || state.mode !== 'lights' || tool.value !== 'light';
+    const wall = state.config.geometry.find(item => item.id === state.selected);
+    const surfaceActive = tool.value === 'surface';
+    get('[data-surface]').hidden = !surfaceActive;
+    if (surfaceActive) {
+      const hasFoot = (wall && !redrawingSurface) || state.points.length === 2;
+      get('[data-surface-step]').textContent = hasFoot
+        ? 'Klicka på den målade väggsidans bortre kant. Framsidan vetter mot golvet på andra sidan fotlinjen.'
+        : state.points.length ? 'Markera fotlinjens andra ände.' : 'Markera väggens fot mot golvet med två punkter eller välj en befintlig sträcka.';
+      get('[data-surface-undo]').hidden = !state.points.length;
+      get('[data-surface-redraw]').hidden = !wall || redrawingSurface;
+      get('[data-surface-remove]').hidden = !wall?.face;
+    }
     geoForm.hidden = state.mode !== 'sight' || tool.value !== 'geometry';
     const lightToolActive = state.mode === 'lights' && state.tool === 'light';
     get('[data-duplicate]').hidden = !lightToolActive;
@@ -656,6 +680,17 @@ async function openEditor(map, areas, imageUrl) {
         cx: x, cy: y, r: map.width / 165, fill: 'none', stroke: '#ffde69', 'stroke-width': 2,
       }));
     }
+    if (state.layers.lights) for (const shape of state.config.geometry) {
+      if (!shape.face || !shape.light) continue;
+      const corners = [...shape.points, ...shape.face.slice().reverse()];
+      academyLayer.append(node('polygon', { points: corners.map(p => p.join(',')).join(' '),
+        fill: '#e3ae5229', stroke: shape.id === state.selected ? '#fff2ac' : '#d6a65a', 'stroke-width': 1 }));
+    }
+    if (state.tool === 'surface') {
+      const points = state.points.length ? state.points : state.config.geometry.find(g => g.id === state.selected)?.points || [];
+      for (const [cx,cy] of points) academyLayer.append(node('circle', {cx,cy,r:map.width/240,fill:'#ffe897'}));
+      if (points.length === 2) academyLayer.append(node('line', {x1:points[0][0],y1:points[0][1],x2:points[1][0],y2:points[1][1],stroke:'#ffe897','stroke-width':2}));
+    }
     if (state.layers.solid) for (const shape of state.config.geometry) {
       academyLayer.append(node(shape.closed ? 'polygon' : 'polyline', {
         points: shape.points.map(p => p.join(',')).join(' '),
@@ -673,7 +708,7 @@ async function openEditor(map, areas, imageUrl) {
     });
     const markers = state.layers.lights ? [...state.config.lights.filter(light => !light.characterId).map(light => ({
       id: light.id, lightIds: [light.id], position: light.position, color: light.color,
-    })), ...(tool.value === 'position' ? [] : characterMarkers)] : [];
+    })), ...(tool.value === 'position' ? [] : characterMarkers.filter(marker => marker.lightIds.length))] : [];
     for (const marker of markers) {
       const markerNode = node('circle', { cx: marker.position[0], cy: marker.position[1], r: map.width / 130,
         fill: marker.color, stroke: marker.lightIds.includes(state.selected) ? '#fff' : '#36312b', 'stroke-width': 2,
@@ -705,6 +740,7 @@ async function openEditor(map, areas, imageUrl) {
   }
 
   function select(id) {
+    redrawingSurface = false;
     state.selected = id;
     state.points = [];
     refreshList();
@@ -787,7 +823,7 @@ async function openEditor(map, areas, imageUrl) {
       if (!state.loaded) {
         const data = await load(map);
         if (editor !== state) return;
-        state.config = { ...defaults(), ...data.config };
+        state.config = { ...defaults(), ...(data.config || {lightingModel:'painted'}) };
         state.revision = data.revision ?? 0;
         state.positions = data.positions;
         mask = createMask(map.width, map.height, state.config.freeSight);
@@ -897,10 +933,42 @@ async function openEditor(map, areas, imageUrl) {
     if (state.points.length < (flags.closed ? 3 : 2)) return announce('Rita fler punkter.');
     const id = state.selected || crypto.randomUUID();
     const shape = { id, points: state.points, ...flags };
+    const previous = state.config.geometry.find(item => item.id === id);
+    if (previous?.face && !shape.closed) {
+      const face = replaceWallFoot(previous, shape.points);
+      if (face) shape.face = face;
+    }
     state.config.geometry = [...state.config.geometry.filter(item => item.id !== id), shape];
     markDirty();
     select(id);
   };
+  get('[data-surface-redraw]').onclick = () => { redrawingSurface = true; state.points = []; refreshList(); draw(); };
+  get('[data-surface-undo]').onclick = () => { state.points.pop(); refreshList(); draw(); };
+  get('[data-surface-remove]').onclick = () => {
+    const shape = state.config.geometry.find(item => item.id === state.selected);
+    if (shape?.face) { delete shape.face; markDirty(); select(shape.id); }
+  };
+  function placeSurface(point) {
+    const existing = state.config.geometry.find(item => item.id === state.selected);
+    const foot = existing && !redrawingSurface ? existing.points : state.points;
+    if (foot.length < 2) {
+      if (foot.length && Math.hypot(point[0]-foot[0][0],point[1]-foot[0][1]) < 1) return;
+      state.points.push(point);
+      refreshList(); draw();
+      return;
+    }
+    const face = paintedEdge(foot, point);
+    if (!face || face.some(([x,y]) => x<0 || y<0 || x>map.width || y>map.height)) {
+      return announce('Välj en bortre kant på kartan, minst en kartpixel från fotlinjen.');
+    }
+    const shape = existing ?? { id:crypto.randomUUID(), light:true, sight:true, movement:true, closed:false };
+    shape.points = foot;
+    shape.face = face;
+    if (!existing) state.config.geometry.push(shape);
+    state.config.lightingModel = 'painted';
+    markDirty(); select(shape.id);
+    announce('Väggytan är markerad.');
+  }
   get('[data-remove]').onclick = async () => {
     const light = state.mode === 'lights' && tool.value === 'light' && state.config.lights.some(item => item.id === state.selected);
     const geometry = state.mode === 'sight' && tool.value === 'geometry' && state.config.geometry.some(item => item.id === state.selected);
@@ -1010,6 +1078,8 @@ async function openEditor(map, areas, imageUrl) {
   function drawMeasurement() {
     rulerLayer.replaceChildren();
     measurementOutput.hidden = !measurement;
+    get('[data-calibrate-ten]').hidden = !measurement || measurement.pointerId !== null ||
+      Math.hypot(measurement.end[0]-measurement.start[0], measurement.end[1]-measurement.start[1]) < 1;
     if (!measurement) return;
     const { start, end } = measurement;
     rulerLayer.append(node('line', { x1:start[0], y1:start[1], x2:end[0], y2:end[1],
@@ -1017,6 +1087,14 @@ async function openEditor(map, areas, imageUrl) {
     measurementOutput.textContent = new Intl.NumberFormat('sv-SE',{ maximumFractionDigits:2 }).format(
       mapDistanceMeters(start,end,state.config.pixelsPerMeter)) + ' m';
   }
+  get('[data-calibrate-ten]').onclick = () => {
+    if (!measurement || !state.loaded) return;
+    const ppm = Math.hypot(measurement.end[0]-measurement.start[0],measurement.end[1]-measurement.start[1])/10;
+    if (!(ppm > 0)) return;
+    state.config.pixelsPerMeter = ppm;
+    get('[data-config="pixelsPerMeter"]').value = Number((map.width/ppm).toPrecision(10));
+    markDirty(); draw();
+  };
   function setRuler(enabled) {
     rulerEnabled = enabled;
     ruler.setAttribute('aria-pressed', String(enabled));
@@ -1263,6 +1341,7 @@ async function openEditor(map, areas, imageUrl) {
       } else if (['add', 'subtract'].includes(maskMode.value)) { maskPoints.push(point); draw(); }
       return;
     }
+    if (tool.value === 'surface') return placeSurface(point);
     if (state.mode === 'sight' && tool.value === 'geometry') state.points.push(point);
     else if (state.mode === 'lights' && tool.value === 'position') {
       if (!state.selected) return announce('Välj en rollperson först.');
