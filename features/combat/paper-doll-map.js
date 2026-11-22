@@ -22,9 +22,9 @@
    assets=Object.fromEntries(rows.filter(Boolean));
    ready=true;
    const poses=loadPublishedPoses();
-   loadPublishedRacePoses();
+   const racePoses=loadPublishedRacePoses();
    if(typeof renderCombat==='function')renderCombat();
-   return poses;
+   return Promise.all([poses,racePoses]);
   }).catch(err=>{console.warn('ARES systembilder kunde inte laddas',err)})
     .finally(()=>{loading=null});
   return loading;
@@ -47,7 +47,7 @@
  }
  function loadPublishedRacePoses(){
   if(typeof dbJson!=='function')return;
-  Promise.all([
+  return Promise.all([
    dbJson('rule_races?select=id,name'),
    dbJson('race_battle_poses?select=race_id,gender_variant,pose_key,image_path,base_key,mounting_profile,is_active,publication_status&publication_status=eq.published&is_active=eq.true')
   ]).then(([raceList,rows])=>{
@@ -144,7 +144,7 @@
    '" viewBox="'+[bounds.left,bounds.top,bounds.width,bounds.height].join(' ')+'" overflow="hidden"><image href="'+esc(src)+
    '" width="'+bounds.imageWidth+'" height="'+bounds.imageHeight+'"/></svg>';
  }
- function render(classic,actor,cell,g,stateClasses='',mapBaseWidth,collectArt){
+ function render(classic,actor,cell,g,stateClasses='',mapBaseWidth,collectArt,allowStand=false){
   // Preserve the combat engine's defeated skull/base instead of drawing an upright paper doll.
   if(actor?.status==='dead')return classic;
   if(!ready){load();return classic}
@@ -159,8 +159,8 @@
   const chosenAssets={...assets,[resolver.BASE]:baseAsset};
   const publicPose=published?.image_path&&typeof SUPABASE_URL==='string'?SUPABASE_URL+'/storage/v1/object/public/alea-hermes-public/'+published.image_path:'';
   const selected=resolver.resolve(actor,{assets:chosenAssets,footprint:mapToken?'single':combatFootprintShape(actor),battlePoseUrl:publicPose||pose(actor),portraitUrl:portrait(actor)});
-  if(mapToken&&selected.mode!=='battle-pose')return '';
-  if(mapToken&&collectArt)collectArt(selected.baseUrl,selected.poseUrl);
+  if(mapToken&&selected.mode!=='battle-pose'&&!(allowStand&&selected.mode==='portrait-stand'))return '';
+  if(mapToken&&collectArt)collectArt(selected.baseUrl,selected.poseUrl||selected.standUrl);
   if(selected.mode==='classic')return classic;
   // One base occupies the same hex as the classic marker; no hit geometry changes.
   // SCALE STANDARD: fit the visible High Angle base footprint to the map hex.
@@ -192,7 +192,7 @@
     '<image href="'+esc(selected.baseUrl)+'" x="'+(-baseWidth*baseScale/2)+'" y="'+(baseY-baseHeight*.63*baseScale)+'" width="'+(baseWidth*baseScale)+'" height="'+(baseHeight*baseScale)+'" preserveAspectRatio="xMidYMid meet"/>')+
    (isStand&&selected.portraitUrl?'<defs><clipPath id="'+clip+'"><ellipse cx="'+(portraitX+portraitW/2)+'" cy="'+(portraitY+portraitH/2)+'" rx="'+(portraitW/2)+'" ry="'+(portraitH/2)+'"/></clipPath></defs>'+
     '<image href="'+esc(selected.portraitUrl)+'" x="'+portraitX+'" y="'+portraitY+'" width="'+portraitW+'" height="'+portraitH+'" preserveAspectRatio="xMidYMid slice" clip-path="url(#'+clip+')"/>':'')+
-   (mapToken?mapArt(art,-artWidth/2+poseX,standBottom-poseY,artWidth,artHeight):
+   (mapToken&&!isStand?mapArt(art,-artWidth/2+poseX,standBottom-poseY,artWidth,artHeight):
     '<image href="'+esc(art)+'" x="'+(-artWidth/2+poseX)+'" y="'+(standBottom-artHeight-poseY)+'" width="'+artWidth+'" height="'+artHeight+'" preserveAspectRatio="xMidYMid meet"/>')+
 
 
@@ -211,5 +211,13 @@
   renderMapToken(characterId,BASE_WIDTH,(base,pose)=>{pending=[measureMapArt(base),measureMapArt(pose)]});
   return Promise.all(pending);
  }
- root.aleaCombatPaperDollMap=Object.freeze({render,load,renderMapToken,loadMapTokens,prepareMapToken});
+ function renderAdventureToken(actor,width,collectArt){
+  return render('',actor,{x:0,y:0},null,'',width,collectArt,true);
+ }
+ function prepareAdventureToken(actor){
+  const images=[];
+  renderAdventureToken(actor,BASE_WIDTH,(base,art)=>images.push(measureMapArt(base),measureMapArt(art)));
+  return Promise.all(images);
+ }
+ root.aleaCombatPaperDollMap=Object.freeze({render,load,renderAdventureToken,prepareAdventureToken,renderMapToken,loadMapTokens,prepareMapToken});
 })(globalThis);

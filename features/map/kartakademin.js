@@ -87,6 +87,7 @@ async function syncCampaign(map, areas, refresh = false) {
       state.data = data;
       state.loading = null;
     }
+    window.aleaAdventureFigures?.setGeometry(map, state.data.config);
     if (!state.data.config) {
       dispose(state.view);
       state.view = null;
@@ -100,6 +101,7 @@ async function syncCampaign(map, areas, refresh = false) {
     state.loading = null;
     dispose(state.view);
     state.view = null;
+    if (!state.data) window.aleaAdventureFigures?.geometryError(map);
     console.warn('Kartakademin kunde inte visas', error);
   }
 }

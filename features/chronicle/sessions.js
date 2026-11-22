@@ -32,10 +32,14 @@ function setBannerPhase(value){
 window.aleaSetBannerTimePhase=setBannerPhase;
 async function refreshActive(){
  if(!centralCampaignId){activeGameSession=null;window.aleaCurrentGameSessionId=null;return null}
- const rows=await dbJson('game_sessions?campaign_id=eq.'+encodeURIComponent(centralCampaignId)+'&status=in.(active,paused)&select=id,campaign_id,title,adventure_name,session_date,status,started_at,ended_at,summary,started_by,ended_by&order=started_at.desc&limit=1');
+ const campaignId=centralCampaignId;
+ const rows=await dbJson('game_sessions?campaign_id=eq.'+encodeURIComponent(campaignId)+'&status=in.(active,paused)&select=id,campaign_id,title,adventure_name,session_date,status,started_at,ended_at,summary,started_by,ended_by&order=started_at.desc&limit=1');
+ if(campaignId!==centralCampaignId)return null;
  activeGameSession=rows?.[0]||null;window.aleaCurrentGameSessionId=activeGameSession?.status==='active'?activeGameSession.id:null;
+ window.aleaAdventureFigures?.sessionChanged(campaignId, window.aleaCurrentGameSessionId);
  renderButton();return activeGameSession
 }
+window.aleaReadAdventureSession=refreshActive;
 window.aleaGetActiveGameSessionId=async function(){try{const session=await refreshActive();return session?.status==='active'?session.id:null}catch(error){console.warn('Aktivt spelmöte kunde inte läsas',error);return null}};
 function ensureUi(){
  const clock=document.querySelector('.alea-clock');

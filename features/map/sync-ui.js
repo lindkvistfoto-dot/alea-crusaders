@@ -49,6 +49,7 @@ async function refreshMapOnce(){
  await Promise.all([
   window.aleaKartakademin?.syncCampaign(activeCampaignMap,areas,true),
   window.syncArcaneMapObjects?.(desired.id,true),
+  window.aleaAdventureFigures?.refresh(),
  ]);
 }
 export async function reconcileCampaignMap(){

@@ -1,0 +1,44 @@
+name: Living Hex desktop and touch
+on:
+  pull_request:
+    branches: [development]
+    paths:
+      - 'features/map/adventure-*'
+      - 'features/combat/paper-doll-map.js'
+      - 'scripts/adventure-figures-visual.mjs'
+      - 'tests/fixtures/adventure-figure-art.json'
+      - '.github/workflows/adventure-figures-visual.yml'
+permissions:
+  contents: read
+jobs:
+  placement:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci && npm install --no-save --package-lock=false playwright@1.56.1
+      - uses: actions/checkout@v4
+        with:
+          ref: 50e116696aa47a8f4179874638a149e4cc510fd0
+          path: crypt-fixture
+          sparse-checkout: preview/art-first
+          persist-credentials: false
+      - name: Exercise the DEV build with an isolated session and published HEXAGONIA artwork
+        env:
+          ALEA_BUILD_ENV: development
+        run: |
+          npm run build
+          python3 -m http.server 4181 --bind 127.0.0.1 --directory dist > "$RUNNER_TEMP/living-hex-http.log" 2>&1 &
+          node scripts/adventure-figures-visual.mjs http://127.0.0.1:4181 crypt-fixture/preview/art-first/warm-floor.webp visual-results
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: living-hex-desktop-mobile
+          path: visual-results/
