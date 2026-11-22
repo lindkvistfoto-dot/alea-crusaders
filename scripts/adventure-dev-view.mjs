@@ -10,6 +10,7 @@ try{
  const page=await browser.newPage({viewport:{width:1440,height:960}});
  page.on('pageerror',e=>console.log('Browser',e.stack));
  page.on('response',r=>{if(r.url().includes('adventure-player-map'))console.log('Player raster',r.status())});
+ page.on('console',m=>{if(/Kunde inte (?:öppna karta|uppdatera kartor|synkronisera kampanjkartan)/.test(m.text()))console.log(m.text().slice(0,340))});
  await page.goto(origin,{waitUntil:'domcontentloaded'});
  assert.equal(await page.evaluate(()=>window.ALEA_SUPABASE_CONFIG?.url),'https://wkiuyklzzroavclnsxna.supabase.co');
  await page.locator('#loginEmail').fill(process.env.ALEA_DEV_TEST_EMAIL);
@@ -18,14 +19,15 @@ try{
  await page.waitForFunction(()=>activeUser()?.id&&centralCampaignId&&chars.some(c=>c.id==='astrid'),null,{timeout:60000});
  await page.locator('#loginScreen').waitFor({state:'hidden'});
  await page.locator('#mapNavBtn').click();
- await page.waitForFunction(()=>activeCampaignMap?.image_url&&!adventureLoading);
- await page.waitForFunction(()=>campaignMaps.some(m=>m.name==='Skelettbyn'));
- await page.evaluate(()=>viewCampaignMap(campaignMaps.find(m=>m.name==='Skelettbyn').id));
- await page.waitForFunction(()=>activeCampaignMap?.name==='Skelettbyn'&&document.querySelector('#mapImage').naturalWidth>1,null,{timeout:20000}).catch(async e=>{
-  console.log('Current display',await page.evaluate(()=>({map:activeCampaignMap?.name,manager:adventureCanManage(),size:document.getElementById('mapImage').naturalWidth,status:document.getElementById('mapStatusText').textContent})));
+ // Use the same visible map picker as the GM, even if another map is still loading.
+ await page.locator('#adventureSlBoard .slcb-toggle').click();
+ await page.locator('#mapPicker option').filter({hasText:'Skelettbyn'}).waitFor({state:'attached',timeout:60000});
+ const target=await page.evaluate(()=>campaignMaps.find(m=>m.name==='Skelettbyn').id);
+ await page.locator('#mapPicker').selectOption(target);
+ await page.waitForFunction(()=>activeCampaignMap?.name==='Skelettbyn'&&document.getElementById('mapImage').naturalWidth>1,null,{timeout:60000}).catch(async e=>{
+  console.log('Current display',await page.evaluate(()=>({map:activeCampaignMap?.name,manager:adventureCanManage(),loading:adventureLoading,size:document.getElementById('mapImage').naturalWidth,status:document.getElementById('mapStatusText').textContent})));
   throw e;
  });
- await page.locator('#adventureSlBoard .slcb-toggle').click();
  const expected=await page.evaluate(async()=>{
   await window.aleaCombatPaperDollMap.loadMapTokens();
   for(const id of ['astrid','lyra','evalin']){

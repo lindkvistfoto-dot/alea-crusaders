@@ -77,7 +77,7 @@ async function enterApp(){
  window.aleaRefreshLocation?.restoreEarly?.();
  try{
   await loadCentralData();
-  await Promise.all([loadRuleSkills(),loadRuleMagicRegistry(),loadRuleEffects(),loadRuleProfessions(),loadRuleRaces(),loadRuleArmorRegistry(),loadRuleShields(),loadRuleWeapons(),loadRuleProjectileTypes(),loadRuleWeaponMaterials(),loadRuleCombatFumbles(),loadRuleSocialStands(),loadCampaignMaps(),window.aleaEquipmentCatalog?.load()]);
+  await Promise.all([loadRuleSkills(),loadRuleMagicRegistry(),loadRuleEffects(),loadRuleProfessions(),loadRuleRaces(),loadRuleArmorRegistry(),loadRuleShields(),loadRuleWeapons(),loadRuleProjectileTypes(),loadRuleWeaponMaterials(),loadRuleCombatFumbles(),loadRuleSocialStands(),loadCampaignMaps(false),window.aleaEquipmentCatalog?.load()]);
   await loadCampaignDayState();
  }catch(e){
   console.error('Central data:',e);
