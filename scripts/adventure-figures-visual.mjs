@@ -7,23 +7,17 @@ assert.ok(new URL(origin).hostname === '127.0.0.1' || /^[a-z0-9-]+\.alea-crusade
 await fs.mkdir(output, {recursive:true});
 const fixtures=JSON.parse(await fs.readFile(new URL('../tests/fixtures/adventure-figure-art.json',import.meta.url)));
 const browser=await chromium.launch({channel:'chrome',args:['--enable-unsafe-swiftshader']});
-const images=new Map();
+let currentPage;
 try{
 for(const mobile of [false,true]){
  const page=await browser.newPage({viewport:mobile?{width:400,height:845}:{width:1440,height:980},hasTouch:mobile,isMobile:mobile});
+ currentPage=page;
  const errors=[];page.on('pageerror',e=>{errors.push(e.message);console.log('pageerror',e.message)});
  await page.route('**/*',async route=>{
   const u=new URL(route.request().url());
   if(u.pathname==='/fixture-map.webp')return route.fulfill({path:painting,contentType:'image/webp'});
   if(u.hostname==='wkiuyklzzroavclnsxna.supabase.co' && u.pathname.includes('/storage/v1/object/public/alea-hermes-public/hermes/')){
-    const file=u.pathname.split('/').pop();
-    let bytes=images.get(file);
-    if(!bytes){
-      const response=await route.fetch();
-      assert.equal(response.status(),200,'Published DEV artwork '+file);
-      bytes=await response.body(); images.set(file,bytes);
-    }
-    return route.fulfill({body:bytes,contentType:'image/webp',headers:{'access-control-allow-origin':'*'}});
+    return route.continue();
   }
   if(u.origin===origin)return route.continue();
   if(u.hostname==='unpkg.com'&&u.pathname.includes('dice-box'))return route.fulfill({contentType:'text/javascript',body:'export default class DiceBox {}'});
@@ -120,4 +114,11 @@ for(const mobile of [false,true]){
  console.log(mobile?'Touch PASS':'Desktop PASS');
  await page.close();
 }
-}finally{await browser.close();}
+ } catch(error) {
+  console.error(error);
+  if(currentPage && !currentPage.isClosed()){
+    console.log('Map status',await currentPage.locator('#adventureFigureStatus').textContent().catch(()=>'unavailable'));
+    await currentPage.screenshot({path:path.join(output,'failure.png')}).catch(()=>{});
+  }
+  throw error;
+} finally { await browser.close(); }

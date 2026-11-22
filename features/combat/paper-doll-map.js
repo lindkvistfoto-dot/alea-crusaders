@@ -12,7 +12,9 @@
   if(ready||!resolver||!root.aleaArcanePaperDollAssets||typeof dbJson!=='function'||typeof SUPABASE_URL==='undefined')return;
   loading=root.aleaArcanePaperDollAssets.load({dbJson,baseUrl:SUPABASE_URL}).then(result=>{
    const next=resolver.assetsByKey(result);
-   return Promise.all(Object.entries(next).map(([key,a])=>new Promise(resolve=>{
+   // The registry also contains unrelated maps, UI and award artwork.
+   const pieces=Object.entries(next).filter(([key])=>[STANDARD_BASE,resolver.BASE,resolver.STAND].includes(key));
+   return Promise.all(pieces.map(([key,a])=>new Promise(resolve=>{
     const img=new Image();
     img.onload=()=>{checked.add(key);resolve([key,a])};
     img.onerror=()=>{failed.add(key);resolve(null)};

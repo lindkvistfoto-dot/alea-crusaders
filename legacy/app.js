@@ -4166,7 +4166,7 @@ async function openMap(){
  ['home','view','admin','dicePage','combatPage'].forEach(id=>$(id).classList.add('hidden'));
  $('mapPage').classList.remove('hidden');$('back').classList.add('hidden');$('editBtn').classList.add('hidden');$('cancelEditBtn').classList.add('hidden');
  renderMapPanel();renderMapLibraryControls();
- try{await Promise.all([loadCampaignMaps(true),loadCampaignPlaceData(),loadCampaignContentData()])}catch(e){console.error('Kunde inte uppdatera kartor och platsinnehåll',e)}
+ try{await Promise.all([loadCampaignMaps(true),loadCampaignPlaceData(),loadCampaignContentData()]);window.aleaAdventureFigures?.sync(activeCampaignMap)}catch(e){console.error('Kunde inte uppdatera kartor och platsinnehåll',e)}
 }
 function closeMap(){window.aleaAdventureFigures?.close();closeMapStatusMenu();window.aleaKartakademin?.clearCampaign();
  $('mapPage').classList.add('hidden');

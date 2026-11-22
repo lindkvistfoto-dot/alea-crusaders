@@ -63,6 +63,7 @@ function renderPieces(v, landingId) {
   }
 }
 function toolPanel(v) {
+  if (v.session===undefined) return '<p>Läser spelmötet…</p>';
   if (!v.session) return '<p>Starta eller återuppta ett spelmöte för att placera figurer.</p><button class="btn" type="button" data-action="session">Öppna Spelmöte</button>';
   const choices=sources(v.category);
   if (!choices.some(r=>r[sourceField(r)]===v.choice)) v.choice=choices[0]?.[sourceField(choices[0])];
@@ -77,7 +78,7 @@ function toolPanel(v) {
 }
 function renderBoard(v) {
   const html=v.gm ? slControlBoardHtml({open:v.open,panelId:'adventureFigurePanel',toggle:'aleaAdventureFigures.toggle()',
-    context:'Figurer · '+v.map.name,panel:v.open?'<section class="slcb-module"><h3>Figurer</h3>'+toolPanel(v)+'</section>':''}) : '';
+    context:v.session===null?'Figurer · Öppna Spelmöte för att börja placera':'Figurer · '+v.map.name,panel:v.open?'<section class="slcb-module"><h3>Figurer</h3>'+toolPanel(v)+'</section>':''}) : '';
   if (html!==v.boardHtml) { board.innerHTML=html; v.boardHtml=html; }
 }
 function toggle() { if(view?.gm){ view.open=!view.open; renderBoard(view); } }

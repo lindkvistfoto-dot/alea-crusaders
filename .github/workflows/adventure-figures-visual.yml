@@ -30,13 +30,22 @@ jobs:
           path: crypt-fixture
           sparse-checkout: preview/art-first
           persist-credentials: false
-      - name: Exercise the DEV build with an isolated session and published HEXAGONIA artwork
+      - name: Exercise the DEV preview with an isolated session and published HEXAGONIA artwork
         env:
-          ALEA_BUILD_ENV: development
+          SOURCE_SHA: ${{ github.event.pull_request.head.sha }}
+          SOURCE_BRANCH: ${{ github.head_ref }}
         run: |
-          npm run build
-          python3 -m http.server 4181 --bind 127.0.0.1 --directory dist > "$RUNNER_TEMP/living-hex-http.log" 2>&1 &
-          node scripts/adventure-figures-visual.mjs http://127.0.0.1:4181 crypt-fixture/preview/art-first/warm-floor.webp visual-results
+          set -euo pipefail
+          alias=$(echo "$SOURCE_BRANCH" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9-]+/-/g')
+          for attempt in {1..35}; do
+            manifest=$(curl -fsS --max-time 8 "https://${alias}.alea-crusaders.pages.dev/deployment-manifest.json?sha=$SOURCE_SHA&attempt=$attempt" || true)
+            preview=$(jq -er --arg sha "$SOURCE_SHA" 'select(.source_sha == $sha) | .deployment_url' <<<"$manifest" 2>/dev/null || true)
+            [[ -n "$preview" ]] && break
+            sleep 5
+          done
+          test -n "$preview"
+          echo "Verified preview $preview for $SOURCE_SHA"
+          node scripts/adventure-figures-visual.mjs "$preview" crypt-fixture/preview/art-first/warm-floor.webp visual-results
       - uses: actions/upload-artifact@v4
         if: always()
         with:
