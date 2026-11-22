@@ -12,7 +12,7 @@ try{
 for(const mobile of [false,true]){
  const page=await browser.newPage({viewport:mobile?{width:400,height:845}:{width:1440,height:980},hasTouch:mobile,isMobile:mobile});
  currentPage=page;
- const errors=[];page.on('pageerror',e=>{errors.push(e.message);console.log('pageerror',e.message)});
+ const errors=[];page.on('pageerror',e=>{errors.push(e.message);console.log('pageerror',e.stack)});
  await page.route('**/*',async route=>{
   const u=new URL(route.request().url());
   if(u.pathname==='/fixture-map.webp')return route.fulfill({path:painting,contentType:'image/webp'});

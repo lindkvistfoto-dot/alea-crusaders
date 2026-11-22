@@ -8,16 +8,23 @@ assert.match(origin,/^https:\/\/[a-z0-9-]+\.alea-crusaders\.pages\.dev\/?$/);
 const browser=await chromium.launch({channel:'chrome',args:['--enable-unsafe-swiftshader']});
 try{
  const page=await browser.newPage({viewport:{width:1440,height:960}});
+ page.on('pageerror',e=>console.log('Browser',e.stack));
+ page.on('response',r=>{if(r.url().includes('adventure-player-map'))console.log('Player raster',r.status())});
  await page.goto(origin,{waitUntil:'domcontentloaded'});
  assert.equal(await page.evaluate(()=>window.ALEA_SUPABASE_CONFIG?.url),'https://wkiuyklzzroavclnsxna.supabase.co');
  await page.locator('#loginEmail').fill(process.env.ALEA_DEV_TEST_EMAIL);
  await page.locator('#loginPassword').fill(process.env.ALEA_DEV_TEST_PASSWORD);
  await page.locator('#loginForm').evaluate(form=>form.requestSubmit());
  await page.waitForFunction(()=>activeUser()?.id&&centralCampaignId&&chars.some(c=>c.id==='astrid'),null,{timeout:60000});
- await page.evaluate(()=>openMap());
+ await page.locator('#loginScreen').waitFor({state:'hidden'});
+ await page.locator('#mapNavBtn').click();
+ await page.waitForFunction(()=>activeCampaignMap?.image_url&&!adventureLoading);
  await page.waitForFunction(()=>campaignMaps.some(m=>m.name==='Skelettbyn'));
  await page.evaluate(()=>viewCampaignMap(campaignMaps.find(m=>m.name==='Skelettbyn').id));
- await page.waitForFunction(()=>activeCampaignMap?.name==='Skelettbyn'&&document.querySelector('#mapImage').naturalWidth>1);
+ await page.waitForFunction(()=>activeCampaignMap?.name==='Skelettbyn'&&document.querySelector('#mapImage').naturalWidth>1,null,{timeout:20000}).catch(async e=>{
+  console.log('Current display',await page.evaluate(()=>({map:activeCampaignMap?.name,manager:adventureCanManage(),size:document.getElementById('mapImage').naturalWidth,status:document.getElementById('mapStatusText').textContent})));
+  throw e;
+ });
  await page.locator('#adventureSlBoard .slcb-toggle').click();
  const expected=await page.evaluate(async()=>{
   await window.aleaCombatPaperDollMap.loadMapTokens();
@@ -42,7 +49,10 @@ try{
  const mask=page.waitForResponse(r=>r.url().endsWith('/functions/v1/adventure-player-map')&&r.request().method()==='POST');
  await page.locator('#adventurePreview').click();
  const response=await mask;assert.equal(response.status(),200);
- await page.waitForFunction(()=>activeCampaignMap?.name==='Skelettbyn'&&document.querySelector('#mapImage').naturalWidth>1);
+ await page.waitForFunction(()=>activeCampaignMap?.name==='Skelettbyn'&&document.querySelector('#mapImage').naturalWidth>1,null,{timeout:20000}).catch(async e=>{
+  console.log('Current display',await page.evaluate(()=>({map:activeCampaignMap?.name,manager:adventureCanManage(),size:document.getElementById('mapImage').naturalWidth,status:document.getElementById('mapStatusText').textContent})));
+  throw e;
+ });
  assert.deepEqual(await page.evaluate(()=>campaignMapAreas.map(a=>a.id).sort()),expected);
  assert.equal(await page.locator('.sl-outline,.map-location-gm,[data-concealed]').count(),0);
  await page.screenshot({path:path.join(output,'dev-skelettbyn-spelarvy.png')});

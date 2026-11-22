@@ -29,7 +29,7 @@ function mapControlsContext({gm=true,viewing=next,current=old}={}){
  const context={
   campaignMaps:maps,activeCampaignMap:maps.find(m=>m.id===viewing),
   campaignActiveMapId:current,activatingCampaignMap:false,changingMapVisibilityId:null,
-  adventureCanManage:()=>gm,canManageCampaignMaps:()=>gm,
+  adventureReadVersion:0,adventureCanManage:()=>gm,canManageCampaignMaps:()=>gm,
   $:id=>nodes.get(id)||null,
   escAttr:v=>v
  };
@@ -42,7 +42,7 @@ function activateContext({failUpsert=false,failMetadata=false,viewerOpen=true}={
   campaignMaps:maps,centralCampaignId:campaign,campaignActiveMapId:old,
   activatingCampaignMap:false,
   supabaseSession:{user:{id:'6ec7a85d-7976-40a8-bca1-df16a2ec902e'}},
-  adventureCanManage:()=>true,canManageCampaignMaps:()=>true,
+  adventureReadVersion:0,adventureCanManage:()=>true,canManageCampaignMaps:()=>true,
   renderMapLibraryControls:()=>{},
   renderAdminMaps:()=>{},
   viewCampaignMap:async id=>viewed.push(id),
@@ -91,7 +91,7 @@ describe('Kampanjkarta – välj en annan aktuell karta (v0.34.89)',()=>{
   const context={
    centralCampaignId:campaign,campaignMaps:[],campaignActiveMapId:null,
    activeCampaignMap:maps[0],
-   adventureCanManage:()=>true,canManageCampaignMaps:()=>true,
+   adventureReadVersion:0,adventureCanManage:()=>true,canManageCampaignMaps:()=>true,
    loadCampaignMapRole:async()=>{},
    dbJson:async path=>path.startsWith('campaign_maps?')?maps:[{active_map_id:next}],
    viewCampaignMap:async id=>viewed.push(id),
@@ -139,7 +139,7 @@ function visibilityContext({gm=true,viewing=next,initialVisible=false,saveConfir
  const calls=[],toasts=[],alerts=[];
  const ctx={
   campaignMaps:[entity],activeCampaignMap:entity,centralCampaignId:campaign,
-  changingMapVisibilityId:null,adventureCanManage:()=>gm,canManageCampaignMaps:()=>gm,
+  changingMapVisibilityId:null,adventureReadVersion:0,adventureCanManage:()=>gm,canManageCampaignMaps:()=>gm,
   renderMapLibraryControls:()=>calls.push('render'),
   renderAdminMaps:()=>calls.push('admin'),
   loadCampaignMaps:async()=>calls.push('reload'),

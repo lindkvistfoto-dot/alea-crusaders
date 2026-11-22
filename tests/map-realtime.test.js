@@ -144,7 +144,7 @@ function uiHarness({gm=false,maps=[{id:'old',player_visible:true}],state='explor
   campaignActiveMapId:'old',campaignMaps:maps,
   campaignMapAreas:[],mapSelectedAreaId:null,
   mapView:{scale:1.8,x:124,y:-30},
-  adventureCanManage:()=>gm,adventureReadVersion:0,adventurePlayerPreview:false,
+  adventureCanManage:()=>gm,adventureReadVersion:0,adventureLoading:false,adventurePlayerPreview:false,
   loadCampaignMaps:async()=>{context.campaignActiveMapId=current;context.campaignMaps=maps;actions.push('library')},
   loadCampaignMapAreas:async()=>[{id:'polygon',status:state,location_id:'place'}],
   renderMapPanel:()=>actions.push('render'),

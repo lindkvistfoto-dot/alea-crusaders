@@ -3392,7 +3392,7 @@ async function advanceCampaignDay(withRest){
   showBackupToast('✓ Dag '+campaignDayState.day_number+' startad · '+restHours+' h vila')
  }catch(e){alert('Kunde inte starta ny dag: '+e.message)}
 }
-let adventurePlayerPreview=false, adventurePreviousMap=null, adventurePreviousCamera=null, adventureReadVersion=0, adventureProjectionUrl='';
+let adventurePlayerPreview=false, adventurePreviousMap=null, adventurePreviousCamera=null, adventureReadVersion=0, adventureLoading=false, adventureProjectionUrl='';
 function adventureCanManage(){return canManageCampaignMaps()&&!adventurePlayerPreview}
 async function toggleAdventurePreview(){
  if(!canManageCampaignMaps())return;
@@ -3408,7 +3408,7 @@ async function toggleAdventurePreview(){
  }
 }
 function clearAdventureMap(){
- ++adventureReadVersion;
+ ++adventureReadVersion;adventureLoading=false;
  activeCampaignMap=null;
  closeMapStatusMenu();closeMapLocationInfo();
  $('mapImage').removeAttribute('src');$('mapOverlay').replaceChildren();
@@ -3425,6 +3425,7 @@ async function adventureRaster(map){
  return URL.createObjectURL(await response.blob());
 }
 async function loadCampaignMaps(loadViewed=true){
+ const version=adventureReadVersion;
  if(!centralCampaignId){campaignMaps=[];campaignActiveMapId=null;setCampaignMapData(null,[]);return}
  await loadCampaignMapRole();
  const mapsQuery='campaign_maps?campaign_id=eq.'+encodeURIComponent(centralCampaignId)+'&select=id,campaign_id,site_id,name,image_path,width,height,player_visible,first_activated_at,last_activated_at,sort_order';
@@ -3439,7 +3440,7 @@ async function loadCampaignMaps(loadViewed=true){
  let settings=await dbJson('campaign_map_settings?campaign_id=eq.'+encodeURIComponent(centralCampaignId)+'&select=active_map_id&limit=1');
  campaignActiveMapId=settings?.[0]?.active_map_id||null;
  let viewable=adventureCanManage()?campaignMaps:campaignMaps.filter(m=>m.player_visible);
- if(loadViewed){
+ if(loadViewed&&version===adventureReadVersion){
   let keep=activeCampaignMap&&viewable.some(m=>m.id===activeCampaignMap.id)?activeCampaignMap.id:null;
   let current=viewable.some(m=>m.id===campaignActiveMapId)?campaignActiveMapId:null;
   let target=current||keep||viewable[0]?.id||null;
@@ -3689,6 +3690,7 @@ async function viewCampaignMap(id,reset=true){
  if(!map||(!manager&&!map.player_visible)){clearAdventureMap();return}
  const switched=activeCampaignMap?.id!==id;
  if(switched)closeMapLocationInfo();
+ adventureLoading=true;
  const viewport=$('mapViewport');viewport?.classList.add('map-loading');
  let url;
  try{
@@ -3705,7 +3707,7 @@ async function viewCampaignMap(id,reset=true){
  }catch(e){
   if(version!==adventureReadVersion)return;
   clearAdventureMap();$('mapStatusText').textContent='Kunde inte öppna kartan. '+e.message;
- }finally{if(version===adventureReadVersion||!activeCampaignMap)viewport?.classList.remove('map-loading')}
+ }finally{if(version===adventureReadVersion||!activeCampaignMap){adventureLoading=false;viewport?.classList.remove('map-loading')}}
 }
 function goToActiveCampaignMap(){if(campaignActiveMapId)viewCampaignMap(campaignActiveMapId)}
 async function activateViewedMap(){

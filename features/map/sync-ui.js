@@ -12,7 +12,7 @@ function mapPanelOpen(){
 
 async function refreshMapOnce(){
  const campaign=String(centralCampaignId||'');
- if(!campaign||!supabaseSession?.access_token||!mapPanelOpen())return;
+ if(adventureLoading||!campaign||!supabaseSession?.access_token||!mapPanelOpen())return;
  const version=adventureReadVersion;
  const priorMap=activeCampaignMap?.id||null;
  await loadCampaignMaps(false);
