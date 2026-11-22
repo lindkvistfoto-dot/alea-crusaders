@@ -67,7 +67,17 @@ for(const mobile of [false,true]){
  await layer.waitFor();await page.waitForFunction(()=>document.querySelector('.adventure-figure-layer[data-gm]')&&window.aleaCombatPaperDollMap.renderMapToken(chars[0]._dbId,100));
  await page.locator('#mapViewport').scrollIntoViewIfNeeded();
  const point=async(q,r)=>layer.evaluate((el,[q,r])=>{const p=new DOMPoint(25*Math.sqrt(3)*(q+r/2),37.5*r).matrixTransform(el.getScreenCTM());return [p.x,p.y]},[q,r]);
- const touch=async(q,r)=>{const xy=await point(q,r);if(mobile)await page.touchscreen.tap(...xy);else await page.mouse.click(...xy)};
+ const touch=async(q,r)=>{
+  // Wait for the map to settle after closing the board and scrolling it into view.
+  await layer.evaluate(async el=>{
+   let prior='',stable=0;
+   for(let i=0;i<90&&stable<4;i++){
+    await new Promise(resolve=>requestAnimationFrame(resolve));
+    const t=el.getScreenCTM(),signature=[t.a,t.d,t.e,t.f].join(',');
+    stable=signature===prior?stable+1:0;prior=signature;
+   }
+  });
+  const xy=await point(q,r);if(mobile)await page.touchscreen.tap(...xy);else await page.mouse.click(...xy)};
  const verifyCount=async n=>page.waitForFunction(n=>window.fixture.rows.length===n,n,{timeout:5500});
  const waitToken=async()=>page.waitForFunction(()=>document.querySelector('[data-figure-id] .combat-paper-doll-universal'));
  const arm=async(label,category,hidden=true)=>{
@@ -106,6 +116,7 @@ for(const mobile of [false,true]){
   assert.equal(await page.evaluate(()=>mapSelectedAreaId),null);
  }
  await arm('Lyra Gråväv','character');await touch(5,5);await verifyCount(2);
+ assert.deepEqual(await page.evaluate(()=>{const {q,r}=fixture.rows.find(row=>row.name==='Lyra Gråväv');return [q,r]}),[5,5]);
  await arm('Evalin Hugger','character');await touch(5,5);
  assert.equal(await page.evaluate(()=>fixture.rows.length),2);
  await arm('Evalin Hugger','character');await touch(1,8);await verifyCount(3);

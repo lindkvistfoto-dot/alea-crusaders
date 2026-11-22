@@ -3396,12 +3396,13 @@ let adventurePlayerPreview=false, adventurePreviousMap=null, adventurePreviousCa
 function adventureCanManage(){return canManageCampaignMaps()&&!adventurePlayerPreview}
 async function toggleAdventurePreview(){
  if(!canManageCampaignMaps())return;
- const previous=activeCampaignMap?.id;
+ const previous=activeCampaignMap?.id,area=mapSelectedAreaId;
  if(!adventurePlayerPreview){adventurePreviousMap=previous;adventurePreviousCamera={...mapView};}
  adventurePlayerPreview=!adventurePlayerPreview;
  const desired=adventurePlayerPreview?previous:adventurePreviousMap;
  clearAdventureMap();
  await viewCampaignMap(desired,false);
+ if(activeCampaignMap?.id===previous&&campaignMapAreas.some(a=>a.id===area))await openMapLocationInfoByArea(area);
  if(!adventurePlayerPreview&&activeCampaignMap?.id===adventurePreviousMap&&adventurePreviousCamera){
   const version=adventureReadVersion;
   requestAnimationFrame(()=>{if(version===adventureReadVersion){Object.assign(mapView,adventurePreviousCamera);applyMapTransform();}});

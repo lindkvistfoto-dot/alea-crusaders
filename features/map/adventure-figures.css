@@ -31,7 +31,8 @@ body:has(#mapPage:not(.hidden)) main:has(#mapPage) {
 #mapPage .mappage { max-width:none; margin:0; padding:0; border:0 }
 #mapPage .mapviewport {
   width:100%; height:auto; min-height:0;
-  max-height:calc(100dvh - var(--adventure-header, 130px) - 5rem);
+  max-height:max(12rem,calc(100dvh - var(--adventure-header, 130px) - 5rem));
+  scroll-margin-top:var(--adventure-header,130px);
   aspect-ratio:var(--campaign-map-aspect-ratio, 16 / 10);
 }
 #mapPage .maptoolbar { margin:0; flex-wrap:wrap }
@@ -49,4 +50,19 @@ body:has(#mapPage:not(.hidden)) main:has(#mapPage) {
 @media(max-width:900px){
   #mapPage .mapworkarea { grid-template-columns:minmax(0,1fr); grid-template-areas:"map" "images" "info";gap:.45rem }
   #mapPage .map-location-images-panel, #mapPage .map-location-panel {max-height:none}
+}
+
+@media(min-width:901px) {
+  body:has(#mapPage:not(.hidden)) .alea-app-header { --adventure-nav-size:clamp(54px,6.3vw,104px); padding-inline:var(--alea-navigation-inline-padding) }
+  body:has(#mapPage:not(.hidden)) .alea-app-header > .bar {width:100%;padding-inline:0}
+  body:has(#mapPage:not(.hidden)) .alea-app-header::before {width:calc(100% - 2 * var(--alea-navigation-inline-padding))}
+  body:has(#mapPage:not(.hidden)) .alea-toolstrip {min-height:var(--adventure-nav-size);padding-left:calc(var(--adventure-nav-size) + 12px)}
+  body:has(#mapPage:not(.hidden)) .alea-banner-home-link,
+  body:has(#mapPage:not(.hidden)) .alea-banner-home-icon {width:var(--adventure-nav-size);height:var(--adventure-nav-size)}
+  body:has(#mapPage:not(.hidden)) .alea-toolstrip > .btn.alea-nav-art {
+    flex-basis:var(--adventure-nav-size)!important;width:var(--adventure-nav-size)!important;
+    min-width:var(--adventure-nav-size)!important;max-width:var(--adventure-nav-size)!important;
+    height:var(--adventure-nav-size)!important;min-height:var(--adventure-nav-size)!important;
+  }
+  body:has(.arcane-character-rail:not([hidden])) #mapPage #mapLocationPanel {padding-inline-end:4.25rem}
 }

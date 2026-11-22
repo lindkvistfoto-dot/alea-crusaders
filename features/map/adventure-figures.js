@@ -297,7 +297,8 @@ async function arm(row) {
   const session=v.session;
   try {await prepare(v,[row]);} catch {if(view===v)notice('Figurbilden kunde inte laddas.');return;}
   if(view!==v||v.session!==session||!begin(v,row,'armed',null,null))return;
-  boardOpen=false;renderBoard(v);viewport.scrollIntoView({block:'nearest'});
+  boardOpen=false;renderBoard(v);
+  viewport.scrollIntoView({block:'nearest',behavior:'instant'});
 }
 board.addEventListener('change',e=>{
   const v=view,field=e.target.dataset.field;
@@ -349,7 +350,9 @@ document.addEventListener('pointerdown',e=>{
   if(!ready(v))return;
   if(drag?.mode==='armed'&&viewport.contains(e.target)){
     e.stopPropagation();e.preventDefault();drag.point=point;drag.pointerId=e.pointerId;drag.start=point;
-    document.documentElement.setPointerCapture?.(e.pointerId);updatePointer();return;
+    document.documentElement.setPointerCapture?.(e.pointerId);updatePointer();
+    drag.pressedCell=drag.cell;
+    return;
   }
   const portrait=e.target.closest('.arcane-character-rail [data-character]');
   let token=e.target.closest('[data-figure-id]');
@@ -386,7 +389,10 @@ document.addEventListener('pointerup',e=>{
   }
   if(!drag||e.pointerId!==drag.pointerId)return;
   e.stopPropagation();e.preventDefault();swallowClick=true;
-  drag.point={clientX:e.clientX,clientY:e.clientY};updatePointer();if(drag)persist();
+  drag.point={clientX:e.clientX,clientY:e.clientY};updatePointer();
+  if(!drag)return;
+  if(drag.mode==='armed'&&(!drag.pressedCell||drag.cell?.q!==drag.pressedCell.q||drag.cell?.r!==drag.pressedCell.r)){cancel();return;}
+  persist();
 },true);
 document.addEventListener('click',e=>{if(swallowClick){swallowClick=false;e.preventDefault();e.stopImmediatePropagation();}},true);
 document.addEventListener('pointercancel',cancel,true);
