@@ -1252,7 +1252,7 @@ async function syncCharacterToCentral(c){
 function scheduleCentralSave(){if(!centralReady)return;clearTimeout(centralSaveTimer);centralSaveTimer=setTimeout(async()=>{try{for(let c of chars)await syncCharacterToCentral(c);localStorage.setItem('dod_chars_v03a',JSON.stringify(chars))}catch(e){console.error('Sparning till Supabase misslyckades',e)}},350)}
 function storeSession(x){supabaseSession=x?{...x}:null;if(supabaseSession&&!Number(supabaseSession.expires_at)&&Number(supabaseSession.expires_in)>0)supabaseSession.expires_at=Math.floor(Date.now()/1000)+Number(supabaseSession.expires_in);if(supabaseSession&&sessionBelongsToProject(supabaseSession))localStorage.setItem(SUPABASE_SESSION_KEY,JSON.stringify(supabaseSession));else{localStorage.removeItem(SUPABASE_SESSION_KEY);supabaseSession=null}}
 async function loginUser(){let email=$('loginEmail').value.trim(),password=$('loginPassword').value,b=$('loginScreen').querySelector('.login-submit');$('loginError').textContent='';b.disabled=true;b.textContent='Loggar in…';try{let r=await authFetch('/auth/v1/token?grant_type=password',{method:'POST',body:JSON.stringify({email,password})});let x=await r.json();if(!r.ok)throw new Error(x.error_description||x.msg||'Fel e-postadress eller lösenord.');storeSession(x);await loadProfile();if(!supabaseProfile)throw new Error('Användarprofil saknas.');$('loginPassword').value='';enterApp()}catch(e){storeSession(null);supabaseProfile=null;$('loginError').textContent=e.message||'Inloggningen misslyckades.'}finally{b.disabled=false;b.textContent='Logga in'}}
-async function logoutUser(){try{if(supabaseSession?.access_token)await authFetch('/auth/v1/logout',{method:'POST',headers:{'Authorization':'Bearer '+supabaseSession.access_token}})}catch(e){}window.aleaRefreshLocation?.clear?.();revokeMapImageUrls();revokeCombatIconUrls();revokeNpcPortraitUrls();storeSession(null);supabaseProfile=null;centralReady=false;centralCampaignId=null;centralCampaignRole=null;campaignDayState=null;campaignErfAwards=[];campaignCharacterRestStates=[];campaignLocationEventLinks=[];activeCombat=null;combatants=[];combatHexes=[];combatActions=[];combatLogRows=[];combatSelectedTargetId=null;campaignMaps=[];campaignActiveMapId=null;activeCampaignMap=null;current=null;editing=false;showLogin()}
+async function logoutUser(){try{if(supabaseSession?.access_token)await authFetch('/auth/v1/logout',{method:'POST',headers:{'Authorization':'Bearer '+supabaseSession.access_token}})}catch(e){}window.aleaAdventureFigures?.close();window.aleaRefreshLocation?.clear?.();revokeMapImageUrls();revokeCombatIconUrls();revokeNpcPortraitUrls();storeSession(null);supabaseProfile=null;centralReady=false;centralCampaignId=null;centralCampaignRole=null;campaignDayState=null;campaignErfAwards=[];campaignCharacterRestStates=[];campaignLocationEventLinks=[];activeCombat=null;combatants=[];combatHexes=[];combatActions=[];combatLogRows=[];combatSelectedTargetId=null;campaignMaps=[];campaignActiveMapId=null;activeCampaignMap=null;current=null;editing=false;showLogin()}
 async function restoreSession(){supabaseSession=projectSession();if(!supabaseSession?.refresh_token)return false;try{let r=await authFetch('/auth/v1/token?grant_type=refresh_token',{method:'POST',body:JSON.stringify({refresh_token:supabaseSession.refresh_token})});let x=await r.json();if(!r.ok)throw 0;storeSession(x);await loadProfile();return !!supabaseProfile}catch(e){storeSession(null);supabaseProfile=null;return false}}
 // Recovery uses the token from the email redirect, independently of any
 // regular ALEA session already stored in this browser.
@@ -4166,9 +4166,9 @@ async function openMap(){
  ['home','view','admin','dicePage','combatPage'].forEach(id=>$(id).classList.add('hidden'));
  $('mapPage').classList.remove('hidden');$('back').classList.add('hidden');$('editBtn').classList.add('hidden');$('cancelEditBtn').classList.add('hidden');
  renderMapPanel();renderMapLibraryControls();
- try{await Promise.all([loadCampaignMaps(true),loadCampaignPlaceData(),loadCampaignContentData()])}catch(e){console.error('Kunde inte uppdatera kartor och platsinnehåll',e)}
+ try{await Promise.all([loadCampaignMaps(true),loadCampaignPlaceData(),loadCampaignContentData()]);window.aleaAdventureFigures?.sync(activeCampaignMap)}catch(e){console.error('Kunde inte uppdatera kartor och platsinnehåll',e)}
 }
-function closeMap(){closeMapStatusMenu();window.aleaKartakademin?.clearCampaign();
+function closeMap(){window.aleaAdventureFigures?.close();closeMapStatusMenu();window.aleaKartakademin?.clearCampaign();
  $('mapPage').classList.add('hidden');
  if(mapReturn==='combat'){$('combatPage').classList.remove('hidden')}
  else if(mapReturn==='dice'){$('dicePage').classList.remove('hidden')}
@@ -4178,6 +4178,7 @@ function closeMap(){closeMapStatusMenu();window.aleaKartakademin?.clearCampaign(
 }
 function setCampaignMapData(map,areas=[]){activeCampaignMap=map||null;campaignMapAreas=Array.isArray(areas)?areas:[];renderMapPanel();if(activeCampaignMap)requestAnimationFrame(resetMapView)}
 function renderMapPanel(){
+ window.aleaAdventureFigures?.sync(activeCampaignMap);
  void window.aleaKartakademin?.syncCampaign(activeCampaignMap,campaignMapAreas);
  let img=$('mapImage'),overlay=$('mapOverlay'),placeholder=$('mapPlaceholder'),subtitle=$('mapSubtitle'),status=$('mapStatusText');
  let viewport=$('mapViewport');

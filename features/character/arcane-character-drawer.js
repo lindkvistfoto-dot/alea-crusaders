@@ -2,6 +2,7 @@
 (()=>{
  'use strict';
  const labels=['Grundegenskaper','Färdigheter','Magi','Utrustning'];
+ let railMarkup=null;
  let selectedId=null,activePage=0,root,rail,drawer,content,previousCurrent=null,rollOwnerId=null,focusPortraitId=null,observer,npcFlags=new Map(),npcFlagsCampaign=null,npcFlagsPromise=null;
  const esc=value=>typeof escAttr==='function'?escAttr(String(value??'')):String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const campaignCharacters=()=>typeof chars!=='undefined'&&Array.isArray(chars)?chars.filter(c=>{if(!c)return false;const id=charId(c);if(typeof c.isNpc==='boolean')return !c.isNpc;if(npcFlagsCampaign===centralCampaignId&&npcFlags.has(id))return npcFlags.get(id)!==true;return c.ownerId!=='SLP'}):[];
@@ -14,6 +15,10 @@
   root=document.createElement('div');root.id='arcaneCharacterDrawerRoot';
   root.innerHTML='<nav class="arcane-character-rail" aria-label="Aktiv spelgrupp"></nav><div class="arcane-drawer-overlay" aria-hidden="true"></div><aside class="arcane-character-drawer" role="dialog" aria-modal="false" aria-label="Rollperson" aria-hidden="true"><header class="arcane-character-drawer-head"><div class="arcane-drawer-portrait"></div><div><h2></h2><p></p></div><button type="button" class="arcane-character-drawer-close" aria-label="Stäng rollpersonspanelen">×</button></header><nav class="arcane-drawer-tabs" role="tablist" aria-label="Rollpersonsidor"></nav><div class="arcane-drawer-content" tabindex="0"></div><footer class="arcane-drawer-page-nav"><button type="button" class="arcane-drawer-arrow" data-dir="-1" aria-label="Föregående sida">‹</button><span class="arcane-drawer-page-count"></span><button type="button" class="arcane-drawer-arrow" data-dir="1" aria-label="Nästa sida">›</button></footer></aside>';
   document.body.append(root);rail=root.querySelector('.arcane-character-rail');drawer=root.querySelector('.arcane-character-drawer');content=root.querySelector('.arcane-drawer-content');
+  rail.addEventListener('click',event=>{
+   const button=event.target.closest('[data-character]');if(!button)return;
+   focusPortraitId=button.dataset.character;toggleCharacter(button.dataset.character);
+  });
   root.querySelector('.arcane-character-drawer-close').addEventListener('click',close);
   root.querySelectorAll('.arcane-drawer-arrow').forEach(b=>b.addEventListener('click',()=>setPage(activePage+Number(b.dataset.dir))));
   root.querySelector('.arcane-drawer-overlay').addEventListener('click',close);
@@ -28,8 +33,9 @@
  async function loadNpcFlags(){const campaignId=typeof centralCampaignId!=='undefined'?centralCampaignId:null;if(!campaignId||typeof dbJson!=='function'||npcFlagsCampaign===campaignId)return;if(npcFlagsPromise)return npcFlagsPromise;npcFlagsPromise=(async()=>{try{const rows=await dbJson('characters?campaign_id=eq.'+encodeURIComponent(campaignId)+'&select=id,is_npc');npcFlags=new Map((Array.isArray(rows)?rows:[]).map(r=>[String(r.id),r.is_npc===true]));npcFlagsCampaign=campaignId}catch(e){npcFlagsCampaign=campaignId}finally{npcFlagsPromise=null;requestAnimationFrame(refresh)}})();return npcFlagsPromise}
  function refresh(){makeRoot();const visible=isNonHomePageVisible()&&window.matchMedia('(min-width: 901px)').matches;rail.hidden=!visible;if(!visible){if(drawer.classList.contains('is-open'))close();return}loadNpcFlags();
   const list=campaignCharacters();if(!list.some(c=>charId(c)===selectedId))selectedId=null;
-  rail.innerHTML=list.map(c=>'<button type="button" class="arcane-character-portrait" data-character="'+esc(charId(c))+'" aria-label="Visa '+esc(charName(c))+'" aria-pressed="'+(charId(c)===selectedId)+'" title="'+esc(charName(c))+'">'+imageOrFallback(portrait(c),c,'arcane-character-portrait')+'</button>').join('');
-  rail.querySelectorAll('[data-character]').forEach(b=>b.addEventListener('click',()=>{focusPortraitId=b.dataset.character;toggleCharacter(b.dataset.character)}));if(focusPortraitId){rail.querySelector('[data-character="'+CSS.escape(focusPortraitId)+'"]')?.focus({preventScroll:true});focusPortraitId=null}
+  const markup=list.map(c=>'<button type="button" class="arcane-character-portrait" data-character="'+esc(charId(c))+'" aria-label="Visa '+esc(charName(c))+'" aria-pressed="'+(charId(c)===selectedId)+'" title="'+esc(charName(c))+'">'+imageOrFallback(portrait(c),c,'arcane-character-portrait')+'</button>').join('');
+  if(markup!==railMarkup){rail.innerHTML=markup;railMarkup=markup;}
+  if(focusPortraitId){rail.querySelector('[data-character="'+CSS.escape(focusPortraitId)+'"]')?.focus({preventScroll:true});focusPortraitId=null}
   if(drawer.classList.contains('is-open'))renderDrawer();
  }
  function toggleCharacter(id){if(selectedId===id&&drawer.classList.contains('is-open')){close();return}if(rollOwnerId&&rollOwnerId!==id){if(document.getElementById('skillRollMenu')&&!document.getElementById('skillRollMenu').classList.contains('hidden'))window.closeSkillRollMenu?.();if(document.getElementById('spellRollMenu')&&!document.getElementById('spellRollMenu').classList.contains('hidden'))window.closeSpellRollMenu?.();restoreCurrent()}selectedId=id;renderDrawer();drawer.classList.add('is-open');drawer.setAttribute('aria-hidden','false');refresh()}

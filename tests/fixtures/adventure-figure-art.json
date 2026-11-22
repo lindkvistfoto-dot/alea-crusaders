@@ -1,0 +1,125 @@
+{
+  "assets": [
+    {
+      "id": "2ab9aa61-4b89-4d7f-8905-19ce644d9121",
+      "label": "Arcane Bronze Ivory Hexagon",
+      "width": 1220,
+      "height": 811,
+      "app_bytes": 333968,
+      "asset_key": "arcane-paper-doll-hexagon-base",
+      "app_sha256": "466d693ea041fed307bc1ea1e96cbf810615340fc4605d6eac20ebb011ac02bf",
+      "asset_path": "hermes/system-asset/arcane-paper-doll-hexagon-base/466d693ea041fed307bc1ea1e96cbf810615340fc4605d6eac20ebb011ac02bf.webp",
+      "alpha_preserved": true
+    },
+    {
+      "id": "d6ad2f3e-70a6-4c2a-89be-9b02b9fd27e8",
+      "label": "Arcane Portrait Stand – Generic Battle Pose",
+      "width": 853,
+      "height": 1280,
+      "app_bytes": 201296,
+      "asset_key": "arcane-portrait-stand-generic",
+      "app_sha256": "545ee6cbadf625eb047ff8ca7d67e4d22484180c2a8bffa96abfbc3178d3f953",
+      "asset_path": "hermes/system-asset/arcane-portrait-stand-generic/545ee6cbadf625eb047ff8ca7d67e4d22484180c2a8bffa96abfbc3178d3f953.webp",
+      "alpha_preserved": true
+    },
+    {
+      "id": "b8131d52-a0c8-46a1-9bb8-9f6225b8c0a1",
+      "label": "Arcane Bronze Ivory – Pointed Hex High Angle",
+      "width": 1280,
+      "height": 1170,
+      "app_bytes": 413392,
+      "asset_key": "arcane-bronze-ivory-pointed-hex-high-angle",
+      "app_sha256": "59d0c314e733bdd933053685f55dd6daec65bf60bd38d805286317cd2f4e0603",
+      "asset_path": "hermes/system-asset/arcane-bronze-ivory-pointed-hex-high-angle/59d0c314e733bdd933053685f55dd6daec65bf60bd38d805286317cd2f4e0603.webp",
+      "alpha_preserved": true
+    }
+  ],
+  "poses": [
+    {
+      "base_key": "arcane-bronze-ivory-pointed-hex-high-angle",
+      "pose_key": "standard",
+      "image_path": "hermes/battle-pose-cutout/18cc3c28-d75a-4c98-a0f1-773a75e9cb43/816fe0789206fad3edd1ef1d3587fb26c6206adb45b3e8294deab0ab1e90287e.webp",
+      "combatant_id": "d6310877-52e8-41c0-b2e5-bd81d5a50bbf",
+      "combatant_type": "character-npc",
+      "mounting_profile": {
+        "base": {
+          "scale": 35
+        },
+        "cutout": {
+          "x": 0,
+          "y": 8,
+          "scale": 65
+        },
+        "schema": 1
+      }
+    },
+    {
+      "base_key": "arcane-paper-doll-hexagon-base",
+      "pose_key": "standard",
+      "image_path": "hermes/battle-pose-cutout/2267ba55-5f25-4ee0-ad3e-10bcd168435d/0523350e0a8e68a7a13f63a19e3ffe4f768fcb01ff7c6d04ff4b5f310aa46a56.webp",
+      "combatant_id": "e8b28cfa-98ac-4e70-b610-1062685e7b94",
+      "combatant_type": "character-npc",
+      "mounting_profile": {
+        "base": {
+          "scale": 35
+        },
+        "cutout": {
+          "x": 0,
+          "y": -2,
+          "scale": 47
+        },
+        "schema": 1
+      }
+    },
+    {
+      "base_key": "arcane-bronze-ivory-pointed-hex-low-angle",
+      "pose_key": "standard",
+      "image_path": "hermes/battle-pose-cutout/c8a6f1bf-ed1f-4a9b-b7de-b6c4ba1ddfa2/116261584f241481fcec8fab166130bc5dbc9d17a1171c003d9fa854f57d4427.webp",
+      "combatant_id": "46a932b6-3ccc-45e6-9f84-7bde457affd3",
+      "combatant_type": "character-npc",
+      "mounting_profile": {
+        "base": {
+          "scale": 38
+        },
+        "cutout": {
+          "x": 0,
+          "y": 11,
+          "scale": 49
+        },
+        "schema": 1
+      }
+    },
+    {
+      "base_key": "arcane-bronze-ivory-pointed-hex-high-angle",
+      "pose_key": "enhandssvard_shield",
+      "image_path": "hermes/battle-pose-cutout/d0307875-5488-48c6-91f6-7608c19de768/0523350e0a8e68a7a13f63a19e3ffe4f768fcb01ff7c6d04ff4b5f310aa46a56.webp",
+      "combatant_id": "e8b28cfa-98ac-4e70-b610-1062685e7b94",
+      "combatant_type": "character-npc",
+      "mounting_profile": {
+        "base": {
+          "scale": 35
+        },
+        "cutout": {
+          "x": 0,
+          "y": 0,
+          "scale": 75
+        },
+        "schema": 1
+      }
+    }
+  ],
+  "heroes": [
+    {
+      "id": "d6310877-52e8-41c0-b2e5-bd81d5a50bbf",
+      "name": "Evalin Hugger"
+    },
+    {
+      "id": "46a932b6-3ccc-45e6-9f84-7bde457affd3",
+      "name": "Lyra Gråväv"
+    },
+    {
+      "id": "e8b28cfa-98ac-4e70-b610-1062685e7b94",
+      "name": "Astrid Eldhjärta"
+    }
+  ]
+}

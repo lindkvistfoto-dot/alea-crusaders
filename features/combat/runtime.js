@@ -7240,10 +7240,15 @@ function combatSlBoardModuleHtml(logHtml){
 function combatSlControlBoardHtml(logHtml){
  if(!combatCanManage()||!activeCombat)return '';
  const tabs=[['overview','Översikt'],['combatants','Stridande'],['battlefield','Battlefield Library'],['events','Effekter'],['secrets','SL-info'],['log','Händelselogg']];
- return '<section class="sl-control-board'+(combatSlBoardOpen?' is-open':'')+'" aria-label="SL Control Board">'+
-  '<button type="button" class="slcb-toggle" aria-expanded="'+(combatSlBoardOpen?'true':'false')+'" aria-controls="slControlBoardPanel" onclick="combatSlBoardToggle()"><span class="slcb-mark" aria-hidden="true">⬡</span><span><b>SL CONTROL BOARD</b><small>'+escAttr(activeCombat?.name||'Aktiv strid')+' · runda '+(Number(activeCombat?.round_number)||1)+' · '+(combatSlBoardOpen?'panelen öppen':'öppna spelledarverktyg')+'</small></span><span class="slcb-chevron" aria-hidden="true">'+(combatSlBoardOpen?'⌃':'⌄')+'</span></button>'+
-  (combatSlBoardOpen?'<div id="slControlBoardPanel" class="slcb-panel"><div id="combatGmControls" class="combat-gm-controls hidden"></div><nav class="slcb-tabs" aria-label="SL-verktyg">'+tabs.map(([key,label])=>'<button type="button" class="slcb-tab'+(combatSlBoardTab===key?' active':'')+'" aria-pressed="'+(combatSlBoardTab===key?'true':'false')+'" onclick="combatSlBoardNavigate(\''+key+'\')">'+label+'</button>').join('')+'</nav>'+combatSlBoardModuleHtml(logHtml)+'</div>':'')+
-  '</section>'
+ const panel=combatSlBoardOpen?'<div id="combatGmControls" class="combat-gm-controls hidden"></div><nav class="slcb-tabs" aria-label="SL-verktyg">'+tabs.map(([key,label])=>'<button type="button" class="slcb-tab'+(combatSlBoardTab===key?' active':'')+'" aria-pressed="'+(combatSlBoardTab===key?'true':'false')+'" onclick="combatSlBoardNavigate(\''+key+'\')">'+label+'</button>').join('')+'</nav>'+combatSlBoardModuleHtml(logHtml):'';
+ return slControlBoardHtml({open:combatSlBoardOpen,panelId:'slControlBoardPanel',toggle:'combatSlBoardToggle()',
+  context:(activeCombat?.name||'Aktiv strid')+' · runda '+(Number(activeCombat?.round_number)||1),panel});
+}
+// Shared shell. Each map mode supplies its own tools and open state.
+function slControlBoardHtml({open,panelId,toggle,context,panel}){
+ return '<section class="sl-control-board'+(open?' is-open':'')+'" aria-label="SL Control Board">'+
+  '<button type="button" class="slcb-toggle" aria-expanded="'+open+'" aria-controls="'+panelId+'" onclick="'+toggle+'"><span class="slcb-mark" aria-hidden="true">⬡</span><span><b>SL CONTROL BOARD</b><small>'+escAttr(context)+' · '+(open?'panelen öppen':'öppna spelledarverktyg')+'</small></span><span class="slcb-chevron" aria-hidden="true">'+(open?'⌃':'⌄')+'</span></button>'+
+  (open?'<div id="'+panelId+'" class="slcb-panel">'+panel+'</div>':'')+'</section>'
 }
 function combatSelectGmPlacement(id){
  if(!combatCanManage()||!activeCombat)return;
