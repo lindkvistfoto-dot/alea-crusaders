@@ -56,7 +56,21 @@
 .kartakademin-active > :is(#adminPlaceStructures, #adminSiteDetail) { display:none }
 #admin .adminpage:has(.kartakademin-active) { max-width:none; min-width:0 }
 #admin .adminpage:has(.kartakademin-active) > .adminhead { display:none }
-#admin .adminbox.kartakademin-active { padding:0; border:0; background:none; box-shadow:none }
+/* The embedded editor grows inside the Admin section. */
+#admin .adminbox.kartakademin-active { padding:0; border:0; background:none; box-shadow:none; overflow:visible }
+body:has(#admin:not(.hidden) .kartakademin-active) {
+  padding-bottom:calc(.75rem + env(safe-area-inset-bottom, 0px));
+}
+body:has(#admin:not(.hidden) .kartakademin-active) > :is(.alea-audio-dock,.alea-soundboard) {
+  position:static; width:min(calc(100% - 2 * var(--alea-navigation-inline-padding)),1180px); margin:.5rem auto 0;
+}
+body:has(#admin:not(.hidden) .kartakademin-active) > .alea-audio-dock {
+  display:grid; grid-template-columns:max-content max-content 1fr;
+}
+body:has(#admin:not(.hidden) .kartakademin-active) :is(.alea-audio-panel,.alea-soundboard-panel) {
+  position:static; grid-column:1/-1; width:min(100%,360px); min-width:0;
+  max-height:none; overflow:visible; margin-top:.35rem;
+}
 @media (min-width:1024px) {
   body main:has(#admin:not(.hidden) .kartakademin-active) { width:100%; max-width:none; padding-inline:0; padding-bottom:8px }
   body main:has(#admin:not(.hidden) .kartakademin-active) > #admin {
@@ -67,7 +81,7 @@
 #mapAreaEditor {
   --ink:#f3ecdc; --secondary:#c5c6b5; --bronze:#776140; --seam:#465044;
   --panel:linear-gradient(135deg,#13251ee8,#09120fee), url('../skills/codex-assets/dark-panel.webp') center / cover;
-  width:100%; max-width:none; min-width:0; padding:0;
+  width:100%; max-width:none; min-width:0; max-height:none; padding:0;
   color:var(--ink); font:400 .85rem/1.35 system-ui,sans-serif; color-scheme:dark;
 }
 #mapAreaEditor *, #mapAreaEditor { box-sizing:border-box }
@@ -87,7 +101,7 @@
 }
 .map-area-workspace {
   display:grid; grid-template-columns:minmax(0,1fr) minmax(0,2fr) minmax(0,1fr);
-  gap:.65rem; height:var(--kartakademin-space,65dvh); min-height:0;
+  gap:.65rem; height:max(10rem,calc(100dvh - var(--kartakademin-top,35dvh) - .75rem)); min-height:0;
 }
 .kartakademin-navigation, .map-area-tool-panel {
   min-width:0; min-height:0; overflow:auto; overscroll-behavior:contain; scrollbar-width:thin;
@@ -206,9 +220,13 @@
 .kartakademin-controls label:has(> input[type=checkbox]) { display:flex; align-items:center; gap:.35rem }
 [data-light] label:has(> input[type=checkbox]),.kartakademin-flood-basic label:has([type=checkbox]) { grid-column:1/-1 }
 .kartakademin-flood-basic,.kartakademin-advanced-flood { width:100% }
-@media (max-width:900px) {
-  .map-area-workspace { display:flex; flex-direction:column; height:auto }
-  .kartakademin-center { order:-1; grid-template-rows:auto minmax(220px,46dvh) auto }
+@media (max-width:900px), (max-height:34rem) {
+  body:has(#admin:not(.hidden) .kartakademin-active) .alea-app-header { position:relative }
+  .map-area-workspace {
+    --kartakademin-map-height:clamp(13.75rem,46dvh,30rem);
+    display:flex; flex-direction:column; height:auto;
+  }
+  .kartakademin-center { order:-1; grid-template-rows:auto var(--kartakademin-map-height) auto }
   .kartakademin-navigation, .map-area-tool-panel { overflow:visible }
   #mapAreaEditor :is(.btn,.smallbtn,[role=tab],.map-status-pill,.deletebtn) { min-height:36px }
   .kartakademin-layers label { min-height:34px }
@@ -257,19 +275,18 @@
 #mapAreaEditor .room-rows button:hover { background:#253229 }
 #mapAreaEditor .room-properties [data-room-delete] { color:#efb8a4 }
 #mapAreaSvg .map-editor-zone.studio-neighbour { stroke:#5ce3ce; stroke-width:3 }
-@media (max-width:900px) {
+@media (max-width:900px), (max-height:34rem) {
   .map-area-workspace:has([data-mode-button=rooms][aria-selected=true]) {
     & .map-area-tool-panel, & .kartakademin-center { display:contents }
     & .kartakademin-mode-nav { order:-8 }
     & .kartakademin-panel-heading { order:-7 }
     & .map-area-toolbar { order:-6; margin:0 }
     & .map-area-notice { order:-5 }
-    & .map-area-map-stage { order:-4; height:clamp(220px,46dvh,480px) }
+    & .map-area-map-stage { order:-4; height:var(--kartakademin-map-height) }
     & .kartakademin-center > .kartakademin-footer { order:-3 }
     & .map-area-list { order:-2 }
   }
   #mapAreaEditor .room-tool-group button, #mapAreaEditor .room-rows button, #mapAreaEditor #mapAreaRemoveVertexBtn { min-height:44px }
 }
 
-.room-rows { max-height:24rem; overflow:auto; overscroll-behavior:contain }
 #mapAreaRoomLayer { -webkit-tap-highlight-color:transparent; user-select:none }
