@@ -1,0 +1,56 @@
+import { chromium } from 'playwright';
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+
+const [origin,output]=process.argv.slice(2);
+assert.match(origin,/^https:\/\/[a-z0-9-]+\.alea-crusaders\.pages\.dev\/?$/);
+const browser=await chromium.launch({channel:'chrome',args:['--enable-unsafe-swiftshader']});
+try{
+ const page=await browser.newPage({viewport:{width:1440,height:960}});
+ await page.goto(origin,{waitUntil:'domcontentloaded'});
+ assert.equal(await page.evaluate(()=>window.ALEA_SUPABASE_CONFIG?.url),'https://wkiuyklzzroavclnsxna.supabase.co');
+ await page.locator('#loginEmail').fill(process.env.ALEA_DEV_TEST_EMAIL);
+ await page.locator('#loginPassword').fill(process.env.ALEA_DEV_TEST_PASSWORD);
+ await page.locator('#loginForm').evaluate(form=>form.requestSubmit());
+ await page.waitForFunction(()=>activeUser()?.id&&centralCampaignId&&chars.some(c=>c.id==='astrid'),null,{timeout:60000});
+ await page.evaluate(()=>openMap());
+ await page.waitForFunction(()=>campaignMaps.some(m=>m.name==='Skelettbyn'));
+ await page.evaluate(()=>viewCampaignMap(campaignMaps.find(m=>m.name==='Skelettbyn').id));
+ await page.waitForFunction(()=>activeCampaignMap?.name==='Skelettbyn'&&document.querySelector('#mapImage').naturalWidth>1);
+ await page.locator('#adventureSlBoard .slcb-toggle').click();
+ const expected=await page.evaluate(async()=>{
+  await window.aleaCombatPaperDollMap.loadMapTokens();
+  for(const id of ['astrid','lyra','evalin']){
+   const char=chars.find(c=>c.id===id);
+   const art=window.aleaCombatPaperDollMap.renderAdventureToken({source_type:'character',source_id:char._dbId,side:'heroes'},100);
+   if(!art.includes('data-hero-class="'+id+'"'))throw Error('Hero Class missing for '+id);
+  }
+  const explored=campaignMapAreas.filter(a=>a.status==='explored');
+  if(!explored.length||explored.length===campaignMapAreas.length)throw Error('Map needs explored and concealed rooms');
+  await openMapLocationInfoByArea(explored[0].id);
+  return explored.map(a=>a.id).sort();
+ });
+ const layout=await page.evaluate(()=>{
+  const rect=s=>{const r=document.querySelector(s).getBoundingClientRect();return [r.left,r.width,r.right]};
+  return ['.alea-app-header > .bar','#mapPage .mapworkarea','#mapLocationImagesPanel','#mapPage .mapmain','#mapLocationPanel'].map(rect);
+ });
+ assert.ok(Math.abs(layout[0][0]-layout[1][0])<3&&Math.abs(layout[0][2]-layout[1][2])<3,JSON.stringify(layout));
+ assert.ok(Math.abs(layout[2][1]*2-layout[3][1])<3&&Math.abs(layout[4][1]-layout[2][1])<3,JSON.stringify(layout));
+ await fs.mkdir(output,{recursive:true});
+ await page.screenshot({path:path.join(output,'dev-skelettbyn-sl.png')});
+ const mask=page.waitForResponse(r=>r.url().endsWith('/functions/v1/adventure-player-map')&&r.request().method()==='POST');
+ await page.locator('#adventurePreview').click();
+ const response=await mask;assert.equal(response.status(),200);
+ await page.waitForFunction(()=>activeCampaignMap?.name==='Skelettbyn'&&document.querySelector('#mapImage').naturalWidth>1);
+ assert.deepEqual(await page.evaluate(()=>campaignMapAreas.map(a=>a.id).sort()),expected);
+ assert.equal(await page.locator('.sl-outline,.map-location-gm,[data-concealed]').count(),0);
+ await page.screenshot({path:path.join(output,'dev-skelettbyn-spelarvy.png')});
+ await page.setViewportSize({width:390,height:844});
+ await page.locator('#adventurePreview').click();
+ await page.waitForFunction(()=>activeCampaignMap?.name==='Skelettbyn'&&adventureCanManage());
+ await page.evaluate(()=>resetMapView());
+ await page.screenshot({path:path.join(output,'dev-skelettbyn-mobil.png')});
+ assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+ console.log('DEV Skelettbyn: '+expected.length+' explored rooms, verified projection, 3 Hero Class poses, desktop and mobile.');
+}finally{await browser.close();}

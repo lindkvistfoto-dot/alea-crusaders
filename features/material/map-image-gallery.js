@@ -13,11 +13,10 @@
   async function readNewLocationImages(campaignId, locationId) {
     const links = await dbJson(
       'campaign_image_links?campaign_id=eq.' + encodeURIComponent(campaignId) +
-      '&object_type=eq.place&object_id=eq.' + encodeURIComponent(locationId) +
+      '&player_visible=eq.true&object_type=eq.place&object_id=eq.' + encodeURIComponent(locationId) +
       '&select=id,image_id,is_primary,sort_order,caption,player_visible&order=sort_order.asc'
     );
-    // GM map gallery includes hidden images; player visibility is only for sharing.
-    const visible = (links || []).filter(link => canManageCampaignMaps() || link.player_visible === true);
+    const visible = (links || []).filter(link => link.player_visible === true);
     if (!visible.length) return [];
     const ids = [...new Set(visible.map(link => link.image_id))];
     const images = await dbJson(
@@ -61,7 +60,7 @@
     if (!originalGallery) return;
     const selectedArea = campaignMapAreas.find(area => area.id === mapSelectedAreaId);
     if (!selectedArea?.location_id || !centralCampaignId) {
-      return originalRender?.((legacyAssets || []).filter(image => canManageCampaignMaps() || image.player_visible === true));
+      return originalRender?.((legacyAssets || []).filter(image => image.player_visible === true));
     }
     const selectedId = selectedArea.id;
     const stillCurrent = () =>
@@ -83,7 +82,7 @@
       (image.storage_bucket || 'campaign-location-assets') + '/' + image.storage_path
     ));
     const remaining = (legacyAssets || [])
-      .filter(image => canManageCampaignMaps() || image.player_visible === true)
+      .filter(image => image.player_visible === true)
       .filter(image => {
         const key = 'campaign-location-assets/' + image.storage_path;
         if (unique.has(key)) return false;

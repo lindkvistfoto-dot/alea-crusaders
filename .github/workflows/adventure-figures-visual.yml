@@ -6,6 +6,8 @@ on:
       - 'features/map/adventure-*'
       - 'features/combat/paper-doll-map.js'
       - 'scripts/adventure-figures-visual.mjs'
+      - 'scripts/adventure-dev-view.mjs'
+      - 'supabase/functions/adventure-player-map/**'
       - 'tests/fixtures/adventure-figure-art.json'
       - '.github/workflows/adventure-figures-visual.yml'
 permissions:
@@ -45,7 +47,14 @@ jobs:
           done
           test -n "$preview"
           echo "Verified preview $preview for $SOURCE_SHA"
+          echo "ALEA_VERIFIED_PREVIEW=$preview" >> "$GITHUB_ENV"
           node scripts/adventure-figures-visual.mjs "$preview" crypt-fixture/preview/art-first/warm-floor.webp visual-results
+      - name: Check the real campaign in DEV (read only)
+        if: ${{ !cancelled() && env.ALEA_VERIFIED_PREVIEW != '' && github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'feat/adventure-command-center-v11' }}
+        env:
+          ALEA_DEV_TEST_EMAIL: ${{ secrets.ALEA_DEV_TEST_EMAIL }}
+          ALEA_DEV_TEST_PASSWORD: ${{ secrets.ALEA_DEV_TEST_PASSWORD }}
+        run: node scripts/adventure-dev-view.mjs "$ALEA_VERIFIED_PREVIEW" visual-results
       - uses: actions/upload-artifact@v4
         if: always()
         with:

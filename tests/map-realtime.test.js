@@ -144,7 +144,7 @@ function uiHarness({gm=false,maps=[{id:'old',player_visible:true}],state='explor
   campaignActiveMapId:'old',campaignMaps:maps,
   campaignMapAreas:[],mapSelectedAreaId:null,
   mapView:{scale:1.8,x:124,y:-30},
-  canManageCampaignMaps:()=>gm,
+  adventureCanManage:()=>gm,adventureReadVersion:0,adventurePlayerPreview:false,
   loadCampaignMaps:async()=>{context.campaignActiveMapId=current;context.campaignMaps=maps;actions.push('library')},
   loadCampaignMapAreas:async()=>[{id:'polygon',status:state,location_id:'place'}],
   renderMapPanel:()=>actions.push('render'),
@@ -161,13 +161,12 @@ function uiHarness({gm=false,maps=[{id:'old',player_visible:true}],state='explor
  return {context,actions,setMaps:x=>{maps=x},setCurrent:x=>{current=x},refresh:()=>context.window.aleaMapRealtime.refresh()};
 }
 describe('v0.34.95 – map screen reconciliation',()=>{
- it('updates fog without resetting player zoom or image',async()=>{
+ it('refreshes the protected player raster without resetting zoom',async()=>{
   const h=uiHarness();await h.refresh();
-  expect(h.context.campaignMapAreas[0].status).toBe('explored');
-  expect(h.context.activeCampaignMap.image_url).toBe('blob:map');
+  expect(h.actions).toContain('switch:old');
+  expect(h.context.activeCampaignMap.image_url).toBe('blob:new');
   expect(h.context.mapView).toEqual({scale:1.8,x:124,y:-30});
-  expect(h.actions).not.toContain('switch:old');
-  expect(h.actions).toContain('render');
+
  });
  it('switches the player to a newly active visible map',async()=>{
   const h=uiHarness();await h.refresh();

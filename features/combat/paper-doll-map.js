@@ -4,6 +4,12 @@
  const resolver=root.aleaCombatPaperDollResolver;
  const BASE_WIDTH=100.1;
  const STANDARD_BASE='arcane-bronze-ivory-pointed-hex-high-angle';
+ // Foot contact and crown from the approved Hero Class masters (Kryptans dörr).
+ const heroProfiles={
+  astrid:{aspect:1200/1311,x:.61,y:.903,crown:.024,meters:1.90},
+  lyra:{aspect:1086/1448,x:.563,y:.961,crown:.043,meters:1.80},
+  evalin:{aspect:1086/1448,x:.477,y:.925,crown:.243,meters:1.20}
+ };
  let assets={},loading=null,ready=false,poseRows=new Map(),poseLoading=null,racePoseRows=new Map(),races=[];
  const mapBounds=new Map(),pendingBounds=new Map();
  const failed=new Set(),checked=new Set();
@@ -13,7 +19,7 @@
   loading=root.aleaArcanePaperDollAssets.load({dbJson,baseUrl:SUPABASE_URL}).then(result=>{
    const next=resolver.assetsByKey(result);
    // The registry also contains unrelated maps, UI and award artwork.
-   const pieces=Object.entries(next).filter(([key])=>[STANDARD_BASE,resolver.BASE,resolver.STAND].includes(key));
+   const pieces=Object.entries(next).filter(([key])=>[STANDARD_BASE,resolver.BASE,resolver.STAND].includes(key)||Object.hasOwn(heroProfiles,key.replace(/^arcane-hero-class-/,'')));
    return Promise.all(pieces.map(([key,a])=>new Promise(resolve=>{
     const img=new Image();
     img.onload=()=>{checked.add(key);resolve([key,a])};
@@ -152,7 +158,8 @@
   if(!ready){load();return classic}
   const mapToken=Number.isFinite(mapBaseWidth)&&mapBaseWidth>0;
   if(!mapToken&&typeof combatFootprintShape!=='function')return classic;
-  const published=publishedPose(actor);
+  const adventureHero=allowStand&&actor?.side==='heroes';
+  const published=adventureHero?null:publishedPose(actor);
   const profile=published?.mounting_profile||{},cutout=profile.cutout||{},baseProfile=profile.base||{};
   // All single-hex combatants use High Angle regardless of the pose's workshop base.
   // Fall back to the original base only while High Angle is unavailable.
@@ -160,7 +167,7 @@
   if(mapToken&&!assets[STANDARD_BASE]?.src)return '';
   const chosenAssets={...assets,[resolver.BASE]:baseAsset};
   const publicPose=published?.image_path&&typeof SUPABASE_URL==='string'?SUPABASE_URL+'/storage/v1/object/public/alea-hermes-public/'+published.image_path:'';
-  const selected=resolver.resolve(actor,{assets:chosenAssets,footprint:mapToken?'single':combatFootprintShape(actor),battlePoseUrl:publicPose||pose(actor),portraitUrl:portrait(actor)});
+  const selected=resolver.resolve(actor,{assets:chosenAssets,footprint:mapToken?'single':combatFootprintShape(actor),battlePoseUrl:adventureHero?'':publicPose||pose(actor),portraitUrl:portrait(actor)});
   if(mapToken&&selected.mode!=='battle-pose'&&!(allowStand&&selected.mode==='portrait-stand'))return '';
   if(mapToken&&collectArt)collectArt(selected.baseUrl,selected.poseUrl||selected.standUrl);
   if(selected.mode==='classic')return classic;
@@ -214,6 +221,17 @@
   return Promise.all(pending);
  }
  function renderAdventureToken(actor,width,collectArt){
+  if(actor?.side==='heroes'&&typeof chars!=='undefined'){
+   const source=chars.find(c=>c._dbId===actor.source_id);
+   const profile=heroProfiles[source?.id],hero=assets['arcane-hero-class-'+source?.id],base=assets[STANDARD_BASE];
+   if(profile&&hero?.src&&base?.src){
+    if(collectArt)collectArt(base.src,hero.src);
+    const height=width/Math.sqrt(3)*profile.meters*1.1/(profile.y-profile.crown),w=height*profile.aspect;
+    return '<g class="combat-paper-doll-universal" data-hero-class="'+source.id+'" pointer-events="none">'+
+     mapArt(base.src,-width/2,width*.334,width,width*.66,true)+
+     '<image href="'+esc(hero.src)+'" x="'+(-w*profile.x)+'" y="'+(-height*profile.y)+'" width="'+w+'" height="'+height+'"/></g>';
+   }
+  }
   return render('',actor,{x:0,y:0},null,'',width,collectArt,true);
  }
  function prepareAdventureToken(actor){

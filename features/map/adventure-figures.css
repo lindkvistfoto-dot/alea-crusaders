@@ -20,3 +20,33 @@
 body:has(.adventure-figure-layer[data-gm]) .arcane-character-portrait[data-character] { cursor:grab; touch-action:none; user-select:none }
 body:has(.adventure-figure-ghost), body:has(.adventure-figure-ghost) * { cursor:grabbing!important; user-select:none!important }
 @media (prefers-reduced-motion:reduce) { .adventure-hex-light[data-fading] { animation-duration:1ms } }
+#mapPage #adventureControls[hidden] { display:none }
+.adventure-figure-layer [data-selected] > ellipse { fill:#d4b16444; stroke:#ffe4a1; stroke-width:2; vector-effect:non-scaling-stroke }
+.adventure-figure-layer [data-figure-id] { pointer-events:all }
+body:has(#mapPage:not(.hidden)) .alea-app-header > .bar { max-width:none }
+body:has(#mapPage:not(.hidden)) main:has(#mapPage) {
+  box-sizing:border-box; width:100%; max-width:none; margin:0;
+  padding:0 var(--alea-navigation-inline-padding);
+}
+#mapPage .mappage { max-width:none; margin:0; padding:0; border:0 }
+#mapPage .mapviewport {
+  width:100%; height:auto; min-height:0;
+  max-height:calc(100dvh - var(--adventure-header, 130px) - 5rem);
+  aspect-ratio:var(--campaign-map-aspect-ratio, 16 / 10);
+}
+#mapPage .maptoolbar { margin:0; flex-wrap:wrap }
+#mapPage .maptoolbar select { min-width:0; max-width:100% }
+#mapPage .map-location-images-panel, #mapPage .map-location-panel { position:static }
+@media(min-width:901px){
+  #mapPage .mapworkarea {
+    grid-template-columns:minmax(0,1fr) minmax(0,2fr) minmax(0,1fr);
+    grid-template-areas:"images map info"; gap:8px;
+  }
+  #mapPage .map-location-images-panel, #mapPage .map-location-panel {
+    max-height:calc(100dvh - var(--adventure-header, 130px) - .5rem); overflow:auto;
+  }
+}
+@media(max-width:900px){
+  #mapPage .mapworkarea { grid-template-columns:minmax(0,1fr); grid-template-areas:"map" "images" "info";gap:.45rem }
+  #mapPage .map-location-images-panel, #mapPage .map-location-panel {max-height:none}
+}

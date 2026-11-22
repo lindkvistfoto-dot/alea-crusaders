@@ -13,17 +13,19 @@ function mapPanelOpen(){
 async function refreshMapOnce(){
  const campaign=String(centralCampaignId||'');
  if(!campaign||!supabaseSession?.access_token||!mapPanelOpen())return;
+ const version=adventureReadVersion;
  const priorMap=activeCampaignMap?.id||null;
  await loadCampaignMaps(false);
- if(campaign!==String(centralCampaignId||'')||!mapPanelOpen())return;
+ if(version!==adventureReadVersion||campaign!==String(centralCampaignId||'')||!mapPanelOpen())return;
  const currentChanged=seenCampaign===campaign&&
   seenActiveMap!==undefined&&seenActiveMap!==campaignActiveMapId;
  seenCampaign=campaign;seenActiveMap=campaignActiveMapId;
- const isGM=canManageCampaignMaps();
+ const isGM=adventureCanManage();
  const available=campaignMaps.filter(m=>isGM||m.player_visible);
  const current=available.find(m=>m.id===campaignActiveMapId);
  const previous=available.find(m=>m.id===priorMap);
  const desired=(!isGM&&currentChanged&&current?current:previous||current||available[0])||null;
+ if(adventurePlayerPreview&&!priorMap)return;
  if(desired?.id!==priorMap){
   if(desired)await viewCampaignMap(desired.id,false);
   else{
@@ -33,8 +35,14 @@ async function refreshMapOnce(){
   return;
  }
  if(!desired){renderMapLibraryControls();return;}
+ if(!isGM){
+  if(adventurePlayerPreview&&!priorMap)return;
+  await viewCampaignMap(desired.id,false);
+  await window.aleaAdventureFigures?.refresh();
+  return;
+ }
  const areas=await loadCampaignMapAreas(desired.id);
- if(campaign!==String(centralCampaignId||'')||!mapPanelOpen()||
+ if(version!==adventureReadVersion||campaign!==String(centralCampaignId||'')||!mapPanelOpen()||
     activeCampaignMap?.id!==desired.id)return;
  // Keep the image blob, current zoom and pan. Refresh only the fog overlay.
  const existingUrl=activeCampaignMap.image_url||activeCampaignMap.imageUrl||'';

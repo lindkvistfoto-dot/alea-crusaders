@@ -47,7 +47,7 @@
  function renderDisplay(){
   const svg=$('mapOverlay');if(!svg)return;
   svg.querySelector('.arcane-map-objects')?.remove();
-  const map=activeCampaignMap, viewer=activeUser()?.id, canManage=manager();
+  const map=activeCampaignMap, viewer=activeUser()?.id, canManage=adventureCanManage();
   if(!map||display?.mapId!==map.id||display.viewer!==viewer||display.canManage!==canManage||!display.placements?.length)return;
   const group=document.createElementNS(SVG,'g');group.setAttribute('class','arcane-map-objects');group.setAttribute('aria-label','Kartobjekt');
   if(!canManage){
@@ -78,13 +78,13 @@
  async function syncDisplay(mapId,force=false){
   if(!mapId){display=null;return}
   if(activeCampaignMap?.id!==mapId||!(Number(activeCampaignMap.pixels_per_meter)>0))return;
-  const viewer=activeUser()?.id, canManage=manager();
+  const viewer=activeUser()?.id, canManage=adventureCanManage();
   if(display?.mapId!==mapId||display.viewer!==viewer||display.canManage!==canManage)display={mapId,viewer,canManage};
   const current=display;
   if(!force&&(current.loading||current.placements))return;
   const loading=current.loading=Promise.all([
    !force&&current.definitions ? current.definitions : readDefinitions(),
-   readPlacements(mapId),
+   canManage?readPlacements(mapId):dbJson('rpc/read_adventure_player_objects',{method:'POST',body:JSON.stringify({p_map_id:mapId})}),
   ]);
   try{
    const [definitions,placements]=await loading;

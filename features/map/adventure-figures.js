@@ -11,6 +11,8 @@ const status = document.getElementById('adventureFigureStatus');
 const viewport = document.getElementById('mapViewport');
 const page = document.getElementById('mapPage');
 const art = () => window.aleaCombatPaperDollMap;
+const controls=document.getElementById('adventureControls');
+let boardOpen=false;
 let view, drag, press, ghost, highlight, swallowClick = false;
 
 function svg(tag, attrs = {}) {
@@ -52,6 +54,7 @@ function renderPieces(v, landingId) {
     const piece=remaining.get(key)||svg('g',{'data-piece-key':key});
     remaining.delete(key);
     piece.dataset.figureId=row.id;
+    piece.toggleAttribute('data-selected',v.selected===row.id);
     piece.setAttribute('transform','translate('+x+' '+y+')');
     const signature=[row.name,row.player_visible,w,drawing].join('|');
     if(piece.artSignature!==signature){
@@ -87,19 +90,58 @@ function toolPanel(v) {
     (list?'<h4>På kartan</h4><div class="slcb-visibility-list">'+list+'</div>':'');
 }
 function renderBoard(v) {
-  const html=v.gm ? slControlBoardHtml({open:v.open,panelId:'adventureFigurePanel',toggle:'aleaAdventureFigures.toggle()',
-    context:v.session===null?'Figurer · Öppna Spelmöte för att börja placera':'Figurer · '+v.map.name,panel:v.open?'<section class="slcb-module"><h3>Figurer</h3>'+toolPanel(v)+'</section>':''}) : '';
-  if (html!==v.boardHtml) { board.innerHTML=html; v.boardHtml=html; }
+  const owner=canManageCampaignMaps();
+  const context=adventurePlayerPreview?'Spelarvy':v?.map.name||'Karta';
+  const content='<div data-map-controls></div>'+(v?.gm?'<section class="slcb-module"><h3>Figurer</h3>'+toolPanel(v)+'</section>':'');
+  const html=owner?slControlBoardHtml({open:boardOpen,panelId:'adventureFigurePanel',toggle:'aleaAdventureFigures.toggle()',context,panel:boardOpen?content:''}):'<div data-map-controls></div>';
+  if(board.htmlSignature!==html){
+    if(board.contains(controls))board.after(controls);
+    board.innerHTML=html;board.htmlSignature=html;
+    board.querySelector('[data-map-controls]')?.append(controls);
+  }
+  controls.hidden=owner&&!boardOpen;
+  const preview=document.getElementById('adventurePreview');
+  preview.classList.toggle('hidden',!owner);
+  preview.textContent=adventurePlayerPreview?'Återgå till SL-vy':'Visa spelarvy';
+  preview.setAttribute('aria-pressed',String(adventurePlayerPreview));
+  const picker=document.getElementById('adventureZoomPreset');
+  for(const option of picker.options){
+    const missing=option.value==='room'&&!mapSelectedAreaId?'Välj ett rum':option.value==='group'&&!v?.rows.some(r=>r.character_id)?'Placera en rollperson':option.value==='person'&&!v?.rows.some(r=>r.id===v.selected)?'Välj en figur':'';
+    option.disabled=!!option.value&&(!v||!!missing);
+    option.label=option.textContent+(missing?' · '+missing:'');
+  }
 }
-function toggle() { if(view?.gm){ view.open=!view.open; renderBoard(view); } }
+function toggle() {boardOpen=!boardOpen;renderBoard(view);}
+function selectPiece(v,id){v.selected=id;renderPieces(v);renderBoard(v);}
+function zoomTo(mode){
+ const v=view;if(!v||!mode)return;
+ if(mode==='all'){resetMapView();return;}
+ const grid=v.grid||adventureGrid(v.map,null);
+ const selected=v.rows.find(r=>r.id===v.selected),room=campaignMapAreas.find(a=>a.id===mapSelectedAreaId);
+ const d=room?.shape_data;
+ const roomPoints=room?.shape_type==='rect'?[[d.x,d.y],[d.x+d.width,d.y+d.height]]:d?.points||[];
+ const group=v.rows.filter(r=>r.character_id).map(r=>hexCenter(grid,r.q,r.r));
+ let points=mode==='room'?roomPoints:mode==='group'?group:selected?[hexCenter(grid,selected.q,selected.r)]:[];
+ if(mode==='battle'&&!points.length)points=group.length?group:roomPoints;
+ if(mode==='battle'&&!points.length)points=[[-mapView.x/mapView.scale,-mapView.y/mapView.scale]];
+ if(!points.length)return;
+ const xs=points.map(p=>p[0]),ys=points.map(p=>p[1]);
+ const x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys);
+ const pad=mode==='room'?grid.width*.35:grid.width;
+ const span=mode==='battle'?grid.width*9:mode==='person'?grid.width*4:0;
+ const width=span||Math.max(grid.width*2,x1-x0+2*pad),height=span||Math.max(grid.pitch*2,y1-y0+2*pad);
+ const scale=Math.min(6,viewport.clientWidth/width,viewport.clientHeight/height);
+ mapView.scale=scale;mapView.x=-(x0+x1)*scale/2;mapView.y=-(y0+y1)*scale/2;applyMapTransform();
+}
+document.getElementById('adventureZoomPreset').addEventListener('change',e=>{zoomTo(e.target.value);e.target.value='';});
 function close() {
   cancel();
   view?.layer.remove(); view=null;
-  board.replaceChildren(); notice();
+  renderBoard(null); notice();
 }
 function sync(map) {
-  if (!map?.image_url || !centralCampaignId || page.classList.contains('hidden')) { if(view)close(); return; }
-  const gm=canManageCampaignMaps(), campaign=centralCampaignId;
+  if (!map?.image_url || !centralCampaignId || page.classList.contains('hidden')) { if(view)close();else renderBoard(null); return; }
+  const gm=adventureCanManage(), campaign=centralCampaignId;
   if (view?.map.id===map.id && view.gm===gm && view.campaign===campaign) { view.map=map;renderBoard(view);return; }
   close();
   const layer=svg('svg',{class:'adventure-figure-layer',viewBox:'0 0 '+map.width+' '+map.height,width:map.width,height:map.height});
@@ -136,7 +178,7 @@ async function readRows(v) {
   const version=++v.version;
   if(!v.session)return;
   try {
-    const rows=await dbJson(table+'?'+scope(v)+'&select='+columns+'&order=r,q');
+    const rows=v.gm?await dbJson(table+'?'+scope(v)+'&select='+columns+'&order=r,q'):await dbJson('rpc/read_adventure_player_figures',{method:'POST',body:JSON.stringify({p_map_id:v.map.id,p_session_id:v.session})});
     if(view!==v||v.version!==version)return;
     v.rows=rows; v.ready=true;
     v.layer.toggleAttribute('data-gm',v.gm);
@@ -255,7 +297,7 @@ async function arm(row) {
   const session=v.session;
   try {await prepare(v,[row]);} catch {if(view===v)notice('Figurbilden kunde inte laddas.');return;}
   if(view!==v||v.session!==session||!begin(v,row,'armed',null,null))return;
-  v.open=false;renderBoard(v);viewport.scrollIntoView({block:'nearest'});
+  boardOpen=false;renderBoard(v);viewport.scrollIntoView({block:'nearest'});
 }
 board.addEventListener('change',e=>{
   const v=view,field=e.target.dataset.field;
@@ -275,7 +317,7 @@ board.addEventListener('click',e=>{
   }
   const row=v.rows.find(r=>r.id===e.target.closest('[data-instance]')?.dataset.instance);
   if(!row)return;
-  if(action==='move'){void arm(row);return;}
+  if(action==='move'){selectPiece(v,row.id);void arm(row);return;}
   const url=table+'?'+scope(v)+'&id=eq.'+row.id+'&select=id',headers={Prefer:'return=representation'};
   void change(v,()=>dbJson(url,action==='remove'?{method:'DELETE',headers}:{method:'PATCH',headers,body:JSON.stringify({player_visible:!row.player_visible})}));
 });
@@ -297,19 +339,33 @@ document.addEventListener('pointerdown',e=>{
   if(!e.isPrimary){if(drag||press)cancel();return;}
   swallowClick=false;
   const v=view;
-  if(!ready(v))return;
+  if(!v?.ready)return;
   const point={clientX:e.clientX,clientY:e.clientY};
+  if(!v.gm){
+    const piece=e.target.closest('[data-figure-id]');
+    if(piece&&v.layer.contains(piece)){e.preventDefault();e.stopPropagation();swallowClick=true;selectPiece(v,piece.dataset.figureId);}
+    return;
+  }
+  if(!ready(v))return;
   if(drag?.mode==='armed'&&viewport.contains(e.target)){
     e.stopPropagation();e.preventDefault();drag.point=point;drag.pointerId=e.pointerId;drag.start=point;
     document.documentElement.setPointerCapture?.(e.pointerId);updatePointer();return;
   }
   const portrait=e.target.closest('.arcane-character-rail [data-character]');
-  const token=e.target.closest('[data-figure-id]');
+  let token=e.target.closest('[data-figure-id]');
+  if(!token&&e.pointerType==='touch'&&viewport.contains(e.target)){
+    let nearest=22;
+    for(const piece of v.pieces.children){
+      const r=piece.getBoundingClientRect(),distance=Math.hypot(e.clientX-(r.left+r.width/2),e.clientY-(r.top+r.height/2));
+      if(distance<nearest){token=piece;nearest=distance;}
+    }
+  }
   const row=portrait?sources('character').find(r=>r.character_id===portrait.dataset.character):
     token&&v.layer.contains(token)?v.rows.find(r=>r.id===token.dataset.figureId):null;
   if(!row)return;
   cancel();e.stopPropagation(); // Ordinary short portrait clicks still open the character sheet.
-  const p=press={v,row,id:e.pointerId,point,start:point};
+  if(token){e.preventDefault();swallowClick=true;closeMapStatusMenu();selectPiece(v,row.id);}
+  const p=press={v,row,token,id:e.pointerId,point,start:point};
   p.timer=setTimeout(()=>lift(p),170);
 },true);
 document.addEventListener('dragstart',e=>{if(press||drag)e.preventDefault();},true);
@@ -324,7 +380,10 @@ document.addEventListener('pointermove',e=>{
   drag.point=point;updatePointer();
 },true);
 document.addEventListener('pointerup',e=>{
-  if(press?.id===e.pointerId)stopPress();
+  if(press?.id===e.pointerId){
+    if(press.token){e.stopPropagation();e.preventDefault();swallowClick=true;notice(press.row.name+' vald');}
+    stopPress();
+  }
   if(!drag||e.pointerId!==drag.pointerId)return;
   e.stopPropagation();e.preventDefault();swallowClick=true;
   drag.point={clientX:e.clientX,clientY:e.clientY};updatePointer();if(drag)persist();
@@ -340,3 +399,6 @@ new MutationObserver(updatePointer).observe(document.getElementById('mapCanvas')
 new MutationObserver(()=>{if(page.classList.contains('hidden'))close();}).observe(page,{attributes:true,attributeFilter:['class']});
 window.aleaAdventureFigures=Object.freeze({sync,refresh,sessionChanged,setGeometry,geometryError,close,toggle});
 if(typeof activeCampaignMap!=='undefined' && !page.classList.contains('hidden'))renderMapPanel();
+
+const header=document.querySelector('.alea-app-header');
+if(header)new ResizeObserver(()=>page.style.setProperty('--adventure-header',header.offsetHeight+'px')).observe(header);
