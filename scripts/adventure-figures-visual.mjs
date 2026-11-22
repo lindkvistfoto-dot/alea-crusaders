@@ -31,7 +31,7 @@ for(const mobile of [false,true]){
   const session={id:crypto.randomUUID(),campaign_id:map.campaign_id,status:'active'};
   const rows=[], requests=[];
   const enemy={id:crypto.randomUUID(),name:'Kryptväktare',active:true},npc={id:crypto.randomUUID(),name:'Vägvisaren',active:true};
-  chars=heroes.map(x=>({_dbId:x.id,name:x.name,isNpc:false,identity:{namn:x.name},ownerId:'fixture'}));
+  chars=heroes.map(x=>({id:x.id,_dbId:x.id,name:x.name,isNpc:false,live:{KP:12,KPmax:12,PSY:10,PSYmax:10},identity:{namn:x.name},ownerId:'fixture'}));
   campaignNpcs=[npc];campaignMonsters=[enemy];campaignMaps=[map];centralCampaignId=map.campaign_id;centralCampaignRole='gm';
   const config={version:1,darkness:0,pixelsPerMeter:25,lights:[],geometry:[],freeSight:null};
   const room={id:crypto.randomUUID(),location_id:crypto.randomUUID(),name:'Kryptan',status:'explored',shape_type:'rect',shape_data:{x:0,y:0,width:800,height:680}};
@@ -80,6 +80,8 @@ for(const mobile of [false,true]){
  if(!mobile){
   const rail=page.getByRole('button',{name:'Visa Astrid Eldhjärta',exact:true});
   const start=async()=>{await rail.waitFor({state:'visible'});const [x,y]=await rail.evaluate(b=>{const r=b.getBoundingClientRect();return [r.x+r.width/2,r.y+r.height/2]});await page.mouse.move(x,y);await page.mouse.down();await page.locator('.adventure-figure-ghost').waitFor({state:'attached'});};
+  await rail.click();await page.locator('.arcane-character-drawer.is-open').waitFor();
+  await page.keyboard.press('Escape');await page.locator('.arcane-character-drawer.is-open').waitFor({state:'detached'});
   await start();
   await page.mouse.move(...await point(4,6));await page.locator('[data-cell="4,6"]:not([data-fading])').waitFor();
   assert.ok(await page.locator('.adventure-figure-ghost').innerHTML().then(h=>h.includes('0523350e')&&h.includes('59d0c314')));
@@ -94,8 +96,12 @@ for(const mobile of [false,true]){
   await page.waitForFunction(id=>fixture.rows.length===1&&fixture.rows[0].q===3&&fixture.rows[0].id===id,id);
   await start();await page.mouse.move(...await point(4,6));await page.keyboard.press('Escape');await page.mouse.up();assert.equal(await page.evaluate(()=>fixture.rows[0].q),3);
   await start();await page.mouse.move(4,4);await page.mouse.up();assert.equal(await page.evaluate(()=>fixture.rows.length),1);
+  await page.mouse.move(...await point(3,7));await page.mouse.down();await page.mouse.move(...await point(4,7),{steps:6});await page.mouse.up();
+  await page.waitForFunction(id=>fixture.rows[0].id===id && fixture.rows[0].q===4,id);
  }else{await arm('Astrid Eldhjärta','character');await touch(3,7);await verifyCount(1);}
  await arm('Lyra Gråväv','character');await touch(5,5);await verifyCount(2);
+ await arm('Evalin Hugger','character');await touch(5,5);
+ assert.equal(await page.evaluate(()=>fixture.rows.length),2);
  await arm('Evalin Hugger','character');await touch(1,8);await verifyCount(3);
  await arm('Vägvisaren','npc',false);await touch(2,6);await verifyCount(4);
  await arm('Kryptväktare','monster');await touch(3,5);await verifyCount(5);

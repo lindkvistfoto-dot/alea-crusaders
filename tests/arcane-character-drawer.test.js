@@ -34,7 +34,7 @@ describe('ARCANE character drawer',()=>{
   expect(component).not.toMatch(/<input|onchange=|onupload|type=["']file/i);
  });
  it('supports character switching, tab navigation, arrows and horizontal swipe',()=>{
-  expect(component).toContain('toggleCharacter(b.dataset.character)');
+  expect(component).toMatch(/toggleCharacter\(\w+\.dataset\.character\)/);
   expect(component).toContain('function isNonHomePageVisible()');
   expect(component).toContain('window.aleaCharacterDrawerRefresh=refresh');
   expect(read('legacy/app.js')).toContain('window.aleaCharacterDrawerRefresh?.()');

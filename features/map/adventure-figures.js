@@ -25,7 +25,7 @@ function scope(v) {
 function sourceField(row) { return sourceFields.find(field => row[field]); }
 function actor(row, prefix = 'map') {
   const field = sourceField(row);
-  return { id: prefix+'-'+(row.id || row[field]), source_id:row[field], name_snapshot:row.name,
+  return { id: prefix+'-'+(row.character_id || row.id || row[field]), source_id:row[field], name_snapshot:row.name,
     source_type: field === 'monster_id' ? 'monster' : field === 'npc_id' ? 'npc' : 'character',
     side:field === 'monster_id' ? 'enemies' : field === 'character_id' ? 'heroes' : 'neutral',
     race:row.race, gender:row.gender };
@@ -41,26 +41,36 @@ function sources(category) {
 function tokenArt(row, width, prefix) { return art()?.renderAdventureToken(actor(row,prefix),width) || ''; }
 function renderPieces(v, landingId) {
   const rows = v.pending ? [...v.rows.filter(r=>r.id!==v.pending.id), v.pending] : v.rows;
-  v.pieces.replaceChildren();
-  if (!v.grid) return;
-  // A figure farther down the map stands in front of its northern neighbour.
+  if (!v.grid) { v.pieces.replaceChildren();return; }
+  const remaining=new Map([...v.pieces.children].map(el=>[el.dataset.pieceKey,el]));
+  let previous=null;
+  // Depth order and stable DOM identity survive the server acknowledgement,
+  // including the first hero upsert where the server allocates its row ID.
   for (const row of rows.slice().sort((a,b)=>a.r-b.r || a.q-b.q)) {
     const [x,y] = hexCenter(v.grid,row.q,row.r), w = v.grid.width;
-    const piece = svg('g',{'data-figure-id':row.id,transform:'translate('+x+' '+y+')'});
-    const title=svg('title'); title.textContent=row.name+(row.player_visible?'':' · dold för spelarna');
-    piece.append(title);
-    const face = svg('g'), drawing = tokenArt(row,w);
-    if (drawing) face.innerHTML = drawing;
-    else { const label=svg('text',{'text-anchor':'middle',fill:'ivory','font-size':w*.2}); label.textContent=row.name; face.append(label); }
-    piece.append(svg('ellipse',{cx:0,cy:-.17*w,rx:w*.48,ry:w*.59,fill:'transparent'}),face);
-    if (!row.player_visible) {
-      piece.dataset.concealed = '';
-      piece.append(svg('circle',{class:'figure-secret',cx:w*.37,cy:w*.17,r:w*.065}));
+    const key=row.character_id||row.id, drawing=tokenArt(row,w,row.character_id?'hero':'map');
+    const piece=remaining.get(key)||svg('g',{'data-piece-key':key});
+    remaining.delete(key);
+    piece.dataset.figureId=row.id;
+    piece.setAttribute('transform','translate('+x+' '+y+')');
+    const signature=[row.name,row.player_visible,w,drawing].join('|');
+    if(piece.artSignature!==signature){
+      piece.artSignature=signature;
+      const title=svg('title'); title.textContent=row.name+(row.player_visible?'':' · dold för spelarna');
+      const face = svg('g',{'data-face':''});
+      if (drawing) face.innerHTML = drawing;
+      else { const label=svg('text',{'text-anchor':'middle',fill:'ivory','font-size':w*.2}); label.textContent=row.name; face.append(label); }
+      piece.replaceChildren(title,svg('ellipse',{cx:0,cy:-.17*w,rx:w*.48,ry:w*.59,fill:'transparent'}),face);
+      piece.toggleAttribute('data-concealed',!row.player_visible);
+      if (!row.player_visible) piece.append(svg('circle',{class:'figure-secret',cx:w*.37,cy:w*.17,r:w*.065}));
     }
-    v.pieces.append(piece);
+    const next=previous?previous.nextElementSibling:v.pieces.firstElementChild;
+    if(piece!==next)v.pieces.insertBefore(piece,next);
+    previous=piece;
     if (row.id===landingId && !matchMedia('(prefers-reduced-motion: reduce)').matches)
-      face.animate([{transform:'translateY(-8px) scale(1.08)'},{transform:'translateY(0) scale(.98)',offset:.75},{transform:'scale(1)'}],{duration:185,easing:'ease-out'});
+      piece.querySelector('[data-face]').animate([{transform:'translateY(-8px) scale(1.08)'},{transform:'translateY(0) scale(.98)',offset:.75},{transform:'scale(1)'}],{duration:185,easing:'ease-out'});
   }
+  for(const el of remaining.values())el.remove();
 }
 function toolPanel(v) {
   if (v.session===undefined) return '<p>Läser spelmötet…</p>';
@@ -228,7 +238,7 @@ function persist() {
   cancel();if(!cell||!ready(v))return;
   const position={q:cell.q,r:cell.r},headers={Prefer:'return=representation'};
   const query=table+'?'+scope(v)+'&id=eq.'+row.id+'&select=id';
-  const record={...row,...position,id:row.id||crypto.randomUUID()};
+  const record={player_visible:true,...row,...position,id:row.id||crypto.randomUUID()};
   if(row.id)void change(v,()=>dbJson(query,{method:'PATCH',headers,body:JSON.stringify(position)}),record);
   else {
     const body={...row,...position,campaign_id:v.campaign,session_id:v.session,map_id:v.map.id};
