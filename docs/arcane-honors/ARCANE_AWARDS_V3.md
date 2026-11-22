@@ -20,3 +20,14 @@ All three records are 2048 × 2048 and preserve true alpha. The fixed assets hav
 - Award image upload and replacement continue through the existing HERMES ALEA `definition` target. Activation updates the reference only after upload verification succeeds; a failed upload leaves the old reference intact.
 - Existing relief rows and legacy frame metadata are retained in storage. They are not exposed as award configuration and are not deleted by this change.
 - No database migration or asset deletion is included. HERMES CORE created the three missing LIVE registry rows and immutable Storage objects; it changed no grant, definition, or history rows.
+
+## Shared award mounting
+
+The same `ArcaneAwardRenderer` mount is used in administration previews and the Trophy Room. The motif is inset to 80% of the frame diameter; the fixed colored diamond and round gem assets sit above the motif and below the frame. A tinted crown background is aligned beneath the round gem. New HERMES ALEA award uploads are color-sampled in the browser, mapped to the existing accent palette, and saved in the existing `badge_frame_assets.accent_color` JSON metadata. Existing images without accent metadata are sampled on their first admin preview, so they do not need to be uploaded again. No award-specific image controls or schema changes are added.
+
+The existing HERMES CORE DEV gem family is resolved by these asset key patterns:
+
+- `arcane-award-gem-diamond-{red,blue,green,yellow,orange,purple,pink,turquoise,cyan,black,white,brown,light-gray,dark-gray,amber}`
+- `arcane-award-gem-round-{red,blue,green,yellow,orange,purple,pink,turquoise,cyan,black,white,brown,light-gray,dark-gray,amber}`
+
+Gem originals and color variants are already registered in DEV. The crown fill is a small CSS layer beneath the round gem asset, not a separate image file. This visual correction does not publish additional assets to LIVE.
