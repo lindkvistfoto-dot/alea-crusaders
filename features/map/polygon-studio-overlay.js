@@ -1,0 +1,568 @@
+// Kartakademin owns the viewport and its pan/ruler gestures. Rooms use the same
+// SVG coordinate system as the other tools, including at fractional zoom.
+import {
+  areaPoints, hitPolygons, insertSharedVertex, mapPointer, mapScreenScale,
+  movePreparedVertices, nearestEdge, planVertexRemoval, polygonsOverlap, prepareVertexMove,
+  snapPoint, validPolygon
+} from './polygon-edit-geometry.js';
+import { findHoles, gapRepairCandidates } from './polygon-topology.js';
+import { edgeGapRepair } from './polygon-edge-gap.js';
+
+const ns = 'http://www.w3.org/2000/svg';
+function node(tag, attrs = {}) {
+  const element = document.createElementNS(ns, tag);
+  for (const [attr, value] of Object.entries(attrs)) element.setAttribute(attr, value);
+  return element;
+}
+const coords = points => points.map(p => p.join(',')).join(' ');
+const equalPoint = (a, b) => a[0] === b[0] && a[1] === b[1];
+
+export function createPolygonOverlay({
+  svg, map, getAreas, getWalls = () => [], isActive, isVisible = () => true,
+  onSelect = () => {}, onChange = () => {}, onNotice = () => {}, onCreate, onGeometry, confirmBoundaryRemoval
+}) {
+  const events = new AbortController();
+  const options = { signal: events.signal };
+  const layer = node('g', { id: 'mapAreaRoomLayer' });
+  const rooms = node('g'), handles = node('g'), gapLayer = node('g', { 'pointer-events': 'none' });
+  const preview = node('g', { 'pointer-events': 'none' });
+  const roomNodes = new Map();
+  layer.append(rooms, gapLayer, handles, preview);
+  svg.prepend(layer);
+  let mode = 'select', selectedId = null, vertexIndex = null, candidateIds = [];
+  let draft = [], gap = null, drag = null, pointerStart = null, hover = null;
+  let repairOptions = [], repair = null, choosingEdges = false, sourceEdge = null, targetEdge = null;
+  let previousAreas, shapes = [], gaps, busy = false, disposed = false;
+  let suppressClick = false;
+  let affectedIds = [];
+  const selected = () => shapes.find(shape => shape.id === selectedId);
+  const state = () => ({
+    mode, selectedId, vertexIndex, candidateIds: [...candidateIds], affectedIds: [...affectedIds],
+    gapSelected: !!gap, gapTargetId: repair?.id ?? null, gapTargetIds: repairOptions.map(option => option.id),
+    choosingEdges, sourceId: sourceEdge?.id, targetId: targetEdge?.id,
+    draftCount: draft.length, canFinish: !busy && (mode === 'draw' ? draft.length >= 3 : !!repair),
+    pending: busy || !!drag || !!sourceEdge || !!gap || !!draft.length, dragging: !!drag
+  });
+  function changed() { if (!disposed) onChange(state()); }
+  function refreshShapes() {
+    const areas = getAreas();
+    if (previousAreas === areas) return;
+    const oldVertex = selected()?.points[vertexIndex];
+    previousAreas = areas;
+    shapes = areas.map(area => ({ id: area.id, points: areaPoints(area) }));
+    gaps = undefined;
+    // A conflict reload invalidates proposals built against the old boundary.
+    clearGap();
+    if (oldVertex && (!selected()?.points[vertexIndex] || !equalPoint(oldVertex, selected().points[vertexIndex]))) {
+      vertexIndex = null;
+      affectedIds = [];
+    }
+    if (selectedId && !selected()) {
+      selectedId = null;
+      vertexIndex = null;
+      candidateIds = [];
+      affectedIds = [];
+    }
+  }
+  function marker(group, point, size, scale, attrs) {
+    const circle = node('ellipse', {
+      cx: point[0], cy: point[1], rx: size / scale.scaleX, ry: size / scale.scaleY,
+      'vector-effect': 'non-scaling-stroke', ...attrs
+    });
+    group.append(circle);
+    return circle;
+  }
+  function paintRooms() {
+    const active = isActive(), highlighted = repair?.id ?? sourceEdge?.id ?? selectedId;
+    const remaining = new Set(roomNodes.keys());
+    for (const shape of shapes) {
+      remaining.delete(shape.id);
+      let polygon = roomNodes.get(shape.id);
+      if (!polygon) {
+        polygon = node('polygon', { 'data-area-id': shape.id });
+        roomNodes.set(shape.id, polygon);
+        rooms.append(polygon);
+      }
+      const points = coords(shape.points);
+      if (polygon.getAttribute('points') !== points) polygon.setAttribute('points', points);
+      polygon.setAttribute('class', ['map-editor-zone', !active ? 'reference' :
+        shape.id === highlighted ? 'selected' : affectedIds.includes(shape.id) ? 'studio-neighbour' : ''].join(' '));
+    }
+    for (const id of remaining) { roomNodes.get(id).remove(); roomNodes.delete(id); }
+    // The selected contour stays visible when a later room shares an edge.
+    if (active && roomNodes.has(highlighted)) rooms.append(roomNodes.get(highlighted));
+  }
+  function paintHandles(points = selected()?.points, selectedIndex = vertexIndex) {
+    if (!isActive() || !points || !['edit', 'select'].includes(mode)) { handles.replaceChildren(); return; }
+    const scale = mapScreenScale(svg);
+    while (handles.childElementCount > points.length) handles.lastElementChild.remove();
+    points.forEach((point, index) => {
+      const active = index === selectedIndex, size = active ? 6 : mode === 'edit' ? 5 : 3;
+      // Keep handle elements stable during a drag. Pointer hit tests use a
+      // larger CSS-pixel radius than the visible marker.
+      let glyph = handles.children[index];
+      if (!glyph) glyph = marker(handles, point, size, scale, { 'data-vertex-index': index, style: 'pointer-events:none' });
+      const attrs = { cx: point[0], cy: point[1], rx: size / scale.scaleX, ry: size / scale.scaleY,
+        class: 'map-editor-vertex' + (active ? ' active' : '') };
+      for (const [key, value] of Object.entries(attrs)) {
+        if (glyph.getAttribute(key) !== String(value)) glyph.setAttribute(key, value);
+      }
+    });
+  }
+  function paintGaps() {
+    gapLayer.replaceChildren();
+    if (!isActive() || mode !== 'fill') return;
+    if (repair) {
+      // A subpixel-wide patch remains visible over the full proposed room.
+      gapLayer.append(node('polygon', { 'data-gap-repair-id': repair.id, points: coords(repair.points),
+        fill: '#ffd36a36', stroke: '#ffd36a', 'stroke-width': 3, 'vector-effect': 'non-scaling-stroke' }));
+    }
+    if (choosingEdges) {
+      for (const [edge, name] of [[sourceEdge, 'source'], [targetEdge, 'target']]) {
+        if (!edge) continue;
+        const points = shapes.find(s => s.id === edge.id).points;
+        gapLayer.append(node('polyline', { ['data-seam-' + name]: edge.id,
+          points: coords([points[edge.index], points[(edge.index + 1) % points.length]]),
+          stroke: name === 'source' ? '#ffd36a' : '#def9ff', 'stroke-width': 5, 'vector-effect': 'non-scaling-stroke' }));
+      }
+    } else gaps ??= findHoles(shapes.map(shape => shape.points));
+    const visibleGaps = choosingEdges ? (gap ? [gap] : []) : gaps;
+    for (const [index, hole] of visibleGaps.entries()) {
+      // A real gap may be only a fraction of a map pixel wide. Give its exact
+      // boundary a fixed-width visible outline, including when zoomed out.
+      const active = hole === gap;
+      const candidate = node('polygon', { points: coords(hole.points), 'data-gap-candidate': index,
+        'vector-effect': 'non-scaling-stroke', fill: active ? '#28e7f0ab' : '#2bcde044',
+        stroke: active ? '#72fbff' : '#38bac3', 'stroke-width': active ? 5 : 3,
+        opacity: gap && !active ? .18 : 1 });
+      if (active) candidate.dataset.gapPreview = '';
+      gapLayer.append(candidate);
+    }
+  }
+  function paintPreview() {
+    preview.replaceChildren();
+    if (!isActive()) return;
+    const scale = mapScreenScale(svg);
+    if (mode === 'draw' && draft.length) {
+      const line = hover ? [...draft, hover.point] : draft;
+      preview.append(node(line.length > 2 ? 'polygon' : 'polyline',
+        { class: 'map-editor-draft', points: coords(line) }));
+      draft.forEach((point, index) => marker(preview, point, index ? 3.5 : 6, scale,
+        { class: 'map-editor-point', 'data-draft-vertex': index }));
+    }
+    if (hover?.snap) {
+      if (hover.snap.kind === 'edge') {
+        const { id, index } = hover.snap;
+        const points = id === 'draft' ? draft : (shapes.find(s => s.id === id) ?? getWalls().find(w => w.id === id))?.points;
+        if (points?.[index]) preview.append(node('polyline', { points: coords([points[index], points[(index + 1) % points.length]]),
+          fill: 'none', stroke: '#45f3dc', 'stroke-width': 3, 'vector-effect': 'non-scaling-stroke' }));
+      }
+      marker(preview, hover.point, 9, scale, { fill: 'none', stroke: '#45f3dc', 'stroke-width': 3,
+        'data-snap-kind': hover.snap.kind });
+      marker(preview, hover.point, 2.2, scale, { fill: '#45f3dc' });
+    }
+  }
+  function render() {
+    if (disposed) return;
+    refreshShapes();
+    layer.style.display = isVisible() ? '' : 'none';
+    layer.style.pointerEvents = isActive() ? 'auto' : 'none';
+    layer.dataset.polygonTool = mode;
+    paintRooms();
+    paintGaps();
+    paintHandles();
+    if (drag?.changes.length) paintDrag();
+    paintPreview();
+  }
+  function paintDrag() {
+    for (const { id, points } of drag.changes) {
+      roomNodes.get(id)?.setAttribute('points', coords(points));
+      if (id === selectedId) paintHandles(points, drag.prepared.find(item => item.id === id)?.index);
+    }
+  }
+  function releaseDrag() {
+    if (!drag) return;
+    const pointerId = drag.pointerId;
+    drag = null;
+    if (svg.hasPointerCapture(pointerId)) svg.releasePointerCapture(pointerId);
+  }
+  function clearGap() {
+    gap = null;
+    repairOptions = [];
+    repair = null;
+    choosingEdges = false;
+    sourceEdge = targetEdge = null;
+  }
+  function setGapTarget(id) {
+    if (busy || !isActive() || !gap || mode !== 'fill' || choosingEdges) return;
+    const option = repairOptions.find(candidate => candidate.id === id);
+    if (!option) return;
+    repair = option;
+    paintRooms();
+    paintGaps();
+    changed();
+  }
+  function startEdgeRepair() {
+    if (busy || !isActive() || mode !== 'fill') return;
+    const start = !choosingEdges;
+    clearGap();
+    choosingEdges = start;
+    onNotice('');
+    render();
+    changed();
+  }
+  function clearPreview() {
+    releaseDrag();
+    draft = [];
+    clearGap();
+    hover = null;
+    pointerStart = null;
+    affectedIds = [];
+    vertexIndex = null;
+  }
+  function setMode(next) {
+    if (busy || !['select', 'edit', 'draw', 'fill'].includes(next)) return;
+    clearPreview();
+    candidateIds = [];
+    mode = next;
+    onNotice('');
+    render();
+    changed();
+  }
+  function select(id, candidates = []) {
+    if (busy || drag) return;
+    refreshShapes();
+    selectedId = shapes.some(shape => shape.id === id) ? id : null;
+    candidateIds = candidates;
+    vertexIndex = null;
+    affectedIds = [];
+    hover = null;
+    onSelect(selectedId, candidateIds);
+    render();
+    changed();
+  }
+  function cancel() {
+    if (busy) return;
+    if (drag) suppressClick = true;
+    clearPreview();
+    onNotice('');
+    render();
+    changed();
+  }
+  function invalid(changes, adding = false) {
+    const proposed = new Map(changes.map(change => [change.id, change.points]));
+    const all = adding ? [...shapes, ...changes] : shapes;
+    return changes.some(({ id, points }) => !validPolygon(points) || all.some(other =>
+      other.id !== id && polygonsOverlap(points, proposed.get(other.id) ?? other.points)));
+  }
+  async function persist(changes, operation) {
+    if (!changes.length || busy) return false;
+    if (invalid(changes)) {
+      onNotice('Punktändringen skulle ge en ogiltig polygon eller en överlappning.');
+      return false;
+    }
+    busy = true;
+    changed();
+    try {
+      return await onGeometry(changes, operation);
+    } catch (error) {
+      onNotice(error.message);
+      return false;
+    } finally {
+      busy = false;
+      render();
+      changed();
+    }
+  }
+  async function finish() {
+    refreshShapes();
+    if (!isActive() || busy || !state().canFinish) { render(); changed(); return false; }
+    if (mode === 'fill') {
+      const { id, points } = repair;
+      if (!await persist([{ id, points }], 'repair') || disposed) return false;
+      clearPreview();
+      select(id);
+      return true;
+    }
+    const points = draft;
+    if (invalid([{ id: Symbol(), points }], true)) {
+      onNotice('Kontrollera hörnen. Polygonen korsar sig själv, saknar yta eller överlappar ett rum.');
+      return false;
+    }
+    busy = true;
+    changed();
+    try {
+      const id = await onCreate(points.map(p => p.slice()));
+      if (!id || disposed) return false;
+      busy = false;
+      clearPreview();
+      mode = 'edit';
+      select(id);
+      return true;
+    } catch (error) {
+      onNotice(error.message);
+      return false;
+    } finally {
+      busy = false;
+      render();
+      changed();
+    }
+  }
+  function popPoint() {
+    if (busy || !isActive() || mode !== 'draw' || !draft.length) return false;
+    draft.pop();
+    hover = null;
+    paintPreview();
+    changed();
+    return true;
+  }
+  function snapAt(point, excludePoint) {
+    const targets = [...shapes, ...getWalls()];
+    if (mode === 'draw' && draft.length) targets.push({ id: 'draft', closed: false, points: draft });
+    const snap = snapPoint(point, targets, { ...mapScreenScale(svg), tolerance: 13, excludePoint, excludeIds: drag?.movingIds });
+    return { point: snap?.point ?? point, snap };
+  }
+  function localPoint(event, clamp = false) {
+    const point = mapPointer(event, svg);
+    if (!point) return null;
+    if (clamp) return [Math.max(0, Math.min(map.width, point[0])), Math.max(0, Math.min(map.height, point[1]))];
+    return point[0] >= 0 && point[1] >= 0 && point[0] <= map.width && point[1] <= map.height ? point : null;
+  }
+  function nearestHandle(point, points, scale, radius) {
+    let index = null, distance = radius;
+    points.forEach(([x, y], i) => {
+      const d = Math.hypot((point[0] - x) * scale.scaleX, (point[1] - y) * scale.scaleY);
+      if (d <= distance) { distance = d; index = i; }
+    });
+    return index;
+  }
+  function selectAt(point) {
+    const ids = hitPolygons(point, shapes, { ...mapScreenScale(svg), tolerance: 3 });
+    // Repeated clicks cycle through the exact same hit stack. The panel also
+    // exposes every candidate so a user can pick directly by name.
+    const same = ids.length === candidateIds.length && ids.every((id, i) => id === candidateIds[i]);
+    const next = same && ids.length ? (ids.indexOf(selectedId) + 1) % ids.length : 0;
+    select(ids[next] ?? null, ids);
+  }
+  function pickSeamEdge(point, touch) {
+    const eligible = shapes.filter(shape => shape.id !== sourceEdge?.id && shape.points.length >= 3);
+    const scale = mapScreenScale(svg), inside = new Set(hitPolygons(point, eligible, scale));
+    const edges = eligible.map(shape => ({ id: shape.id, ...nearestEdge(point, shape.points, scale) }))
+      .filter(edge => edge.distance <= (touch ? 20 : 12))
+      .sort((a, b) => Number(inside.has(b.id)) - Number(inside.has(a.id)) ||
+        a.distance - Number(a.id === selectedId) - b.distance + Number(b.id === selectedId));
+    const edge = edges[0];
+    repair = null;
+    gap = null;
+    targetEdge = null;
+    if (!edge) onNotice(sourceEdge ? 'Klicka närmare grannrummets motstående kant.' : 'Klicka närmare kanten på rummet som ska utökas.');
+    else if (!sourceEdge) {
+      sourceEdge = edge;
+      onNotice('');
+    } else {
+      targetEdge = edge;
+      repair = edgeGapRepair(shapes, sourceEdge, targetEdge);
+      if (repair) gap = { points: repair.patch };
+      onNotice(repair ? '' : 'De två kanterna kan inte bilda en smal, fri glipa. Välj en annan motstående kant.');
+    }
+    paintRooms();
+    paintGaps();
+    changed();
+  }
+  async function insert(point, radius) {
+    const shape = selected();
+    if (!shape) return false;
+    const edge = nearestEdge(point, shape.points, mapScreenScale(svg));
+    if (!edge || edge.distance > radius) return false;
+    const changes = insertSharedVertex(shapes, edge.point);
+    if (changes.length && await persist(changes)) {
+      select(shape.id);
+      vertexIndex = selected()?.points.findIndex(p => equalPoint(p, edge.point)) ?? null;
+      if (vertexIndex === -1) vertexIndex = null;
+      affectedIds = changes.map(change => change.id);
+      render();
+      changed();
+    }
+    return true;
+  }
+  async function removeVertex() {
+    if (busy || mode !== 'edit' || vertexIndex === null || !isActive()) return false;
+    refreshShapes();
+    if (vertexIndex === null) { render(); changed(); return false; }
+    const plan = planVertexRemoval(shapes, selectedId, vertexIndex);
+    if (!plan.changes.length) {
+      const explanation = {
+        minimum: 'Varje berört rum behöver minst tre punkter.',
+        junction: 'Punkten är en knut där gränser möts. Den behövs för att rummen ska ansluta.',
+        invalid: 'Punkten behövs för att behålla en giltig rumsgräns utan överlappning.'
+      };
+      onNotice(explanation[plan.reason]);
+      return false;
+    }
+    if (plan.straightensSharedBoundary) {
+      const snapshot = previousAreas, roomId = selectedId, index = vertexIndex;
+      if (!await confirmBoundaryRemoval(plan.changes.map(change => change.id), index) || disposed) return false;
+      if (snapshot !== getAreas() || roomId !== selectedId || index !== vertexIndex || !isActive()) {
+        vertexIndex = null;
+        affectedIds = [];
+        render();
+        onNotice('Kartan eller markeringen har ändrats. Välj punkten på nytt.');
+        changed();
+        return false;
+      }
+    }
+    if (!await persist(plan.changes, 'remove-vertex')) return false;
+    vertexIndex = null;
+    affectedIds = [];
+    render();
+    changed();
+    return true;
+  }
+  svg.addEventListener('pointerdown', event => {
+    if (!isActive() || busy || event.button !== 0) return;
+    if (!event.isPrimary) {
+      if (event.pointerType === 'touch' && pointerStart) {
+        releaseDrag();
+        pointerStart = null;
+        hover = null;
+        suppressClick = true;
+        render();
+        changed();
+      }
+      return;
+    }
+    suppressClick = false;
+    const point = localPoint(event);
+    if (!point) return;
+    pointerStart = { id: event.pointerId, x: event.clientX, y: event.clientY, touch: event.pointerType === 'touch' };
+    if (mode !== 'edit' || !selected()) return;
+    const index = nearestHandle(point, selected().points, mapScreenScale(svg), pointerStart.touch ? 18 : 12);
+    if (index === null) return;
+    vertexIndex = index;
+    const origin = selected().points[index], prepared = prepareVertexMove(shapes, origin);
+    affectedIds = prepared.map(item => item.id);
+    drag = { pointerId: event.pointerId, origin, prepared, movingIds: new Set(affectedIds), changes: [], moved: false };
+    hover = null;
+    suppressClick = true;
+    svg.setPointerCapture(event.pointerId);
+    event.preventDefault();
+    onNotice('');
+    render();
+    changed();
+  }, options);
+  function moveDrag(event) {
+    if (!drag.moved && Math.hypot(event.clientX - pointerStart.x, event.clientY - pointerStart.y) <
+        (pointerStart.touch ? 8 : 4)) return;
+    const point = localPoint(event, true);
+    if (!point) return;
+    drag.moved = true;
+    hover = snapAt(point, drag.origin);
+    drag.changes = movePreparedVertices(drag.prepared, hover.point);
+    paintDrag();
+    paintPreview();
+  }
+  svg.addEventListener('pointermove', event => {
+    if (disposed || busy || !isActive() || !event.isPrimary) return;
+    if (drag?.pointerId === event.pointerId) { moveDrag(event); return; }
+    if (event.buttons || mode !== 'draw') return;
+    const point = localPoint(event);
+    hover = point ? snapAt(point) : null;
+    paintPreview();
+  }, options);
+  svg.addEventListener('pointerleave', () => { if (!drag) { hover = null; paintPreview(); } }, options);
+  svg.addEventListener('pointerup', async event => {
+    if (!pointerStart || event.pointerId !== pointerStart.id) return;
+    if (drag?.pointerId === event.pointerId) {
+      if (isActive()) moveDrag(event);
+      const { changes, moved, origin } = drag;
+      const destination = hover?.point;
+      releaseDrag();
+      pointerStart = null;
+      hover = null;
+      if (isActive() && moved && destination && !equalPoint(origin, destination)) {
+        // Materialize a target edge in the same transaction as moving the node.
+        const movedIds = new Set(changes.map(change => change.id));
+        const joined = insertSharedVertex(shapes.filter(shape => !movedIds.has(shape.id)), destination);
+        const saved = await persist([...changes, ...joined]);
+        if (saved) {
+          vertexIndex = selected()?.points.findIndex(point => equalPoint(point, destination)) ?? null;
+          if (vertexIndex === -1) vertexIndex = null;
+          affectedIds = [...movedIds, ...joined.map(item => item.id)];
+        }
+      }
+      render();
+      changed();
+    } else {
+      suppressClick = Math.hypot(event.clientX - pointerStart.x, event.clientY - pointerStart.y) >
+        (pointerStart.touch ? 8 : 4);
+      pointerStart = null;
+    }
+  }, options);
+  for (const type of ['pointercancel', 'lostpointercapture']) svg.addEventListener(type, event => {
+    if (drag?.pointerId !== event.pointerId && pointerStart?.id !== event.pointerId) return;
+    if (drag) releaseDrag();
+    pointerStart = null;
+    suppressClick = true;
+    hover = null;
+    render();
+    changed();
+  }, options);
+  svg.addEventListener('click', async event => {
+    if (!isActive() || busy || event.button !== 0 || (event.detail > 1 && mode === 'draw')) return;
+    if (suppressClick) { suppressClick = false; return; }
+    const point = localPoint(event);
+    if (!point) return;
+    onNotice('');
+    if (mode === 'select') { selectAt(point); return; }
+    if (mode === 'edit') {
+      // Pointerdown selects a handle. Keyboard-generated clicks and automation
+      // can still arrive without a matching pointer gesture.
+      if (selected() && nearestHandle(point, selected().points, mapScreenScale(svg), 12) !== null) return;
+      if (!await insert(point, event.pointerType === 'touch' ? 16 : 9)) selectAt(point);
+      return;
+    }
+    if (mode === 'fill') {
+      if (choosingEdges) { pickSeamEdge(point, event.pointerType === 'touch'); return; }
+      gaps ??= findHoles(shapes.map(shape => shape.points));
+      const scale = mapScreenScale(svg);
+      const direct = hitPolygons(point, gaps.map((hole, id) => ({ id, points: hole.points })));
+      const tolerance = event.pointerType === 'touch' ? 18 : 10;
+      const nearby = gaps.map((hole, id) => ({ id, distance: nearestEdge(point, hole.points, scale).distance }))
+        .filter(hit => hit.distance <= tolerance).sort((a, b) => a.distance - b.distance);
+      gap = gaps[direct[0] ?? nearby[0]?.id] ?? null;
+      repairOptions = gap ? gapRepairCandidates(shapes, gap.points) : [];
+      repair = repairOptions.find(option => option.id === selectedId) ?? repairOptions[0] ?? null;
+      if (repair) onNotice('Guld visar rummets nya gräns. Turkos visar glipan som läggs till.');
+      else if (gap) onNotice('Glipan kan inte förenas med något angränsande rum till en giltig polygon.');
+      else onNotice('Välj en turkos glipa, eller välj två kanter om glipan är öppen.');
+      paintRooms();
+      paintGaps();
+      changed();
+      return;
+    }
+    hover = snapAt(point);
+    if (draft.length >= 3 && equalPoint(hover.point, draft[0])) { await finish(); return; }
+    if (draft.some(vertex => equalPoint(vertex, hover.point))) {
+      onNotice('Det här hörnet finns redan i konturen.');
+      return;
+    }
+    draft.push(hover.point.slice());
+    paintPreview();
+    changed();
+  }, options);
+  svg.addEventListener('dblclick', event => {
+    if (isActive() && mode === 'draw' && !busy) { event.preventDefault(); void finish(); }
+  }, options);
+  const resize = new ResizeObserver(() => { if (!disposed) { paintHandles(); paintPreview(); } });
+  resize.observe(svg);
+  return {
+    render, setMode, setGapTarget, startEdgeRepair, select, cancel, finish, removeVertex, popPoint, get state() { return state(); },
+    destroy() {
+      disposed = true;
+      releaseDrag();
+      events.abort();
+      resize.disconnect();
+      layer.remove();
+    }
+  };
+}

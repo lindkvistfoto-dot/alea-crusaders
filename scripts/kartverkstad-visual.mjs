@@ -6,7 +6,7 @@ import { chromium } from 'playwright';
 const [origin, output, compare] = process.argv.slice(2);
 assert.equal(new URL(origin).hostname, '127.0.0.1');
 await mkdir(output, { recursive: true });
-const browser = await chromium.launch({ channel:'chrome', args:['--enable-unsafe-swiftshader'] });
+const browser = await chromium.launch({ ...(process.env.CHROME_BIN ? {executablePath:process.env.CHROME_BIN} : {channel:'chrome'}), args:['--enable-unsafe-swiftshader'] });
 
 async function openTestMap() {
   const rooms = [
@@ -26,17 +26,18 @@ async function openTestMap() {
   for (const [x,y,w,h] of [[166,112,202,25],[135,176,26,150],[393,176,25,148]]) {
     pen.fillStyle='#b4a78b'; pen.fillRect(x,y,w,h);
   }
-  const site = {id:id(),name:'Fästet'};
+  const campaign = id();
+  const site = {id:id(),campaign_id:campaign,name:'Fästet'};
   const areas = rooms.map(([name,x,y,w,h],index) => {
     pen.fillStyle='#aa9c80'; pen.fillRect(x,y,w,h);
     pen.strokeStyle='#776a51'; pen.lineWidth=4; pen.strokeRect(x+4,y+4,w-8,h-8);
     pen.fillStyle='#352f24'; pen.textAlign='center'; pen.font='18px Georgia';
     pen.fillText(name,x+w/2,y+h/2);
-    const location = {id:id(), name, site_id:site.id, location_key:String(index+1)};
+    const location = {id:id(), name, campaign_id:campaign, site_id:site.id, location_key:String(index+1)};
     campaignLocations.push(location);
     return {id:id(),location_id:location.id,shape_type:'rect',shape_data:{x,y,width:w,height:h}};
   });
-  const map = {id:id(),site_id:site.id,name:'Fästets källare',width:530,height:450};
+  const map = {id:id(),campaign_id:campaign,site_id:site.id,name:'Fästets källare',width:530,height:450};
   campaignSites = [site];
   campaignMaps = [map];
   centralCampaignRole='gm';
@@ -75,7 +76,10 @@ try {
     await page.goto(origin);
     await page.waitForFunction(() => window.aleaKartakademin && typeof openMapAreaEditor === 'function');
     await page.evaluate(openTestMap);
-    await page.locator('#mapAreaList select').first().waitFor();
+    const roomRows = compare === 'baseline'
+      ? '#mapAreaList .map-area-list-row select:visible, #mapAreaList [data-room-id]:visible'
+      : '#mapAreaList [data-room-id]';
+    await page.locator(roomRows).first().waitFor();
     await page.waitForFunction(() => document.querySelector('[data-map-scale]')?.textContent.includes('px/m'));
     await page.screenshot({path:`${output}/${width}x${height}.png`});
     if (compare === 'baseline') return;
@@ -84,7 +88,7 @@ try {
       const widths = Array.from(document.querySelector('.map-area-workspace').children, child=>child.getBoundingClientRect().width);
       return {banner:box('.alea-app-header .bar'), workspace:box('.map-area-workspace'), widths,
         stage:box('.map-area-map-stage'), board:box('#mapAreaImage'), pageWidth:document.documentElement.scrollWidth,
-        rows:Array.from(document.querySelector('.map-area-list-row').children,el=>el.getBoundingClientRect().y)};
+        list:box('#mapAreaList'), rows:[...document.querySelectorAll('#mapAreaList [data-room-id]')].map(el=>el.getBoundingClientRect().toJSON())};
     });
     console.log(width,height,metrics);
     assert.ok(metrics.pageWidth <= width);
@@ -92,7 +96,8 @@ try {
       assert.ok(Math.abs(metrics.banner.x-metrics.workspace.x)<=1 && Math.abs(metrics.banner.width-metrics.workspace.width)<=1,'banner edges');
       assert.ok(Math.abs(metrics.widths[0]*2-metrics.widths[1])<=1 && Math.abs(metrics.widths[0]-metrics.widths[2])<=1,'panel proportions');
       assert.ok(metrics.workspace.bottom<=height+1,'toolbar within viewport');
-      assert.ok(Math.max(...metrics.rows)-Math.min(...metrics.rows)<14,'room controls in one row');
+      assert.equal(metrics.rows.length,4);
+      assert.ok(metrics.rows.every(row=>row.x>=metrics.list.x-1 && row.right<=metrics.list.right+1),'room labels inside panel');
     }
     assert.ok(metrics.board.x>=metrics.stage.x-1 && metrics.board.right<=metrics.stage.right+1 &&
       metrics.board.y>=metrics.stage.y-1 && metrics.board.bottom<=metrics.stage.bottom+1,'map inside frame');
@@ -103,7 +108,7 @@ try {
     assert.ok(await save.evaluate(button=>button.matches(':focus-visible')));
     await save.hover();
     assert.ok(await save.evaluate(button=>button.matches(':hover')));
-    assert.ok(await page.locator('#mapAreaSaveBtn').isDisabled());
+    assert.ok(await page.locator('[data-room-mode=select][aria-pressed=true]').count());
     const help = page.getByRole('button',{name:'Mer information om Rumsverktyg'});
     await help.click();
     await page.getByRole('button',{name:'Stäng information'}).click();

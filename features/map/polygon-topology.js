@@ -1,117 +1,182 @@
-/* Smart Polygon Editor — pure topological helpers (no runtime dependencies). */
-const EPS=1e-5;
-const eq=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1])<EPS;
-const key=p=>p.map(v=>Number(v).toFixed(5)).join(',');
-const edgeKey=(a,b)=>[key(a),key(b)].sort().join('|');
-function area(p){return p.reduce((s,a,i)=>{let b=p[(i+1)%p.length];return s+a[0]*b[1]-b[0]*a[1]},0)/2}
-function onSegment(p,a,b){
- const cross=(b[0]-a[0])*(p[1]-a[1])-(b[1]-a[1])*(p[0]-a[0]);
- const len=Math.hypot(b[0]-a[0],b[1]-a[1]);
- return len>EPS&&Math.abs(cross)/len<EPS&&((p[0]-a[0])*(p[0]-b[0])+(p[1]-a[1])*(p[1]-b[1]))<EPS;
-}
-function inside(p,poly){
- let v=false;
- for(let i=0,j=poly.length-1;i<poly.length;j=i++){
-  const a=poly[i],b=poly[j];
-  if(onSegment(p,a,b)||eq(p,a))return true;
-  if((a[1]>p[1])!==(b[1]>p[1])&&p[0]<(b[0]-a[0])*(p[1]-a[1])/(b[1]-a[1])+a[0])v=!v;
- }
- return v;
-}
-function splitPolygons(polygons){
- const all=polygons.flatMap(p=>p);
- return polygons.map(poly=>{
-  const output=[];
-  for(let i=0;i<poly.length;i++){
-   const a=poly[i],b=poly[(i+1)%poly.length];
-   let extra=all.filter(p=>!eq(p,a)&&!eq(p,b)&&onSegment(p,a,b));
-   let points=[a,...extra].sort((p,q)=>(p[0]-a[0])*(b[0]-a[0])+(p[1]-a[1])*(b[1]-a[1])-((q[0]-a[0])*(b[0]-a[0])+(q[1]-a[1])*(b[1]-a[1])));
-   for(let p of points)if(!output.length||!eq(output[output.length-1],p))output.push(p.slice());
+/* Planar faces in map coordinates. Nothing here changes a stored room. */
+import { polygonsOverlap, signedArea as area, sortedInteriorVertices, validPolygon } from './polygon-edit-geometry.js';
+
+const eq = (a, b) => a[0] === b[0] && a[1] === b[1];
+const key = point => point.join(',');
+const edgeKey = (a, b) => [key(a), key(b)].sort().join('|');
+
+function lowerBoundX(points, x) {
+  let low = 0;
+  let high = points.length;
+  while (low < high) {
+    const mid = Math.floor((low + high) / 2);
+    if (points[mid][0] < x) low = mid + 1;
+    else high = mid;
   }
-  return output;
- });
+  return low;
 }
-function findHoles(polygons){
- const shapes=splitPolygons(polygons.filter(p=>p.length>=3));
- const edges=new Map(),vertices=new Map();
- for(let poly of shapes)for(let i=0;i<poly.length;i++){
-  const a=poly[i],b=poly[(i+1)%poly.length];if(eq(a,b))continue;
-  edges.set(edgeKey(a,b),[a,b]);vertices.set(key(a),a);vertices.set(key(b),b);
- }
- const outgoing=new Map(),half=[];
- for(let [a,b] of edges.values())for(let [from,to] of [[a,b],[b,a]]){
-  let h={from:key(from),to:key(to),seen:false};
-  half.push(h);if(!outgoing.has(h.from))outgoing.set(h.from,[]);
-  outgoing.get(h.from).push(h);
- }
- for(let hs of outgoing.values())hs.sort((a,b)=>{
-  const p=vertices.get(a.from),x=vertices.get(a.to),y=vertices.get(b.to);
-  return Math.atan2(x[1]-p[1],x[0]-p[0])-Math.atan2(y[1]-p[1],y[0]-p[0]);
- });
- const holes=[],signatures=new Set();
- for(let h of half){
-  if(h.seen)continue;
-  const trace=[],visited=new Set();let current=h,closed=false;
-  for(let i=0;i<=half.length;i++){
-   const id=current.from+'>'+current.to;
-   if(visited.has(id)){closed=current===h;break}
-   visited.add(id);trace.push(vertices.get(current.from));
-   const outs=outgoing.get(current.to)||[];
-   const rev=outs.findIndex(x=>x.to===current.from);
-   if(rev<0)break;
-   current=outs[(rev-1+outs.length)%outs.length];
+
+// Split T-junctions using the source vertices themselves, including intermediate
+// points along a shared wall. A near miss must never close an open passage.
+function splitPolygons(polygons) {
+  const unique = new Map();
+  for (const polygon of polygons) {
+    for (const point of polygon) unique.set(key(point), point);
   }
-  for(let id of visited){let entry=half.find(x=>x.from+'>'+x.to===id);if(entry)entry.seen=true}
-  if(!closed||trace.length<3||area(trace)<EPS)continue;
-  // A point just inside the clockwise face: below a rightward horizontal edge.
-  let sample=null;
-  for(let i=0;i<trace.length;i++){
-   const a=trace[i],b=trace[(i+1)%trace.length],len=Math.hypot(b[0]-a[0],b[1]-a[1]);
-   if(len<EPS)continue;
-   const delta=Math.min(.001,len/1000);
-   sample=[(a[0]+b[0])/2-(b[1]-a[1])/len*delta,(a[1]+b[1])/2+(b[0]-a[0])/len*delta];
-   break;
+  const vertices = [...unique.values()].sort((a, b) => a[0] - b[0]);
+  return polygons.map(polygon => {
+    const result = [];
+    for (let i = 0; i < polygon.length; i++) {
+      const a = polygon[i], b = polygon[(i + 1) % polygon.length];
+      if (eq(a, b)) continue;
+      const minX = Math.min(a[0], b[0]), maxX = Math.max(a[0], b[0]);
+      const minY = Math.min(a[1], b[1]), maxY = Math.max(a[1], b[1]);
+      const candidates = [];
+      for (let j = lowerBoundX(vertices, minX); j < vertices.length && vertices[j][0] <= maxX; j++) {
+        const point = vertices[j];
+        if (point[1] >= minY && point[1] <= maxY) candidates.push(point);
+      }
+      result.push(a.slice());
+      for (const point of sortedInteriorVertices(a, b, candidates)) result.push(point.slice());
+    }
+    return result;
+  });
+}
+
+function buildFaceGraph(polygons) {
+  const vertices = new Map();
+  const halfEdges = [];
+  function vertex(point) {
+    const id = key(point);
+    if (!vertices.has(id)) vertices.set(id, { point, neighbors: new Map() });
+    return vertices.get(id);
   }
-  if(!sample||shapes.some(poly=>inside(sample,poly)))continue;
-  const sig=trace.map(key).sort().join(';');if(signatures.has(sig))continue;
-  signatures.add(sig);holes.push({points:trace,area:area(trace)});
- }
- return holes.sort((a,b)=>a.area-b.area);
+  function edge(from, to) {
+    if (!from.neighbors.has(to)) {
+      const a = { from, to }, b = { from: to, to: from, twin: a };
+      a.twin = b;
+      from.neighbors.set(to, a);
+      to.neighbors.set(from, b);
+      halfEdges.push(a, b);
+    }
+    return from.neighbors.get(to);
+  }
+  for (const polygon of polygons) {
+    const positive = area(polygon) > 0;
+    for (let i = 0; i < polygon.length; i++) {
+      const a = vertex(polygon[i]), b = vertex(polygon[(i + 1) % polygon.length]);
+      if (a !== b) (positive ? edge(a, b) : edge(b, a)).occupied = true;
+    }
+  }
+  for (const node of vertices.values()) {
+    const angle = edge => Math.atan2(edge.to.point[1] - node.point[1], edge.to.point[0] - node.point[0]);
+    const outgoing = [...node.neighbors.values()].sort((a, b) => angle(a) - angle(b));
+    // The predecessor of the incoming twin bounds the face on our left.
+    for (let i = 0; i < outgoing.length; i++) {
+      outgoing[i].twin.next = outgoing[(i + outgoing.length - 1) % outgoing.length];
+    }
+  }
+  return halfEdges;
 }
-function mergeHole(polygon,hole){
- if(!polygon||!hole||polygon.length<3||hole.length<3)return null;
- const [a,b]=splitPolygons([area(polygon)<0?[...polygon].reverse():polygon,area(hole)<0?[...hole].reverse():hole]);
- const edges=new Map();
- for(let poly of [a,b])for(let i=0;i<poly.length;i++){
-  const from=poly[i],to=poly[(i+1)%poly.length],id=edgeKey(from,to);
-  if(edges.has(id))edges.delete(id);else edges.set(id,{from,to});
- }
- const remaining=[...edges.values()];
- const output=[],used=new Set();let current=remaining[0];
- if(!current)return null;
- const first=key(current.from);
- for(let i=0;i<=remaining.length;i++){
-  if(!current||used.has(current))return null;
-  used.add(current);output.push(current.from);
-  if(key(current.to)===first)break;
-  const choices=remaining.filter(e=>!used.has(e)&&eq(e.from,current.to));
-  if(choices.length!==1)return null;current=choices[0];
- }
- if(used.size!==remaining.length||output.length<3)return null;
- const result=output.filter((p,i)=>!i||!eq(p,output[i-1]));
- if(Math.abs(area(result)-area(a)-area(b))>Math.max(.01,Math.abs(area(b))*.00001))return null;
- return result;
+
+function findHoles(polygons) {
+  const shapes = splitPolygons(polygons.filter(polygon => polygon.length >= 3));
+  const halfEdges = buildFaceGraph(shapes);
+  const holes = [];
+  for (const start of halfEdges) {
+    if (start.visited) continue;
+    const points = [];
+    let occupied = false;
+    let edge = start;
+    do {
+      edge.visited = true;
+      points.push(edge.from.point);
+      occupied ||= Boolean(edge.occupied);
+      edge = edge.next;
+    } while (edge !== start);
+    if (occupied) continue;
+    const faceArea = area(points);
+    if (faceArea <= 0 || !validPolygon(points)) continue;
+    // A disconnected occupied island has its own edge cycle. Holes in a
+    // single room ring are not representable, so never offer that enclosing face.
+    if (shapes.some(shape => polygonsOverlap(points, shape))) continue;
+    holes.push({ points, area: faceArea });
+  }
+  return holes.sort((a, b) => a.area - b.area);
 }
-function sharedBoundaryLength(polygon,hole){
- const [a,b]=splitPolygons([polygon,hole]);
- const edges=new Set();
- for(let i=0;i<a.length;i++)edges.add(edgeKey(a[i],a[(i+1)%a.length]));
- let total=0;
- for(let i=0;i<b.length;i++){
-  const p=b[i],q=b[(i+1)%b.length];
-  if(edges.has(edgeKey(p,q)))total+=Math.hypot(q[0]-p[0],q[1]-p[1]);
- }
- return total;
+
+// Positively orient both rings. Two adjacent interiors run in opposite
+// directions along every shared segment, including partial edges after noding.
+function jointBoundary(polygon, hole) {
+  const [room, gap] = splitPolygons([polygon, hole]).map(ring => area(ring) < 0 ? ring.reverse() : ring);
+  const boundary = new Map();
+  let sharedLength = 0;
+  let opposite = true;
+  for (const ring of [room, gap]) {
+    for (let i = 0; i < ring.length; i++) {
+      const from = ring[i], to = ring[(i + 1) % ring.length];
+      const id = edgeKey(from, to), previous = boundary.get(id);
+      if (!previous) {
+        boundary.set(id, { from, to });
+        continue;
+      }
+      sharedLength += Math.hypot(to[0] - from[0], to[1] - from[1]);
+      if (!eq(previous.from, to) || !eq(previous.to, from)) opposite = false;
+      boundary.delete(id);
+    }
+  }
+  return { edges: boundary.values(), opposite, sharedLength };
+}
+
+function joinedRing(polygon, hole, joint) {
+  if (!joint.sharedLength || !joint.opposite) return null;
+  const outgoing = new Map();
+  for (const edge of joint.edges) {
+    const id = key(edge.from);
+    if (outgoing.has(id)) return null; // Branch or point contact.
+    outgoing.set(id, edge);
+  }
+  // Keep the edited room's winding and first surviving original corner.
+  const start = polygon.find(point => outgoing.has(key(point))) ?? outgoing.values().next().value?.from;
+  if (!start) return null;
+  const result = [];
+  let current = start;
+  do {
+    const id = key(current), next = outgoing.get(id);
+    if (!next) return null;
+    outgoing.delete(id);
+    result.push(current.slice());
+    current = next.to;
+  } while (!eq(current, start));
+  if (outgoing.size || !validPolygon(result)) return null; // A second boundary needs a multi-ring shape.
+  const expected = Math.abs(area(polygon)) + Math.abs(area(hole));
+  const tolerance = 32 * Number.EPSILON * result.length * expected;
+  if (Math.abs(area(result) - expected) > tolerance) return null;
+  return area(polygon) < 0 ? [result[0], ...result.slice(1).reverse()] : result;
+}
+
+function mergeHole(polygon, hole) {
+  if (!validPolygon(polygon) || !validPolygon(hole) || polygonsOverlap(polygon, hole)) return null;
+  return joinedRing(polygon, hole, jointBoundary(polygon, hole));
+}
+
+function sharedBoundaryLength(polygon, hole) {
+  return jointBoundary(polygon, hole).sharedLength;
+}
+
+// The caller supplies a face from findHoles on this map. Each option replaces
+// exactly one room's geometry; IDs, place links and the neighboring rings stay intact.
+export function gapRepairCandidates(shapes, hole) {
+  if (!validPolygon(hole) || shapes.some(shape => polygonsOverlap(shape.points, hole))) return [];
+  const choices = [];
+  for (const room of shapes) {
+    const joint = jointBoundary(room.points, hole);
+    if (!joint.sharedLength || !validPolygon(room.points)) continue;
+    const points = joinedRing(room.points, hole, joint);
+    if (!points || shapes.some(other => other.id !== room.id && polygonsOverlap(points, other.points))) continue;
+    choices.push({ id: room.id, points, sharedLength: joint.sharedLength });
+  }
+  return choices.sort((a, b) => b.sharedLength - a.sharedLength);
 }
 function moveSharedVertex(polygons,origin,destination){
  return polygons.map(poly=>poly.map(p=>eq(p,origin)?destination.slice():p.slice()));

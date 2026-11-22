@@ -236,3 +236,40 @@
 [data-tool-choice=light] { --tool-art:url('../../assets/spells/arcane-ivory/eld.webp') }
 [data-tool-choice=position] { --tool-art:url('../../assets/arcane/system/v1/icon-person.avif') }
 [data-tool-choice=mask], [data-tool-choice=geometry] { --tool-art:url('../../assets/arcane/system/v1/icon-map.avif') }
+
+#mapAreaEditor .map-area-toolbar { display:flex; flex-direction:column }
+.room-tool-group { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:.2rem }
+#mapAreaEditor .room-tool-group button { padding-inline:.2rem }
+.room-actions { display:flex; flex-wrap:wrap; align-items:center; gap:.3rem; margin-top:.25rem }
+.room-properties { background:#111d17; border:1px solid #786643; padding:.6rem; border-radius:6px }
+.room-properties h4, .room-list-heading { margin:.15rem 0; color:#f2ddb4 }
+.room-properties p { margin:.25rem 0; font-size:.8rem; color:var(--secondary) }
+.room-properties label { display:grid; margin:.45rem 0; gap:.15rem; color:var(--secondary) }
+.room-properties select { min-width:0; width:100% }
+.room-list-heading { margin:.7rem 0 .2rem }
+#mapAreaEditor .room-rows .map-area-list-row {
+  width:100%; display:flex; align-items:center; justify-content:space-between; gap:.5rem;
+  padding:.35rem .45rem; text-align:left; background:transparent; color:var(--ink); cursor:pointer;
+}
+.room-rows .map-area-list-row strong { flex-shrink:0; font-variant-numeric:tabular-nums }
+.room-rows .map-area-list-row span { text-align:right; font-size:.8rem; color:var(--secondary); overflow-wrap:anywhere }
+#mapAreaEditor .room-rows .map-area-list-row[aria-pressed=true] { background:#3b3224; border-left:3px solid #ffdb63; box-shadow:none }
+#mapAreaEditor .room-rows button:hover { background:#253229 }
+#mapAreaEditor .room-properties [data-room-delete] { color:#efb8a4 }
+#mapAreaSvg .map-editor-zone.studio-neighbour { stroke:#5ce3ce; stroke-width:3 }
+@media (max-width:900px) {
+  .map-area-workspace:has([data-mode-button=rooms][aria-selected=true]) {
+    & .map-area-tool-panel, & .kartakademin-center { display:contents }
+    & .kartakademin-mode-nav { order:-8 }
+    & .kartakademin-panel-heading { order:-7 }
+    & .map-area-toolbar { order:-6; margin:0 }
+    & .map-area-notice { order:-5 }
+    & .map-area-map-stage { order:-4; height:clamp(220px,46dvh,480px) }
+    & .kartakademin-center > .kartakademin-footer { order:-3 }
+    & .map-area-list { order:-2 }
+  }
+  #mapAreaEditor .room-tool-group button, #mapAreaEditor .room-rows button, #mapAreaEditor #mapAreaRemoveVertexBtn { min-height:44px }
+}
+
+.room-rows { max-height:24rem; overflow:auto; overscroll-behavior:contain }
+#mapAreaRoomLayer { -webkit-tap-highlight-color:transparent; user-select:none }

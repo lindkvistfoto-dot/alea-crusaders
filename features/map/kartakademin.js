@@ -1,4 +1,6 @@
 import './kartakademin.css';
+import { mountPolygonStudio } from './polygon-studio.js';
+import { mapPointer } from './polygon-edit-geometry.js';
 import { createMask, findSmallSolidIslands, isFree, maskHistory, paintMask, polygonMask, prepareFreeSight, serializeMask } from './kartakademin-mask.js';
 import { FREE_SIGHT_RESET_CONFIRMATION, FREE_SIGHT_RESET_LABEL, removalConfirmation, resetFreeSight, toolsForMode } from './kartakademin-actions.js';
 import { paintedEdge, replaceWallFoot } from './kartakademin-surfaces.js';
@@ -114,6 +116,7 @@ function option(value, text) {
 
 function closeEditor() {
   if (!editor) return;
+  editor.studio?.destroy();
   editor.disposeFlood?.();
   dispose(editor.view);
   editor.root.closest('.map-area-editor')?.querySelector('[data-mask-overlay]')?.remove();
@@ -131,7 +134,7 @@ function closeEditor() {
   editor = null;
 }
 
-async function openEditor(map, areas, imageUrl) {
+async function openEditor(map, areas, imageUrl, roomData) {
   const opener = document.getElementById('mapAreaEditor');
   closeEditor();
   if (!canManageCampaignMaps() || !opener) return;
@@ -142,7 +145,7 @@ async function openEditor(map, areas, imageUrl) {
     title: 'Rumsverktyg',
     paragraphs: [
       'Rita minst tre hörn. Nya punkter fäster mot befintliga hörn och kanter. Tomrum mellan rum är tillåtna, men polygoner får inte överlappa.',
-      'Välj Infoga punkt och klicka nära en kant. Dra ett hörn för att flytta det. Koppla sedan polygonen till en plats i rumslistan.',
+      'Välj ett rum på kartan eller i listan. Under Redigera kan du dra hörn och klicka på en kant för att lägga till en punkt. Med Fyll lagar du en glipa mellan befintliga rum. Välj mottagande rum och granska den nya gränsen före sparning.',
     ],
   });
   root.innerHTML = `<div data-body>
@@ -324,7 +327,7 @@ async function openEditor(map, areas, imageUrl) {
   const rulerLayer = node('g', { 'data-ruler-layer': '', 'aria-hidden': 'true' });
   academyLayer.after(tokenLayer, rulerLayer);
   const measurementOutput = get('[data-measurement]');
-  let rulerEnabled = false, measurement;
+  let viewTool = '', measurement;
   const tokenPreview = get('[data-token-preview]');
   const ruler = get('[data-ruler-tool]');
   const tokenStyles = get('[data-token-style]');
@@ -452,9 +455,9 @@ async function openEditor(map, areas, imageUrl) {
   }
 
   function brushPoint(event, clamp = false) {
-    const inverse = svg.getScreenCTM()?.inverse();
-    if (!inverse) return null;
-    const { x, y } = new DOMPoint(event.clientX, event.clientY).matrixTransform(inverse);
+    const point = mapPointer(event, svg);
+    if (!point) return null;
+    const [x, y] = point;
     if (!clamp && (x < 0 || y < 0 || x >= map.width || y >= map.height)) return null;
     return [Math.min(map.width - .001, Math.max(0, x)), Math.min(map.height - .001, Math.max(0, y))];
   }
@@ -492,11 +495,12 @@ async function openEditor(map, areas, imageUrl) {
     tool.replaceChildren(...options.map(({ value, label }) => option(value, label)));
     state.tool = options.some(item => item.value === preferred) ? preferred : options[0]?.value ?? 'pan';
     tool.value = state.tool;
+    syncPointerTools(false);
   }
 
   function refreshList() {
     const modeKey = state.mode;
-    toolHeader.querySelector('h3').textContent = modeKey === 'rooms' ? 'Rumsverktyg' :
+    toolHeader.querySelector('h3').textContent = modeKey === 'rooms' ? 'Polygonverkstad' :
       modeButtons.find(button => button.dataset.modeButton === modeKey)?.textContent;
     const help = toolHeader.querySelector('button');
     if (help) help.hidden = modeKey !== 'rooms';
@@ -599,6 +603,7 @@ async function openEditor(map, areas, imageUrl) {
 
   state.updateAreas = next => {
     areas = next;
+    state.studio?.render();
     if (get('[data-player]').checked) draw();
   };
   function drawCharacterTokens() {
@@ -841,7 +846,7 @@ async function openEditor(map, areas, imageUrl) {
         else input.value = input.dataset.config === 'darkness' ? value * 100 : value ?? 0;
       }
       refreshList();
-      window.renderMapAreaEditor?.();
+      state.studio?.render();
       if (!body.hidden) {
         state.view = mount(board, { ...map, image_url: imageUrl });
         await state.view.ready;
@@ -859,21 +864,24 @@ async function openEditor(map, areas, imageUrl) {
     if (input === menu) return select(menu.value);
     if (input === mode) {
       state.mode = mode.value;
+      toolPanel.inert = state.mode !== 'rooms' && get('[data-light-only]').checked;
+      claimEditPointer();
       state.selected = '';
       for (const button of modeButtons) button.setAttribute('aria-selected', String(button.dataset.modeButton === state.mode));
       refreshToolPicker(state.mode === 'rooms' ? 'room' : state.mode === 'sight' ? 'mask' : state.mode === 'lights' ? 'light' : 'pan');
       state.points = [];
       maskPoints.length = 0;
       resetFlood();
-      refreshList(); draw(); window.renderMapAreaEditor?.(); return;
+      refreshList(); draw(); state.studio?.render(); return;
     }
     if (input.dataset.layer) return state.setLayer(input.dataset.layer, input.checked);
     if (input === maskMode || input === zoom || input.dataset.flood) return;
     if (input === tool) {
+      claimEditPointer();
       refreshToolPicker(tool.value);
       if (tool.value !== 'mask') resetFlood();
       maskPoints.length = 0;
-      refreshList(); draw(); window.renderMapAreaEditor?.();
+      refreshList(); draw(); state.studio?.render();
       return select('');
     }
     const key = input.dataset.config;
@@ -910,8 +918,9 @@ async function openEditor(map, areas, imageUrl) {
   root.onchange = leftPanel.onchange = onChange;
   get('[data-light-only]').onchange = () => {
     const active = get('[data-light-only]').checked;
-    toolPanel.inert = active;
+    toolPanel.inert = active && state.mode !== 'rooms';
     draw();
+    state.studio?.render();
   };
   get('[data-reset-north]').onclick = () => {
     const north = get('[data-config="north"]');
@@ -920,6 +929,7 @@ async function openEditor(map, areas, imageUrl) {
   };
   for (const button of root.querySelectorAll('[data-mask-tool]')) {
     button.onclick = () => {
+      claimEditPointer();
       maskMode.value = button.dataset.maskTool;
       maskMode.dispatchEvent(new Event('change'));
     };
@@ -1014,7 +1024,7 @@ async function openEditor(map, areas, imageUrl) {
     if (!input) return;
     state.layers[layer] = input.checked = visible;
     draw();
-    window.renderMapAreaEditor?.();
+    state.studio?.render();
   };
   let offsetX = 0, offsetY = 0;
   const fitScale = () => Math.min(viewport.clientWidth / map.width, viewport.clientHeight / map.height);
@@ -1039,14 +1049,14 @@ async function openEditor(map, areas, imageUrl) {
     offsetX = (offsetX + centerX - (x ?? centerX)) * ratio - centerX + (x ?? centerX);
     offsetY = (offsetY + centerY - (y ?? centerY)) * ratio - centerY + (y ?? centerY);
     positionBoard();
-    window.renderMapAreaEditor?.();
+    state.studio?.render();
   }
   let sliderZoom = 1;
   function resetView() {
     zoom.value = String(sliderZoom = 1);
     offsetX = offsetY = 0;
     positionBoard();
-    window.renderMapAreaEditor?.();
+    state.studio?.render();
   }
   zoom.oninput = () => { setZoom(zoom.valueAsNumber, undefined, undefined, sliderZoom); sliderZoom = zoom.valueAsNumber; };
   const zoomBy = (factor, x, y) => { setZoom(zoom.valueAsNumber * factor, x, y); sliderZoom = zoom.valueAsNumber; };
@@ -1070,10 +1080,50 @@ async function openEditor(map, areas, imageUrl) {
   const viewOptions = { signal: viewEvents.signal };
   window.addEventListener('resize', updateWorkspaceHeight, viewOptions);
   const hand = get('[data-pan-tool]');
-  let handEnabled = false;
-  function updatePanCursor() {
-    viewport.classList.toggle('kartakademin-can-pan', handEnabled || spaceDown);
+  // On Android the first tap after dragging the map can deliver a full touch
+  // sequence to a button but omit its click. Activate deliberate tool taps on
+  // touchend and suppress their compatibility click. Scrolling stays native.
+  const toolButtons = '#mapAreaRemoveVertexBtn, [data-room-mode], [data-gap-edges], [data-room-id], [data-pan-tool], [data-ruler-tool], [data-mode-button], [data-tool-choice], [data-mask-tool]';
+  let toolTap = null;
+  workspace.addEventListener('touchstart', event => {
+    const button = event.target.closest?.(toolButtons);
+    const touch = event.touches[0];
+    toolTap = event.touches.length === 1 && button && !button.disabled && !button.closest('[inert]')
+      ? { button, id: touch.identifier, x: touch.clientX, y: touch.clientY } : null;
+  }, { ...viewOptions, passive: true });
+  const withinTap = touch => toolTap && touch.identifier === toolTap.id &&
+    Math.hypot(touch.clientX - toolTap.x, touch.clientY - toolTap.y) <= 8;
+  workspace.addEventListener('touchmove', event => {
+    if (event.touches.length !== 1 || !withinTap(event.touches[0])) toolTap = null;
+  }, { ...viewOptions, passive: true });
+  workspace.addEventListener('touchcancel', () => { toolTap = null; }, viewOptions);
+  workspace.addEventListener('pointercancel', event => { if (event.pointerType === 'touch') toolTap = null; }, viewOptions);
+  window.addEventListener('scroll', () => { toolTap = null; }, { ...viewOptions, capture: true, passive: true });
+  workspace.addEventListener('touchend', event => {
+    const touch = event.changedTouches[0];
+    const button = toolTap?.button;
+    const tapped = button && !event.touches.length && withinTap(touch);
+    toolTap = null;
+    if (!tapped || !event.cancelable || event.defaultPrevented || button.disabled || button.closest('[inert]') ||
+        !button.contains(document.elementFromPoint(touch.clientX, touch.clientY))) return;
+    event.preventDefault();
+    button.focus({ preventScroll: true });
+    button.click();
+  }, { ...viewOptions, passive: false });
+  function pointerTool() {
+    if (spaceDown || pan) return 'pan';
+    return viewTool || (state.tool === 'pan' ? 'pan' : '');
+  }
+  function syncPointerTools(renderRooms = true) {
+    const active = pointerTool();
+    hand.setAttribute('aria-pressed', String(active === 'pan'));
+    ruler.setAttribute('aria-pressed', String(active === 'ruler'));
+    viewport.classList.toggle('kartakademin-can-pan', active === 'pan');
+    viewport.classList.toggle('kartakademin-ruler-active', active === 'ruler');
     viewport.classList.toggle('kartakademin-panning', Boolean(pan));
+    for (const button of get('[data-tool-picker]').children)
+      button.setAttribute('aria-pressed', String(!active && button.dataset.toolChoice === state.tool));
+    if (renderRooms) state.studio?.render();
   }
   function drawMeasurement() {
     rulerLayer.replaceChildren();
@@ -1095,25 +1145,27 @@ async function openEditor(map, areas, imageUrl) {
     get('[data-config="pixelsPerMeter"]').value = Number((map.width/ppm).toPrecision(10));
     markDirty(); draw();
   };
-  function setRuler(enabled) {
-    rulerEnabled = enabled;
-    ruler.setAttribute('aria-pressed', String(enabled));
-    viewport.classList.toggle('kartakademin-ruler-active', enabled);
-    if (!enabled) measurement = null;
-    drawMeasurement();
+  function setViewTool(next) {
+    viewTool = next;
+    if (next !== 'ruler' && measurement) {
+      const pointer = measurement.pointerId;
+      measurement = null;
+      if (pointer != null && viewport.hasPointerCapture(pointer)) viewport.releasePointerCapture(pointer);
+      drawMeasurement();
+    }
+    syncPointerTools();
   }
-  hand.onclick = () => {
-    handEnabled = !handEnabled;
-    if (handEnabled) setRuler(false);
-    hand.setAttribute('aria-pressed', String(handEnabled));
-    updatePanCursor();
-  };
-  ruler.onclick = () => {
-    handEnabled = false;
-    hand.setAttribute('aria-pressed','false');
-    setRuler(!rulerEnabled);
-    updatePanCursor();
-  };
+  function claimEditPointer() {
+    if (pan) {
+      const pointer = pan.pointerId;
+      pan = null;
+      if (viewport.hasPointerCapture(pointer)) viewport.releasePointerCapture(pointer);
+    }
+    spaceDown = false;
+    setViewTool('');
+  }
+  hand.onclick = () => setViewTool(viewTool === 'pan' ? '' : 'pan');
+  ruler.onclick = () => setViewTool(viewTool === 'ruler' ? '' : 'ruler');
   viewport.addEventListener('wheel', event => {
     if (!event.target.closest('#mapAreaCanvas')) return;
     event.preventDefault();
@@ -1121,20 +1173,21 @@ async function openEditor(map, areas, imageUrl) {
     zoomBy(Math.exp(-delta * .002), event.clientX, event.clientY);
   }, { ...viewOptions, passive: false });
   window.addEventListener('keydown', event => {
-    if (event.key === 'Escape' && rulerEnabled) {
-      setRuler(false);
+    if (event.key === 'Escape' && viewTool) {
+      setViewTool('');
       event.preventDefault();
       return;
     }
-    if (event.code !== 'Space' || event.target.closest?.('input, select, textarea, [contenteditable]')) return;
+    if (event.code !== 'Space' || event.repeat || event.target.closest?.('input, select, textarea, [contenteditable]')) return;
     if (!viewport.matches(':hover') && event.target.closest?.('button, summary, [role="button"]')) return;
     spaceDown = true;
-    updatePanCursor();
+    syncPointerTools();
     event.preventDefault();
   }, viewOptions);
   function releaseSpace() {
+    if (!spaceDown) return;
     spaceDown = false;
-    updatePanCursor();
+    syncPointerTools();
   }
   window.addEventListener('keyup', event => { if (event.code === 'Space') releaseSpace(); }, viewOptions);
   window.addEventListener('blur', releaseSpace, viewOptions);
@@ -1143,9 +1196,9 @@ async function openEditor(map, areas, imageUrl) {
     suppressPanClick = false;
     if (stroke || lightDrag || (event.button === 1 && (event.buttons & 1))) return;
     const wantsPan = event.button === 1 ||
-      (event.button === 0 && (spaceDown || handEnabled || (!rulerEnabled && tool.value === 'pan')));
+      (event.button === 0 && pointerTool() === 'pan');
     if (!wantsPan) {
-      if (!rulerEnabled || event.button !== 0) return;
+      if (viewTool !== 'ruler' || event.button !== 0) return;
       event.stopPropagation();
       event.preventDefault();
       suppressPanClick = true;
@@ -1161,7 +1214,7 @@ async function openEditor(map, areas, imageUrl) {
     pan = { pointerId: event.pointerId, x: event.clientX, y: event.clientY, left: offsetX, top: offsetY };
     suppressPanClick = true;
     viewport.setPointerCapture(event.pointerId);
-    updatePanCursor();
+    syncPointerTools();
   }, { ...viewOptions, capture: true });
   viewport.addEventListener('pointermove', event => {
     if (measurement?.pointerId === event.pointerId) {
@@ -1188,14 +1241,14 @@ async function openEditor(map, areas, imageUrl) {
     if (pan?.pointerId !== event.pointerId) return;
     event.stopPropagation();
     pan = null;
-    updatePanCursor();
+    syncPointerTools();
   }
   for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) {
     viewport.addEventListener(type, finishPan, viewOptions);
   }
   for (const type of ['click', 'dblclick', 'auxclick', 'contextmenu']) {
     viewport.addEventListener(type, event => {
-      if (!suppressPanClick && !rulerEnabled && !get('[data-light-only]').checked) return;
+      if (!suppressPanClick && viewTool !== 'ruler' && !get('[data-light-only]').checked) return;
       event.preventDefault();
       event.stopPropagation();
     }, { ...viewOptions, capture: true });
@@ -1203,6 +1256,39 @@ async function openEditor(map, areas, imageUrl) {
   viewport.addEventListener('pointerdown', event => {
     if (get('[data-light-only]').checked) event.stopPropagation();
   }, { ...viewOptions, capture: true });
+  if (roomData) {
+    state.studio = mountPolygonStudio({
+      map, svg, toolbar, roomList, roomNotice, ...roomData, dbJson,
+      getAreas: () => areas,
+      getWalls: () => state.layers.sight ? state.config.geometry.filter(shape => shape.points?.length >= 2) : [],
+      inRoomMode: () => state.mode === 'rooms',
+      isVisible: () => state.layers.rooms && !get('[data-light-only]').checked,
+      canPoint: () => !state.saving && !pointerTool(),
+      pointerTool,
+      claimRoomPointer() {
+        if (state.tool !== 'room') refreshToolPicker('room');
+        const lightOnly = get('[data-light-only]');
+        if (lightOnly.checked) {
+          lightOnly.checked = false;
+          toolPanel.inert = false;
+          draw();
+        }
+        if (!state.layers.rooms) state.setLayer('rooms', true);
+        claimEditPointer();
+      },
+      changed(next) {
+        state.updateAreas(next);
+        roomData.changed(next);
+      },
+      centerOn([x, y]) {
+        const scale = fitScale() * zoom.valueAsNumber;
+        offsetX = (map.width / 2 - x) * scale;
+        offsetY = (map.height / 2 - y) * scale;
+        positionBoard();
+      }
+    });
+    state.studio.render();
+  }
   refreshToolPicker('room');
   for (const button of modeButtons) button.setAttribute('aria-selected', String(button.dataset.modeButton === state.mode));
   refreshList();
@@ -1392,4 +1478,4 @@ async function openEditor(map, areas, imageUrl) {
   };
 }
 
-window.aleaKartakademin = { openEditor, closeEditor, syncCampaign, clearCampaign, getEditMode: () => editor?.mode ?? null, getTool: () => editor?.tool ?? null, isLayerVisible: name => editor?.layers?.[name] ?? true, setLayer: (name, visible) => editor?.setLayer?.(name, visible), updateEditorAreas: areas => editor?.updateAreas?.(areas), hasPendingChanges: () => Boolean(editor?.dirty || editor?.saving), isSaving: () => Boolean(editor?.saving) };
+window.aleaKartakademin = { openEditor, closeEditor, syncCampaign, clearCampaign, getEditMode: () => editor?.mode ?? null, getTool: () => editor?.tool ?? null, isLayerVisible: name => editor?.layers?.[name] ?? true, setLayer: (name, visible) => editor?.setLayer?.(name, visible), updateEditorAreas: areas => editor?.updateAreas?.(areas), hasPendingChanges: () => Boolean(editor?.dirty || editor?.saving || editor?.studio?.pending), isSaving: () => Boolean(editor?.saving || editor?.studio?.busy) };
