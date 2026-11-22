@@ -2639,7 +2639,7 @@ async function showSkillInfo(i){let sk=current.skills[i];if(!ruleSkillsLoaded)aw
 function closeSkillInfo(){weaponInstanceEditTarget=null;$('skillModal').classList.remove('weapon-instance-modal');$('skillModal').classList.add('hidden')}document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSkillInfo()});function confirmRow(btn){save();btn.classList.add('saved');btn.textContent='✓';btn.title='Raden är sparad';let toast=$('saveToast');if(toast){toast.classList.remove('show');void toast.offsetWidth;toast.classList.add('show');clearTimeout(window.__saveToastTimer);window.__saveToastTimer=setTimeout(()=>toast.classList.remove('show'),1200)}let box=btn.closest('.rowactions');if(box){box.classList.remove('row-confirmed');void box.offsetWidth;box.classList.add('row-confirmed')}}
 
 
-async function loadCampaignContentData(){
+async function loadCampaignContentData({portraits=true}={}){
  campaignContentReady=false;
  if(!centralCampaignId){campaignEvents=[];campaignNpcs=[];campaignMonsters=[];return}
  try{
@@ -2648,7 +2648,7 @@ async function loadCampaignContentData(){
    dbJson('campaign_npcs?campaign_id=eq.'+encodeURIComponent(centralCampaignId)+'&select=*&order=sort_order.asc,name.asc'),
    dbJson('campaign_monsters?campaign_id=eq.'+encodeURIComponent(centralCampaignId)+'&select=*&order=sort_order.asc,name.asc')
   ]);
-  campaignEvents=Array.isArray(rows[0])?rows[0]:[];campaignNpcs=Array.isArray(rows[1])?rows[1]:[];campaignMonsters=Array.isArray(rows[2])?rows[2]:[];await preloadNpcPortraits(campaignNpcs.concat(campaignMonsters));campaignContentReady=true;
+  campaignEvents=Array.isArray(rows[0])?rows[0]:[];campaignNpcs=Array.isArray(rows[1])?rows[1]:[];campaignMonsters=Array.isArray(rows[2])?rows[2]:[];if(portraits)await preloadNpcPortraits(campaignNpcs.concat(campaignMonsters));campaignContentReady=true;
  }catch(e){console.warn('Kampanjinnehåll är inte tillgängligt ännu',e);campaignEvents=[];campaignNpcs=[];campaignMonsters=[];campaignContentReady=false}
 }
 function contentVisibilityBadge(v){return v?'<span class="content-badge visible">SPELARE</span>':'<span class="content-badge">SL</span>'}
@@ -3417,11 +3417,20 @@ function clearAdventureMap(){
  if(adventureProjectionUrl)URL.revokeObjectURL(adventureProjectionUrl);
  adventureProjectionUrl='';adventureProjectionTag='';
 }
+async function fetchMapArtwork(read){
+ // Storage can return 544 while DEV's connection pool is occupied.
+ for(let attempt=0;;attempt++){
+  const response=await read();
+  if(attempt===2||![429,502,503,504,544].includes(response.status))return response;
+  await response.body?.cancel();
+  await new Promise(resolve=>setTimeout(resolve,750*(attempt+1)));
+ }
+}
 async function readAdventureRaster(map,previous){
- const response=await fetch(ALEA_SUPABASE_CONFIG.endpoint('/functions/v1/adventure-player-map'),{
+ const response=await fetchMapArtwork(()=>fetch(ALEA_SUPABASE_CONFIG.endpoint('/functions/v1/adventure-player-map'),{
   method:'POST',headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+supabaseSession.access_token,'Content-Type':'application/json'},
   body:JSON.stringify({map_id:map.id,previous}),cache:'no-store'
- });
+ }));
  if(previous&&response.status===304)return null;
  if(!response.ok)throw Error('Spelarkartan kunde inte läsas ('+response.status+').');
  return {url:URL.createObjectURL(await response.blob()),tag:response.headers.get('ETag')||''};
@@ -3443,12 +3452,13 @@ async function loadCampaignMaps(loadViewed=true){
  let settings=await dbJson('campaign_map_settings?campaign_id=eq.'+encodeURIComponent(centralCampaignId)+'&select=active_map_id&limit=1');
  campaignActiveMapId=settings?.[0]?.active_map_id||null;
  let viewable=adventureCanManage()?campaignMaps:campaignMaps.filter(m=>m.player_visible);
+ renderMapLibraryControls();
  if(loadViewed&&version===adventureReadVersion){
   let keep=activeCampaignMap&&viewable.some(m=>m.id===activeCampaignMap.id)?activeCampaignMap.id:null;
   let current=viewable.some(m=>m.id===campaignActiveMapId)?campaignActiveMapId:null;
   let target=current||keep||viewable[0]?.id||null;
   if(target)await viewCampaignMap(target,false);else setCampaignMapData(null,[]);
- }else renderMapLibraryControls();
+ }
 }
 function renderMapLibraryControls(){
  let picker=$('mapPicker'),currentBtn=$('mapCurrentBtn'),setCurrentBtn=$('mapSetCurrentBtn'),badge=$('mapCurrentBadge'),visibilityToggle=$('mapVisibilityToggle');
@@ -3647,7 +3657,7 @@ async function getMapImageUrl(map){
  if(!validMapStoragePath(map.image_path))throw new Error('Kartbilden har en äldre eller ogiltig lagringssökväg: '+map.image_path);
  let cached=mapImageCache.get(map.image_path);
  if(cached?.url)return cached.url;
- let r=await mapStorageFetch('object/authenticated/campaign-maps/'+encodeStoragePath(map.image_path),{method:'GET'});
+ let r=await fetchMapArtwork(()=>mapStorageFetch('object/authenticated/campaign-maps/'+encodeStoragePath(map.image_path),{method:'GET'}));
  if(!r.ok){
   let data=await r.json().catch(()=>null);
   throw new Error(data?.message||data?.error||('Kunde inte läsa kartbilden ('+r.status+').'));
@@ -4215,7 +4225,7 @@ async function openMap(){
  ['home','view','admin','dicePage','combatPage'].forEach(id=>$(id).classList.add('hidden'));
  $('mapPage').classList.remove('hidden');$('back').classList.add('hidden');$('editBtn').classList.add('hidden');$('cancelEditBtn').classList.add('hidden');
  renderMapPanel();renderMapLibraryControls();
- try{await Promise.all([loadCampaignMaps(true),loadCampaignPlaceData(),loadCampaignContentData()]);window.aleaAdventureFigures?.sync(activeCampaignMap)}catch(e){console.error('Kunde inte uppdatera kartor och platsinnehåll',e)}
+ try{await Promise.all([loadCampaignMaps(true),loadCampaignPlaceData(),loadCampaignContentData({portraits:false})]);window.aleaAdventureFigures?.sync(activeCampaignMap)}catch(e){console.error('Kunde inte uppdatera kartor och platsinnehåll',e)}
 }
 function closeMap(){adventureReadVersion++;if(adventurePlayerPreview){adventurePlayerPreview=false;clearAdventureMap()}window.aleaAdventureFigures?.close();closeMapStatusMenu();window.aleaKartakademin?.clearCampaign();
  $('mapPage').classList.add('hidden');

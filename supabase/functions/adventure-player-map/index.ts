@@ -28,7 +28,8 @@ Deno.serve(async req=>{
     // Resolve access with the caller's JWT before reading any private geometry or pixels.
     const access=await fetch(base+'/rest/v1/campaign_maps?id=eq.'+id+'&player_visible=eq.true&select=id',{
       headers:{apikey:anon,Authorization:jwt}});
-    if(!access.ok||!(await access.json()).length)return empty(403);
+    if(!access.ok)return empty(access.status>=500||access.status===429?503:403);
+    if(!(await access.json()).length)return empty(403);
     const headers={apikey:service,Authorization:'Bearer '+service,'Content-Type':'application/json'};
     const result=await fetch(base+'/rest/v1/rpc/adventure_raster_plan',{method:'POST',headers,body:JSON.stringify({p_map_id:id})});
     if(!result.ok)return empty(503);

@@ -171,7 +171,13 @@ async function prepare(v,rows) {
     if(v.prepared.has(key))return false;
     v.prepared.add(key);return true;
   });
-  if(fresh.length)await Promise.all(fresh.map(row=>art().prepareAdventureToken(actor(row))));
+  if(fresh.length){
+    const activeSources=fresh.map(row=>row.npc_id?campaignNpcs.find(n=>n.id===row.npc_id):
+      row.monster_id?campaignMonsters.find(m=>m.id===row.monster_id):null).filter(Boolean);
+    if(activeSources.length)await preloadNpcPortraits(activeSources);
+    if(view!==v)return;
+    await Promise.all(fresh.map(row=>art().prepareAdventureToken(actor(row))));
+  }
   if(view===v && fresh.length)renderPieces(v);
 }
 async function readRows(v) {
