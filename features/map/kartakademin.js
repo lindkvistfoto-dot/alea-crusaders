@@ -1063,22 +1063,22 @@ async function openEditor(map, areas, imageUrl, roomData) {
   get('[data-zoom-in]').onclick = () => zoomBy(1.25);
   get('[data-zoom-out]').onclick = () => zoomBy(1 / 1.25);
   get('[data-fit-view]').onclick = get('[data-reset-view]').onclick = resetView;
-  const updateWorkspaceHeight = () => {
+  const updateWorkspaceTop = () => {
     const pageTop = workspace.getBoundingClientRect().top + window.scrollY;
-    workspace.style.setProperty('--kartakademin-space', `${Math.max(160, window.innerHeight - pageTop - 12)}px`);
+    workspace.style.setProperty('--kartakademin-top', `${pageTop}px`);
   };
   const header = document.querySelector('.alea-app-header');
   const resize = new ResizeObserver(entries => {
-    if (entries.some(entry => entry.target !== viewport)) updateWorkspaceHeight();
+    if (entries.some(entry => entry.target !== viewport)) updateWorkspaceTop();
     positionBoard();
   });
   resize.observe(viewport);
   resize.observe(get('.kartakademin-header'));
   if (header) resize.observe(header);
-  updateWorkspaceHeight();
+  updateWorkspaceTop();
   positionBoard();
   const viewOptions = { signal: viewEvents.signal };
-  window.addEventListener('resize', updateWorkspaceHeight, viewOptions);
+  window.addEventListener('resize', updateWorkspaceTop, viewOptions);
   const hand = get('[data-pan-tool]');
   // On Android the first tap after dragging the map can deliver a full touch
   // sequence to a button but omit its click. Activate deliberate tool taps on

@@ -1,18 +1,24 @@
 // Run against a local ALEA build. Only fixture data exists in this browser context.
 import assert from 'node:assert/strict';
-import { mkdir } from 'node:fs/promises';
+import { mkdir, readFile } from 'node:fs/promises';
 import { chromium } from 'playwright';
 
-const [origin, output, compare] = process.argv.slice(2);
+const [origin, output, compare, fixturePath] = process.argv.slice(2);
+const fixture = fixturePath ? JSON.parse(await readFile(fixturePath, 'utf8')) : null;
 assert.equal(new URL(origin).hostname, '127.0.0.1');
 await mkdir(output, { recursive: true });
 const browser = await chromium.launch({ ...(process.env.CHROME_BIN ? {executablePath:process.env.CHROME_BIN} : {channel:'chrome'}), args:['--enable-unsafe-swiftshader'] });
 
-async function openTestMap() {
+async function openTestMap({scrollTest = false, fixture = null} = {}) {
   const rooms = [
     ['Portsal',36,45,205,160], ['Arkiv',300,45,190,160],
     ['Vaktrum',36,266,205,144], ['Brunnshall',300,266,190,144],
   ];
+  if (scrollTest && !fixture) {
+    for (let index = 0; index < 24; index++) {
+      rooms.push([`Rum ${index + 5}`, 246 + index % 2 * 22, 22 + Math.floor(index / 2) * 33, 17, 25]);
+    }
+  }
   const id = () => crypto.randomUUID();
   const plan = document.createElement('canvas');
   plan.width = 530; plan.height = 450;
@@ -41,6 +47,16 @@ async function openTestMap() {
   campaignSites = [site];
   campaignMaps = [map];
   centralCampaignRole='gm';
+  if (scrollTest) {
+    centralCampaignId = campaignMaps[0].campaign_id;
+    supabaseSession = {user:{id:id()}, access_token:'visual-test-fixture'};
+  }
+  if (fixture) {
+    campaignMaps = fixture.maps;
+    campaignSites = fixture.sites;
+    campaignLocations = fixture.locations;
+    areas.splice(0, areas.length, ...fixture.areas);
+  }
   const image = URL.createObjectURL(await new Promise(resolve => plan.toBlob(resolve)));
   window.getMapImageUrl = async () => image;
   let configuration = {environment:'underground',pixelsPerMeter:26.5,darkness:.60};
@@ -60,17 +76,143 @@ async function openTestMap() {
   document.querySelectorAll('header,main,#admin,#adminNavBtn').forEach(el=>el.classList.remove('hidden'));
   document.querySelectorAll('main > section:not(#admin)').forEach(el=>el.classList.add('hidden'));
   await openAdminSection('places');
-  await openMapAreaEditor(map.id);
+  await openMapAreaEditor(campaignMaps[0].id);
 }
 
-try {
-  const page = await browser.newPage();
+async function newPage(options) {
+  const page = await browser.newPage(options);
   await page.route(/^https?:/, route => new URL(route.request().url()).origin === origin ? route.continue() : route.abort());
   // The application bundle imports the dice engine from a CDN. The editor never rolls dice.
   await page.route('https://unpkg.com/@3d-dice/dice-box@*/dist/dice-box.es.min.js', route =>
     route.fulfill({contentType:'text/javascript', body:'export default class DiceBox {}'}));
   page.on('pageerror', error => console.warn('Browser:', error.message));
   page.on('dialog', async dialog => { console.warn(dialog.message()); await dialog.dismiss(); });
+  return page;
+}
+
+// A locator tap can automatically scroll hidden ancestors. Check the real
+// hit target after scrolling the document, and tap exactly that point.
+async function tapVisible(page, selector) {
+  const target = await page.locator(selector).evaluate(element => {
+    const {left, top, right, bottom, width, height} = element.getBoundingClientRect();
+    const x = left + width / 2;
+    const y = top + height / 2;
+    const hit = document.elementFromPoint(x, y);
+    const fullyVisible = height > 0 && width > 0 && left >= 0 && top >= 0 &&
+      right <= visualViewport.width && bottom <= visualViewport.height;
+    return {x, y, top, bottom, height:visualViewport.height,
+      reachable: fullyVisible && element.contains(hit), covering: hit?.closest('[id]')?.id};
+  });
+  assert.ok(target.reachable, `${selector} was unreachable at ${JSON.stringify(target)}`);
+  await page.touchscreen.tap(target.x, target.y);
+}
+
+async function checkMobileScroll(width, height, resizedHeight) {
+  const page = await newPage({viewport:{width,height}, isMobile:true, hasTouch:true});
+  try {
+    await page.goto(origin);
+    await page.waitForFunction(() => window.aleaKartakademin && typeof openMapAreaEditor === 'function');
+    await page.evaluate(openTestMap, {scrollTest:true, fixture});
+    const settings = page.locator('.kartakademin-settings');
+    const roomRows = page.locator('#mapAreaList [data-room-id]');
+    await roomRows.first().waitFor();
+    const roomCount = fixture?.areas.length ?? 28;
+    assert.equal(await roomRows.count(), roomCount);
+    await page.locator('#aleaSoundboard').waitFor();
+    const soundboard = page.locator('[data-board-toggle]');
+    const mixer = page.locator('[data-audio-settings]');
+    const bottom = () => page.evaluate(() => window.scrollTo(0, document.scrollingElement.scrollHeight));
+    const lastControl = '#mapAreaAddImage';
+    const screenshot = state => page.screenshot({path:`${output}/scroll-${width}x${height}-${state}.png`});
+
+    if (compare === 'baseline') {
+      await settings.evaluate(panel => { panel.open = true; });
+      await bottom();
+      await screenshot('bottom');
+      return;
+    }
+
+    const openFileChooser = () => Promise.all([
+      page.waitForEvent('filechooser', {timeout:3000}),
+      tapVisible(page, lastControl),
+    ]);
+    await bottom();
+    await screenshot('bottom');
+    await openFileChooser();
+    await settings.locator('summary').tap();
+    assert.equal(await settings.evaluate(panel => panel.open), false);
+
+    await settings.locator('summary').tap();
+    await settings.locator('[data-config=north]').fill('27');
+    assert.equal(await settings.locator('[data-config=north]').inputValue(), '27');
+    await page.locator('[data-layer=rooms]').tap();
+    assert.equal(await page.locator('[data-layer=rooms]').isChecked(), false);
+    await page.locator('[data-layer=rooms]').tap();
+    await page.locator('[data-save]').tap();
+    await page.locator('[data-save-status][data-status=saved]').waitFor();
+    await settings.locator('summary').tap();
+    await settings.locator('summary').tap();
+
+    await page.locator('[data-zoom-in]').tap();
+    await page.locator('[data-zoom-in]').tap();
+    assert.equal(await page.locator('[data-zoom-percent]').textContent(), '156 %');
+    await page.locator('[data-pan-tool]').tap();
+    await page.locator('[data-pan-tool]').tap();
+    await page.locator('[data-fit-view]').tap();
+    assert.equal(await page.locator('[data-zoom-percent]').textContent(), '100 %');
+
+    await roomRows.last().tap();
+    assert.equal(await roomRows.last().getAttribute('aria-pressed'), 'true');
+    const places = page.locator('.room-properties #mapAreaLocation');
+    assert.ok(await places.locator('option').count() >= roomCount, 'The full place list is available');
+    assert.ok(await places.isEnabled());
+
+    // A swipe starting inside the long room list must move the document.
+    await roomRows.nth(Math.floor(roomCount / 2)).evaluate(row => row.scrollIntoView({block:'center'}));
+    const rowBox = await roomRows.nth(Math.floor(roomCount / 2)).boundingBox();
+    const pageScroll = await page.evaluate(() => scrollY);
+    const touch = await page.context().newCDPSession(page);
+    const x = Math.round(rowBox.x + rowBox.width / 2);
+    const y = Math.round(rowBox.y + rowBox.height / 2);
+    await touch.send('Input.dispatchTouchEvent', {type:'touchStart',touchPoints:[{x,y}]});
+    for (const distance of [22, 50, 86, 124]) {
+      await touch.send('Input.dispatchTouchEvent', {type:'touchMove',touchPoints:[{x,y:y-distance}]});
+    }
+    await touch.send('Input.dispatchTouchEvent', {type:'touchEnd',touchPoints:[]});
+    await page.waitForFunction(previous => scrollY > previous + 20, pageScroll);
+    await touch.detach();
+
+    await mixer.tap();
+    await page.locator('#aleaAudioPanel').waitFor();
+    await soundboard.tap();
+    await page.locator('#aleaSoundboardPanel').waitFor();
+    const lastAudioControls = await page.locator('body > :is(#aleaAudioDock, #aleaSoundboard)').evaluateAll(docks =>
+      docks.map(dock => '#' + dock.id + (dock.id === 'aleaAudioDock' ? ' [data-audio-volume=event]' : ' .alea-soundboard-help'))
+    );
+    await bottom();
+    for (const [index, selector] of [...lastAudioControls].reverse().entries()) {
+      if (index > 0) await page.locator(selector).evaluate(element => element.scrollIntoView({block:'center'}));
+      assert.ok(await page.locator(selector).evaluate(element => {
+        const rect = element.getBoundingClientRect();
+        return rect.top >= 0 && rect.height > 0 && rect.bottom <= visualViewport.height;
+      }), `The end of the open audio panel is visible (${selector})`);
+    }
+    await screenshot('sound-open');
+    for (const nextHeight of [resizedHeight, height]) {
+      await page.setViewportSize({width,height:nextHeight});
+      assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+      await page.locator(lastControl).evaluate(element => element.scrollIntoView({block:'center'}));
+      await screenshot(nextHeight === height ? 'with-sound' : 'reduced');
+      await openFileChooser();
+    }
+    console.log(`Scroll ${width}×${height} / ${resizedHeight}px: ${roomCount} room rows and the final control are reachable`);
+  } finally {
+    await page.close();
+  }
+}
+
+try {
+  const page = await newPage();
   async function checkViewport(width,height) {
     await page.setViewportSize({width,height});
     await page.goto(origin);
@@ -151,6 +293,10 @@ try {
   for (const [width,height] of [[1366,768],[1920,1080],[390,844]]) {
     try { await checkViewport(width,height); }
     catch (error) { errors.push(error); console.error(width,height,error); }
+  }
+  for (const viewport of [[360,740,666],[915,412,354],[834,1112,1020]]) {
+    try { await checkMobileScroll(...viewport); }
+    catch (error) { errors.push(error); console.error(viewport,error); }
   }
   if (errors.length) throw new AggregateError(errors,'Kartverkstadens webbläsartester');
 } finally {
