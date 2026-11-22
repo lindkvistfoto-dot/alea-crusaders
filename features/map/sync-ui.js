@@ -36,7 +36,6 @@ async function refreshMapOnce(){
  }
  if(!desired){renderMapLibraryControls();return;}
  if(!isGM){
-  if(adventurePlayerPreview&&!priorMap)return;
   await viewCampaignMap(desired.id,false);
   await window.aleaAdventureFigures?.refresh();
   return;

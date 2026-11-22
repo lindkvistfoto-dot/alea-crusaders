@@ -74,7 +74,7 @@
     } catch (error) {
       // Preserve the old map gallery if a migration/network/database issue occurs.
       console.warn('Kunde inte läsa det nya kampanjbildbiblioteket:', error);
-      if (stillCurrent()) return originalRender?.((legacyAssets || []));
+      if (stillCurrent()) return originalRender?.((legacyAssets || []).filter(image=>image.player_visible===true));
       return;
     }
     if (!stillCurrent()) return;
