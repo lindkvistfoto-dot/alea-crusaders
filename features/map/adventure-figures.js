@@ -408,7 +408,7 @@ window.addEventListener('blur',cancel);
 window.addEventListener('scroll',updatePointer,true);
 window.addEventListener('resize',updatePointer);
 new MutationObserver(updatePointer).observe(document.getElementById('mapCanvas'),{attributes:true,attributeFilter:['style']});
-new MutationObserver(()=>{if(page.classList.contains('hidden'))close();}).observe(page,{attributes:true,attributeFilter:['class']});
+new MutationObserver(()=>{if(page.classList.contains('hidden')){adventureRequestedMap=null;close();}}).observe(page,{attributes:true,attributeFilter:['class']});
 window.aleaAdventureFigures=Object.freeze({sync,refresh,sessionChanged,setGeometry,geometryError,close,toggle});
 if(typeof activeCampaignMap!=='undefined' && !page.classList.contains('hidden'))renderMapPanel();
 

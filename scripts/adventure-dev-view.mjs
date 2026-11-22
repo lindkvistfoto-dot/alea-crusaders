@@ -25,7 +25,7 @@ try{
  const target=await page.evaluate(()=>campaignMaps.find(m=>m.name==='Skelettbyn').id);
  await page.locator('#mapPicker').selectOption(target);
  await page.waitForFunction(()=>activeCampaignMap?.name==='Skelettbyn'&&document.getElementById('mapImage').naturalWidth>1,null,{timeout:60000}).catch(async e=>{
-  console.log('Current display',await page.evaluate(()=>({map:activeCampaignMap?.name,manager:adventureCanManage(),loading:adventureLoading,size:document.getElementById('mapImage').naturalWidth,status:document.getElementById('mapStatusText').textContent})));
+  console.log('Current display',await page.evaluate(()=>({map:activeCampaignMap?.name,manager:adventureCanManage(),loading:adventureLoading,requested:adventureRequestedMap?.id,version:adventureReadVersion,size:document.getElementById('mapImage').naturalWidth,status:document.getElementById('mapStatusText').textContent})));
   throw e;
  });
  const expected=await page.evaluate(async()=>{

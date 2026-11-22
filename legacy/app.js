@@ -1252,7 +1252,7 @@ async function syncCharacterToCentral(c){
 function scheduleCentralSave(){if(!centralReady)return;clearTimeout(centralSaveTimer);centralSaveTimer=setTimeout(async()=>{try{for(let c of chars)await syncCharacterToCentral(c);localStorage.setItem('dod_chars_v03a',JSON.stringify(chars))}catch(e){console.error('Sparning till Supabase misslyckades',e)}},350)}
 function storeSession(x){supabaseSession=x?{...x}:null;if(supabaseSession&&!Number(supabaseSession.expires_at)&&Number(supabaseSession.expires_in)>0)supabaseSession.expires_at=Math.floor(Date.now()/1000)+Number(supabaseSession.expires_in);if(supabaseSession&&sessionBelongsToProject(supabaseSession))localStorage.setItem(SUPABASE_SESSION_KEY,JSON.stringify(supabaseSession));else{localStorage.removeItem(SUPABASE_SESSION_KEY);supabaseSession=null}}
 async function loginUser(){let email=$('loginEmail').value.trim(),password=$('loginPassword').value,b=$('loginScreen').querySelector('.login-submit');$('loginError').textContent='';b.disabled=true;b.textContent='Loggar in…';try{let r=await authFetch('/auth/v1/token?grant_type=password',{method:'POST',body:JSON.stringify({email,password})});let x=await r.json();if(!r.ok)throw new Error(x.error_description||x.msg||'Fel e-postadress eller lösenord.');storeSession(x);await loadProfile();if(!supabaseProfile)throw new Error('Användarprofil saknas.');$('loginPassword').value='';enterApp()}catch(e){storeSession(null);supabaseProfile=null;$('loginError').textContent=e.message||'Inloggningen misslyckades.'}finally{b.disabled=false;b.textContent='Logga in'}}
-async function logoutUser(){try{if(supabaseSession?.access_token)await authFetch('/auth/v1/logout',{method:'POST',headers:{'Authorization':'Bearer '+supabaseSession.access_token}})}catch(e){}adventurePlayerPreview=false;clearAdventureMap();window.aleaAdventureFigures?.close();window.aleaRefreshLocation?.clear?.();revokeMapImageUrls();revokeCombatIconUrls();revokeNpcPortraitUrls();storeSession(null);supabaseProfile=null;centralReady=false;centralCampaignId=null;centralCampaignRole=null;campaignDayState=null;campaignErfAwards=[];campaignCharacterRestStates=[];campaignLocationEventLinks=[];activeCombat=null;combatants=[];combatHexes=[];combatActions=[];combatLogRows=[];combatSelectedTargetId=null;campaignMaps=[];campaignActiveMapId=null;activeCampaignMap=null;current=null;editing=false;showLogin()}
+async function logoutUser(){try{if(supabaseSession?.access_token)await authFetch('/auth/v1/logout',{method:'POST',headers:{'Authorization':'Bearer '+supabaseSession.access_token}})}catch(e){}adventureRequestedMap=null;adventurePlayerPreview=false;clearAdventureMap();window.aleaAdventureFigures?.close();window.aleaRefreshLocation?.clear?.();revokeMapImageUrls();revokeCombatIconUrls();revokeNpcPortraitUrls();storeSession(null);supabaseProfile=null;centralReady=false;centralCampaignId=null;centralCampaignRole=null;campaignDayState=null;campaignErfAwards=[];campaignCharacterRestStates=[];campaignLocationEventLinks=[];activeCombat=null;combatants=[];combatHexes=[];combatActions=[];combatLogRows=[];combatSelectedTargetId=null;campaignMaps=[];campaignActiveMapId=null;activeCampaignMap=null;current=null;editing=false;showLogin()}
 async function restoreSession(){supabaseSession=projectSession();if(!supabaseSession?.refresh_token)return false;try{let r=await authFetch('/auth/v1/token?grant_type=refresh_token',{method:'POST',body:JSON.stringify({refresh_token:supabaseSession.refresh_token})});let x=await r.json();if(!r.ok)throw 0;storeSession(x);await loadProfile();return !!supabaseProfile}catch(e){storeSession(null);supabaseProfile=null;return false}}
 // Recovery uses the token from the email redirect, independently of any
 // regular ALEA session already stored in this browser.
@@ -3392,7 +3392,7 @@ async function advanceCampaignDay(withRest){
   showBackupToast('✓ Dag '+campaignDayState.day_number+' startad · '+restHours+' h vila')
  }catch(e){alert('Kunde inte starta ny dag: '+e.message)}
 }
-let adventurePlayerPreview=false, adventurePreviousMap=null, adventurePreviousCamera=null, adventureReadVersion=0, adventureLoading=false, adventureProjectionUrl='', adventureProjectionTag='';
+let adventureRequestedMap=null, adventurePlayerPreview=false, adventurePreviousMap=null, adventurePreviousCamera=null, adventureReadVersion=0, adventureLoading=false, adventureProjectionUrl='', adventureProjectionTag='';
 function adventureCanManage(){return canManageCampaignMaps()&&!adventurePlayerPreview}
 async function toggleAdventurePreview(){
  if(!canManageCampaignMaps())return;
@@ -3400,6 +3400,7 @@ async function toggleAdventurePreview(){
  if(!adventurePlayerPreview){adventurePreviousMap=previous;adventurePreviousCamera={...mapView};}
  adventurePlayerPreview=!adventurePlayerPreview;
  const desired=adventurePlayerPreview?previous:adventurePreviousMap;
+ adventureRequestedMap={campaign:centralCampaignId,id:desired};
  clearAdventureMap();
  await viewCampaignMap(desired,false);
  if(activeCampaignMap?.id===previous&&campaignMapAreas.some(a=>a.id===area))await openMapLocationInfoByArea(area);
@@ -3456,7 +3457,7 @@ async function loadCampaignMaps(loadViewed=true){
  if(loadViewed&&version===adventureReadVersion){
   let keep=activeCampaignMap&&viewable.some(m=>m.id===activeCampaignMap.id)?activeCampaignMap.id:null;
   let current=viewable.some(m=>m.id===campaignActiveMapId)?campaignActiveMapId:null;
-  let target=current||keep||viewable[0]?.id||null;
+  let target=requestedAdventureMap(viewable)?.id||current||keep||viewable[0]?.id||null;
   if(target)await viewCampaignMap(target,false);else setCampaignMapData(null,[]);
  }
 }
@@ -3697,6 +3698,13 @@ async function loadCampaignMapAreas(mapId,forEditor=false){
  let stateMap=new Map((states||[]).map(s=>[s.location_id,s.status])),nameMap=new Map((locations||[]).map(l=>[l.id,(l.location_key?l.location_key+'. ':'')+(l.name||'Plats')]));
  return rows.map(a=>{let valid=isUuid(a.location_id);return {...a,location_id:valid?a.location_id:null,_invalid_location_ref:(!valid&&a.location_id)?String(a.location_id):'',status:valid?(stateMap.get(a.location_id)||'unknown'):'unknown',name:valid?(nameMap.get(a.location_id)||'Okänd plats'):'Ej kopplad'}});
 }
+async function selectAdventureMap(id){
+ adventureRequestedMap={campaign:centralCampaignId,id};
+ return viewCampaignMap(id);
+}
+function requestedAdventureMap(maps){
+ return adventureRequestedMap?.campaign===centralCampaignId?maps.find(m=>m.id===adventureRequestedMap.id):null;
+}
 async function viewCampaignMap(id,reset=true){
  const version=++adventureReadVersion,manager=adventureCanManage();
  const map=campaignMaps.find(m=>m.id===id);
@@ -3724,7 +3732,7 @@ async function viewCampaignMap(id,reset=true){
   clearAdventureMap();$('mapStatusText').textContent='Kunde inte öppna kartan. '+e.message;
  }finally{if(version===adventureReadVersion||!activeCampaignMap){adventureLoading=false;viewport?.classList.remove('map-loading')}}
 }
-function goToActiveCampaignMap(){if(campaignActiveMapId)viewCampaignMap(campaignActiveMapId)}
+function goToActiveCampaignMap(){if(campaignActiveMapId)selectAdventureMap(campaignActiveMapId)}
 async function activateViewedMap(){
  if(!adventureCanManage()||!activeCampaignMap)return false;
  return await activateCampaignMapById(activeCampaignMap.id);
@@ -4227,7 +4235,7 @@ async function openMap(){
  renderMapPanel();renderMapLibraryControls();
  try{await Promise.all([loadCampaignMaps(true),loadCampaignPlaceData(),loadCampaignContentData({portraits:false})]);window.aleaAdventureFigures?.sync(activeCampaignMap)}catch(e){console.error('Kunde inte uppdatera kartor och platsinnehåll',e)}
 }
-function closeMap(){adventureReadVersion++;if(adventurePlayerPreview){adventurePlayerPreview=false;clearAdventureMap()}window.aleaAdventureFigures?.close();closeMapStatusMenu();window.aleaKartakademin?.clearCampaign();
+function closeMap(){adventureRequestedMap=null;adventureReadVersion++;if(adventurePlayerPreview){adventurePlayerPreview=false;clearAdventureMap()}window.aleaAdventureFigures?.close();closeMapStatusMenu();window.aleaKartakademin?.clearCampaign();
  $('mapPage').classList.add('hidden');
  if(mapReturn==='combat'){$('combatPage').classList.remove('hidden')}
  else if(mapReturn==='dice'){$('dicePage').classList.remove('hidden')}
@@ -4405,7 +4413,7 @@ async function openMapLocationInfoByArea(areaId,keepToken){
   let pt=rows[0]||[],assets=(rows[1]||[]).filter(function(x){return !x.asset_type||x.asset_type==='image'}),gm=adventureCanManage()?(rows[2]||[]):[];
   let playerText=pt[0]&&pt[0].player_description||'',gmText=gm[0]&&gm[0].gm_description||'',hiddenText=gm[0]&&gm[0].hidden_discoveries||'';
   let editBtn=adventureCanManage()?'<button class="btn" type="button" onclick="editLocationContent(\''+a.location_id+'\')">✎ Redigera innehåll</button>':'';
-  p.innerHTML='<div class="map-location-head"><div><h3>'+escAttr(a.name||'Plats')+'</h3><div class="map-location-meta">'+statusLabel(a.status)+(adventureCanManage()?' · SL-vy':'')+'</div></div><button class="map-location-close" onclick="closeMapLocationInfo()">×</button></div>'+editBtn+mapLocationStatusButtons(a)+'<div class="map-location-section"><h4>Beskrivning</h4>'+mapLocationTextHtml(playerText)+'</div>'+mapLocationEventsHtml(a.location_id)+(adventureCanManage()?'<div class="map-location-section map-location-gm"><h4>SL-noteringar</h4>'+mapLocationTextHtml(gmText)+'</div><div class="map-location-section map-location-hidden"><h4>Finna dolda ting</h4>'+mapLocationTextHtml(hiddenText)+'</div>':'');
+  p.innerHTML='<div class="map-location-head"><div><h3>'+escAttr(a.name||'Plats')+'</h3><div class="map-location-meta">'+statusLabel(a.status)+(adventureCanManage()?' · SL-vy':'')+'</div></div><button class="map-location-close" onclick="closeMapLocationInfo()">×</button></div>'+editBtn+mapLocationStatusButtons(a)+'<div class="map-location-section"><h4>'+(adventureCanManage()&&pt[0]?.player_visible===false?'Beskrivning · endast SL':'Beskrivning')+'</h4>'+mapLocationTextHtml(playerText)+'</div>'+mapLocationEventsHtml(a.location_id)+(adventureCanManage()?'<div class="map-location-section map-location-gm"><h4>SL-noteringar</h4>'+mapLocationTextHtml(gmText)+'</div><div class="map-location-section map-location-hidden"><h4>Finna dolda ting</h4>'+mapLocationTextHtml(hiddenText)+'</div>':'');
   await renderMapLocationPhotos(assets);
  }catch(e){
   if(token!==mapLocationInfoToken)return;

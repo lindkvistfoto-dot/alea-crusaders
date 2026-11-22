@@ -144,7 +144,7 @@ function uiHarness({gm=false,maps=[{id:'old',player_visible:true}],state='explor
   campaignActiveMapId:'old',campaignMaps:maps,
   campaignMapAreas:[],mapSelectedAreaId:null,
   mapView:{scale:1.8,x:124,y:-30},
-  adventureCanManage:()=>gm,adventureReadVersion:0,adventureLoading:false,adventurePlayerPreview:false,
+  adventureRequestedMap:null,requestedAdventureMap:rows=>rows.find(m=>m.id===context.adventureRequestedMap?.id),adventureCanManage:()=>gm,adventureReadVersion:0,adventureLoading:false,adventurePlayerPreview:false,
   loadCampaignMaps:async()=>{context.campaignActiveMapId=current;context.campaignMaps=maps;actions.push('library')},
   loadCampaignMapAreas:async()=>[{id:'polygon',status:state,location_id:'place'}],
   renderMapPanel:()=>actions.push('render'),
@@ -179,6 +179,13 @@ describe('v0.34.95 – map screen reconciliation',()=>{
   h.setMaps([{id:'old',player_visible:false}]);await h.refresh();
   expect(h.actions).toContain('clear');
   expect(h.context.activeCampaignMap).toBe(null);
+ });
+ it('keeps the explicit SL choice while its first image is still loading',async()=>{
+  const h=uiHarness({gm:true,maps:[{id:'old',player_visible:true},{id:'chosen',player_visible:true}]});
+  h.context.activeCampaignMap=null;h.context.adventureRequestedMap={id:'chosen'};
+  await h.refresh();
+  expect(h.actions).toContain('switch:chosen');
+  expect(h.actions).not.toContain('switch:old');
  });
  it('does not force a GM away from the map being previewed',async()=>{
   const h=uiHarness({gm:true});

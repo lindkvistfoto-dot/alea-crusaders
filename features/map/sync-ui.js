@@ -23,9 +23,10 @@ async function refreshMapOnce(){
  const isGM=adventureCanManage();
  const available=campaignMaps.filter(m=>isGM||m.player_visible);
  const current=available.find(m=>m.id===campaignActiveMapId);
- const previous=available.find(m=>m.id===priorMap);
+ const previous=requestedAdventureMap(available)||available.find(m=>m.id===priorMap);
  const desired=(!isGM&&currentChanged&&current?current:previous||current||available[0])||null;
  if(adventurePlayerPreview&&!priorMap)return;
+ if(!isGM&&currentChanged&&current)adventureRequestedMap=null;
  if(desired?.id!==priorMap){
   if(desired)await viewCampaignMap(desired.id,false);
   else{
