@@ -79,7 +79,7 @@ for(const mobile of [false,true]){
  };
  if(!mobile){
   const rail=page.getByRole('button',{name:'Visa Astrid Eldhjärta',exact:true});
-  const start=async()=>{const box=await rail.boundingBox();await page.mouse.move(box.x+box.width/2,box.y+box.height/2);await page.mouse.down();await page.locator('.adventure-figure-ghost').waitFor({state:'attached'});};
+  const start=async()=>{await rail.waitFor({state:'visible'});const [x,y]=await rail.evaluate(b=>{const r=b.getBoundingClientRect();return [r.x+r.width/2,r.y+r.height/2]});await page.mouse.move(x,y);await page.mouse.down();await page.locator('.adventure-figure-ghost').waitFor({state:'attached'});};
   await start();
   await page.mouse.move(...await point(4,6));await page.locator('[data-cell="4,6"]:not([data-fading])').waitFor();
   assert.ok(await page.locator('.adventure-figure-ghost').innerHTML().then(h=>h.includes('0523350e')&&h.includes('59d0c314')));

@@ -157,7 +157,11 @@ async function refresh() {
     if(view===v){sessionChanged(v.campaign,null);notice('Spelmötet kunde inte läsas. '+error.message);}
   }
 }
-function stopPress() { clearTimeout(press?.timer);press=null; }
+function stopPress() {
+  clearTimeout(press?.timer);
+  if(press?.loading)notice();
+  press=null;
+}
 function clearLight() {
   if(!highlight)return;
   const el=highlight; highlight=null;el.dataset.fading='';setTimeout(()=>el.remove(),140);
@@ -205,7 +209,14 @@ async function change(v,request,optimistic) {
   try {
     const result=await request();
     if(!result?.length)throw Error('Figurens läge har ändrats.');
-    if(view===v&&v.session===session)notice();
+    if(view===v&&v.session===session){
+      // Keep the landed piece in place while the authoritative list reloads.
+      if(optimistic){
+        const saved={...optimistic,id:result[0].id};
+        v.rows=[...v.rows.filter(r=>r.id!==saved.id && !(saved.character_id && r.character_id===saved.character_id)),saved];
+      }
+      notice();
+    }
   } catch(error) {
     if(view===v&&v.session===session)notice(/duplicate key/.test(error.message)?'Hexagonen är upptagen.':'Kunde inte spara. '+error.message);
   } finally {
@@ -258,8 +269,16 @@ board.addEventListener('click',e=>{
   const url=table+'?'+scope(v)+'&id=eq.'+row.id+'&select=id',headers={Prefer:'return=representation'};
   void change(v,()=>dbJson(url,action==='remove'?{method:'DELETE',headers}:{method:'PATCH',headers,body:JSON.stringify({player_visible:!row.player_visible})}));
 });
-function lift(p) {
-  if(press!==p)return;
+async function lift(p) {
+  if(press!==p||p.loading)return;
+  if(!tokenArt(p.row,100,'lift')){
+    p.loading=true;
+    notice('Laddar '+p.row.name+'…');
+    try {await prepare(p.v,[p.row]);}
+    catch {if(press===p)notice('Figurbilden kunde inte laddas.');return;}
+    if(press!==p)return;
+    notice();
+  }
   const ok=begin(p.v,p.row,'held',p.point,p.id);
   if(ok){swallowClick=true;document.documentElement.setPointerCapture?.(p.id);}
 }
