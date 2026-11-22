@@ -118,7 +118,7 @@ async function session(touch=false) {
           const c=canvas.getContext('2d'); c.fillStyle='#353936';c.fillRect(0,0,m.width,m.height);
           return canvas.toDataURL();
         };
-        window.adventureRaster=async m=>{const canvas=document.createElement('canvas');canvas.width=m.width;canvas.height=m.height;return canvas.toDataURL();};
+        window.readAdventureRaster=async m=>{const canvas=document.createElement('canvas');canvas.width=m.width;canvas.height=m.height;return {url:canvas.toDataURL(),tag:''};};
         document.querySelector('#loginScreen').classList.add('hidden');
         document.querySelectorAll('header,main,#admin,#adminNavBtn').forEach(el=>el.classList.remove('hidden'));
         document.querySelectorAll('main > section:not(#admin)').forEach(el=>el.classList.add('hidden'));

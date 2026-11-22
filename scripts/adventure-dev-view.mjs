@@ -54,6 +54,12 @@ try{
   throw e;
  });
  assert.deepEqual(await page.evaluate(()=>campaignMapAreas.map(a=>a.id).sort()),expected);
+ const cached=await page.evaluate(async()=>{
+  const before=activeCampaignMap.image_url,tag=adventureProjectionTag;
+  await viewCampaignMap(activeCampaignMap.id,false);
+  return {conditional:!!tag,same:before===activeCampaignMap?.image_url};
+ });
+ if(cached.conditional)assert.ok(cached.same,'An unchanged projection should preserve its image and lighting canvas');
  assert.equal(await page.locator('.sl-outline,.map-location-gm,[data-concealed]').count(),0);
  await page.screenshot({path:path.join(output,'dev-skelettbyn-spelarvy.png')});
  await page.setViewportSize({width:390,height:844});

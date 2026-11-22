@@ -3392,7 +3392,7 @@ async function advanceCampaignDay(withRest){
   showBackupToast('✓ Dag '+campaignDayState.day_number+' startad · '+restHours+' h vila')
  }catch(e){alert('Kunde inte starta ny dag: '+e.message)}
 }
-let adventurePlayerPreview=false, adventurePreviousMap=null, adventurePreviousCamera=null, adventureReadVersion=0, adventureLoading=false, adventureProjectionUrl='';
+let adventurePlayerPreview=false, adventurePreviousMap=null, adventurePreviousCamera=null, adventureReadVersion=0, adventureLoading=false, adventureProjectionUrl='', adventureProjectionTag='';
 function adventureCanManage(){return canManageCampaignMaps()&&!adventurePlayerPreview}
 async function toggleAdventurePreview(){
  if(!canManageCampaignMaps())return;
@@ -3415,16 +3415,18 @@ function clearAdventureMap(){
  $('mapImage').removeAttribute('src');$('mapOverlay').replaceChildren();
  setCampaignMapData(null,[]);
  if(adventureProjectionUrl)URL.revokeObjectURL(adventureProjectionUrl);
- adventureProjectionUrl='';
+ adventureProjectionUrl='';adventureProjectionTag='';
 }
-async function adventureRaster(map){
+async function readAdventureRaster(map,previous){
  const response=await fetch(ALEA_SUPABASE_CONFIG.endpoint('/functions/v1/adventure-player-map'),{
   method:'POST',headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+supabaseSession.access_token,'Content-Type':'application/json'},
-  body:JSON.stringify({map_id:map.id}),cache:'no-store'
+  body:JSON.stringify({map_id:map.id,previous}),cache:'no-store'
  });
+ if(previous&&response.status===304)return null;
  if(!response.ok)throw Error('Spelarkartan kunde inte läsas ('+response.status+').');
- return URL.createObjectURL(await response.blob());
+ return {url:URL.createObjectURL(await response.blob()),tag:response.headers.get('ETag')||''};
 }
+async function adventureRaster(map){return (await readAdventureRaster(map)).url}
 async function loadCampaignMaps(loadViewed=true){
  const version=adventureReadVersion;
  if(!centralCampaignId){campaignMaps=[];campaignActiveMapId=null;setCampaignMapData(null,[]);return}
@@ -3697,10 +3699,12 @@ async function viewCampaignMap(id,reset=true){
  try{
   const areas=await loadCampaignMapAreas(id);
   if(version!==adventureReadVersion)return;
-  url=manager?await getMapImageUrl(map):await adventureRaster(map);
-  if(version!==adventureReadVersion){if(!manager)URL.revokeObjectURL(url);return}
-  if(adventureProjectionUrl)URL.revokeObjectURL(adventureProjectionUrl);
+  const projection=manager?null:await readAdventureRaster(map,!switched&&adventureProjectionUrl?adventureProjectionTag||undefined:undefined);
+  url=manager?await getMapImageUrl(map):projection?.url||adventureProjectionUrl;
+  if(version!==adventureReadVersion){if(projection)URL.revokeObjectURL(projection.url);return}
+  if(adventureProjectionUrl&&url!==adventureProjectionUrl)URL.revokeObjectURL(adventureProjectionUrl);
   adventureProjectionUrl=manager?'':url;
+  adventureProjectionTag=manager?'':projection?.tag??adventureProjectionTag;
   setCampaignMapData({...map,image_url:url},areas,reset||switched);
   if(mapSelectedAreaId&&!areas.some(a=>a.id===mapSelectedAreaId))closeMapLocationInfo();
   else if(!manager&&mapSelectedAreaId)void openMapLocationInfoByArea(mapSelectedAreaId,true);
