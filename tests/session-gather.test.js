@@ -44,6 +44,14 @@ describe('Samla spelarna',()=>{
   expect(gm.opened).not.toHaveBeenCalled();
   expect(a.opened).toHaveBeenCalledTimes(2);
  });
+ it('includes a rendered receipt if the attendance update arrived after the click',async()=>{
+  const m=meeting(),gm=m.client('SL',true);await gm.api.refresh();
+  const player=m.client('Astrid');await player.api.refresh();
+  const sender=[...m.channels.values()].find(c=>c.user==='SL');
+  sender.events.presence({});
+  await gm.api.send('map','Kryptan');
+  await vi.waitFor(()=>expect(gm.latest().report).toEqual({view:'map',total:1,opened:1}));
+ });
  it('leaves late arrivals on their own page, and excludes another meeting',async()=>{
   const m=meeting(),gm=m.client('SL',true),other=m.client('annan');
   other.session('other');await Promise.all([gm.api.refresh(),other.api.refresh()]);

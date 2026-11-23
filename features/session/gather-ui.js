@@ -40,6 +40,8 @@ async function openDestination(message,valid){
   const targetReady=isMap?activeCampaignMap?.id===message.target&&img?.getAttribute('src')===activeCampaignMap.image_url:
    window.aleaGatherGallery.visibleId()===message.target;
   if(targetReady&&img?.complete&&img.naturalWidth>0){
+   // The player may already be on this page, far down the map controls or gallery archive.
+   byId(isMap?'mapViewport':'arcaneGalleryPicture')?.scrollIntoView({block:'center',behavior:'instant'});
    showBackupToast(isMap?'Spelledaren samlade gruppen på '+activeCampaignMap.name:'Spelledaren visar '+img.alt);
    return true;
   }
