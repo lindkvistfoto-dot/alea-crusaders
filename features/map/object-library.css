@@ -1,5 +1,5 @@
 .living-objects { display:grid; gap:.6rem; min-width:0; color:#eadcc4 }
-.living-objects[hidden], [data-object-panel][hidden] { display:none }
+.living-objects[hidden], .living-objects [hidden], [data-object-panel][hidden] { display:none }
 .living-objects label { display:grid; gap:.22rem; font-size:.87rem }
 .living-objects :is(input,textarea,button) { box-sizing:border-box; min-width:0; max-width:100%; font:inherit }
 .living-objects input:not([type=checkbox]), .living-objects textarea { width:100% }
@@ -23,3 +23,5 @@
 .living-handle { fill:#463721; stroke:#fff0cd; stroke-width:2px; vector-effect:non-scaling-stroke; cursor:crosshair }
 .living-objects :is(button,input):focus-visible { outline:2px solid #ffda86; outline-offset:-2px }
 @media(max-width:680px){.living-catalog{max-height:12rem}.living-objects button{min-height:2.6rem}}
+
+.living-objects label.living-snap { display:flex; align-items:center; gap:.45rem }

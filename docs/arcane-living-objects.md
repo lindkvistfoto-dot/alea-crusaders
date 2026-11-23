@@ -1,6 +1,6 @@
 # Kartobjekt i Kartakademin och Äventyrsvyn
 
-Kartakademins flik **Objekt** redigerar kartans förberedda möblering. **Objekt** i SL Control Board öppnar samma verktyg för den aktuella kampanjkartan. Välj en mall och tryck på kartan, eller dra den från biblioteket. Tryck på ett placerat objekt för att flytta det, använda rotations- och skalhandtagen eller ange exakta värden. Varje ändring sparas direkt.
+Kartakademins flik **Objekt** redigerar kartans förberedda möblering. **Objekt** i SL Control Board öppnar samma verktyg för den aktuella kampanjkartan. Välj en mall och tryck på kartan, eller dra den från biblioteket. Tryck på ett placerat objekt för att flytta det, använda rotations- och skalhandtagen eller ange exakta värden. Om ett föremål är helt täckt kan du välja det i **På kartan** och trycka **Flytta** för att ange en ny position. Grundläget är fri placering. Med **Fäst vid hexcentrum** kan du använda kartans befintliga hexgeometri. Varje ändring sparas direkt.
 
 ## Mått och bilder
 

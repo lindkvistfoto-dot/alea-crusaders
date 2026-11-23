@@ -1,4 +1,5 @@
 import './object-library.css';
+import {adventureCell, adventureGrid} from './adventure-hex.js';
 import {mapPointer} from './polygon-edit-geometry.js';
 import hermesAlea from '../hermes-alea/asset-resolver.js';
 
@@ -79,10 +80,11 @@ export function createObjectEditor({map,parent,before,live,manager,getScale,area
   layer.append(mask,pieces);
   parent.append(inputLayer);
   const panel=document.createElement('section');panel.className='living-objects';
-  panel.innerHTML='<label>Sök objekt<input type="search" placeholder="Namn eller kategori" data-search></label><div class="living-catalog" data-catalog></div><div data-inspector></div><p role="status" aria-live="polite"></p>';
+  panel.innerHTML='<label>Sök objekt<input type="search" placeholder="Namn eller kategori" data-search></label><div class="living-catalog" data-catalog></div><label class="living-snap"><input type="checkbox" data-snap> Fäst vid hexcentrum</label><label data-instances hidden>På kartan<select data-instance-picker></select></label><div data-inspector></div><p role="status" aria-live="polite"></p>';
   const catalog=panel.querySelector('[data-catalog]'), inspector=panel.querySelector('[data-inspector]');
+  const instancePicker=panel.querySelector('[data-instance-picker]');
   const search=panel.querySelector('[data-search]'), status=panel.querySelector('[role=status]');
-  let definitions=new Map(),rows=[],selected=null,armed=null,gesture=null,active=false,shown=true;
+  let definitions=new Map(),rows=[],selected=null,armed=null,moving=null,gesture=null,active=false,shown=true;
   let request=0,pending=false,disposed=false,loaded=false,templateId=null,lastScale;
   const events=new AbortController();
   const on=(node,type,fn,options={})=>node.addEventListener(type,fn,{...options,signal:events.signal});
@@ -91,9 +93,17 @@ export function createObjectEditor({map,parent,before,live,manager,getScale,area
   const valid=p=>p && p[0]>=0 && p[1]>=0 && p[0]<=map.width && p[1]<=map.height;
   const stop=e=>{e.preventDefault();e.stopPropagation();};
   const pos=e=>mapPointer(e,layer);
+  const snap=panel.querySelector('[data-snap]');
+  function destination(p){
+    if(!valid(p))return null;
+    if(!snap.checked)return p;
+    const grid=adventureGrid(map,{pixelsPerMeter:getScale()});
+    const cell=adventureCell(map,grid,p,[]);
+    return cell?[cell.x,cell.y]:null;
+  }
   function entry(id) { return definitions.get(id); }
   function available(d) {return d?.url && d.bounds && [d.width_m,d.depth_m,d.height_m].every(n=>Number(n)>0) && getScale()>0;}
-  function cancel() {gesture=null;armed=null;preview.replaceChildren();}
+  function cancel() {gesture=null;armed=null;moving=null;preview.replaceChildren();}
   function draw() {
     layer.style.display=shown?'':'none';
     inputLayer.style.display=active&&shown?'':'none';
@@ -104,6 +114,7 @@ export function createObjectEditor({map,parent,before,live,manager,getScale,area
         areas().filter(a=>a.status!=='explored').map(a=>mapShapeTag(a,'fill="black"')).join('');
       pieces.setAttribute('mask','url(#'+mask.id+')');
     }
+    let selectionOverlay=null;
     for(const saved of rows) {
       const row=gesture?.id===saved.id?{...saved,...gesture.patch}:saved;
       const art=objectArt(entry(row.object_definition_id),row,getScale());
@@ -117,28 +128,38 @@ export function createObjectEditor({map,parent,before,live,manager,getScale,area
         const box=svg('rect',{x:-w/2,y:-h/2,width:w,height:h,fill:'transparent','pointer-events':'all'});
         target.append(box);
         if(row.id===selected){
-          box.setAttribute('class','living-outline');
+          selectionOverlay=svg('g',{transform:group.getAttribute('transform'),'data-object-hit':row.id});
+          selectionOverlay.append(svg('rect',{x:-w/2,y:-h/2,width:w,height:h,class:'living-outline','pointer-events':'none'}));
           if(!row.locked){
             const screen=layer.getScreenCTM();
-            const r=7/(Math.hypot(screen?.a||1,screen?.b||0)||1);
-            target.append(svg('line',{x1:0,x2:0,y1:-h/2,y2:-h/2-2*r,class:'living-outline'}));
+            const r=(matchMedia('(pointer:coarse)').matches?10:7)/(Math.hypot(screen?.a||1,screen?.b||0)||1);
+            selectionOverlay.append(svg('line',{x1:0,x2:0,y1:-h/2,y2:-h/2-2*r,class:'living-outline'}));
             for(const [action,x,y] of [['rotate',0,-h/2-2*r],['scale',w/2,h/2]])
-              target.append(svg('circle',{cx:x,cy:y,r,'data-handle':action,class:'living-handle','pointer-events':'all'}));
+              selectionOverlay.append(svg('circle',{cx:x,cy:y,r,'data-handle':action,class:'living-handle','pointer-events':'all'}));
           }
         }
       }
       pieces.append(group);
     }
+    if(selectionOverlay)hitTargets.append(selectionOverlay);
   }
   function ghost(p) {
     preview.replaceChildren();
-    if(!armed||!valid(p))return;
-    const d=entry(armed),art=objectArt(d,{x:p[0],y:p[1],rotation:d.default_rotation||0},getScale());
+    p=destination(p);
+    if(!armed||!p)return;
+    const d=entry(armed),row=rowById(moving);
+    const art=objectArt(d,{x:p[0],y:p[1],rotation:row?.rotation??d.default_rotation??0,scale_factor:row?.scale_factor??1},getScale());
     if(art)preview.append(art.group);
   }
   const button=(action,label)=>'<button type="button" class="btn" data-command="'+action+'">'+label+'</button>';
   const input=(key,label,value,options='')=>'<label>'+label+'<input type="number" data-value="'+key+'" value="'+escape(value)+'" '+options+'></label>';
   function list(){
+    instancePicker.parentElement.hidden=!rows.length;
+    instancePicker.replaceChildren(new Option('Välj placerat objekt',''),...rows.slice().reverse().map(row=>{
+      const d=entry(row.object_definition_id);
+      return new Option((d?.name||'Objekt')+' · '+format(row.x)+', '+format(row.y)+(row.player_visible?'':' · dold'),row.id);
+    }));
+    instancePicker.value=selected||'';
     const query=search.value.trim().toLocaleLowerCase('sv');
     catalog.innerHTML=[...definitions.values()].filter(d=>d.active!==false && (d.name+' '+category(d.object_type)).toLocaleLowerCase('sv').includes(query)).map(d=>
       '<div class="living-card"><button type="button" data-definition="'+escape(d.id)+'" draggable="'+Boolean(available(d))+'" aria-pressed="'+(armed===d.id)+'" '+(!available(d)?'disabled':'')+'>'+
@@ -147,6 +168,7 @@ export function createObjectEditor({map,parent,before,live,manager,getScale,area
       (!live&&activeUser()?.admin?'<button type="button" data-template="'+escape(d.id)+'" aria-label="Redigera mall '+escape(d.name)+'">✎</button>':'')+'</div>').join('');
   }
   function inspect(){
+    instancePicker.value=selected||'';
     const obj=rowById(selected),d=entry(templateId);
     if(d){
       const battle=!!d.battle_object_key;
@@ -156,13 +178,13 @@ export function createObjectEditor({map,parent,before,live,manager,getScale,area
         '</div><label>Beskrivning<textarea data-description '+(battle?'disabled':'')+'>'+escape(d.description)+'</textarea></label>'+
         (battle?'<small>Beskrivning och Max BEP hämtas från Battle Library.</small>':'')+button('template','Spara mall')+'</fieldset>';return;
     }
-    if(!obj){inspector.innerHTML=armed?button('cancel','Avbryt placering'):'';return;}
+    if(armed||!obj){inspector.innerHTML=armed?button('cancel','Avbryt placering'):'';return;}
     const def=entry(obj.object_definition_id),scale=Number(obj.scale_factor),lock=obj.locked?' disabled':'';
     inspector.innerHTML='<fieldset><legend>'+escape(def?.name)+'</legend><p>'+[def.width_m,def.depth_m,def.height_m].map(n=>format(n*scale)).join(' × ')+' m</p><div class="living-fields">'+
       input('rotation','Rotation (°)',obj.rotation,'step="any"'+lock)+input('scale_factor','Skala (%)',Number((scale*100).toFixed(3)),'min=".001" step="any"'+lock)+
       input('max_bep','Max BEP',obj.max_bep,'min="0" step="1"')+input('current_bep','Aktuell BEP',obj.current_bep,'min="0" step="1"')+
       '</div>'+button('values','Spara värden')+'<div class="living-actions">'+
-      [['back','Längst bak'],['backward','Bakåt'],['forward','Framåt'],['front','Längst fram'],['duplicate','Duplicera'],['lock',obj.locked?'Lås upp':'Lås position'],
+      (obj.locked?'':button('move','Flytta'))+[['back','Längst bak'],['backward','Bakåt'],['forward','Framåt'],['front','Längst fram'],['duplicate','Duplicera'],['lock',obj.locked?'Lås upp':'Lås position'],
        ['visibility',obj.player_visible?'Dölj för spelare':'Visa för spelare'],['remove','Ta bort från kartan']].map(([k,v])=>button(k,v)).join('')+'</div>'+
       '<details><summary>Objektegenskaper</summary>'+[['movement_blocking','Blockerar rörelse'],['light_blocking','Blockerar ljus'],['shadow_casting','Kastar skugga']].map(([k,v])=>'<label><input type="checkbox" data-flag="'+k+'" '+(obj[k]?'checked':'')+'> '+v+'</label>').join('')+'</details></fieldset>';
   }
@@ -207,10 +229,16 @@ export function createObjectEditor({map,parent,before,live,manager,getScale,area
     notify('Placera '+entry(id).name+' på kartan.');onPick();
   }
   function place(p) {
-    if(!armed||!valid(p))return;
-    const id=armed;cancel();void save('place',crypto.randomUUID(),{definition:id,x:p[0],y:p[1]});
+    p=destination(p);
+    if(!armed||!p)return;
+    const definition=armed,id=moving;cancel();
+    if(id)void save('edit',id,{x:p[0],y:p[1]});
+    else void save('place',crypto.randomUUID(),{definition,x:p[0],y:p[1]});
   }
   on(search,'input',list);
+  on(instancePicker,'change',()=>{
+    cancel();selected=instancePicker.value||null;templateId=null;inspect();list();draw();notify('');
+  });
   on(panel,'click',async e=>{
     const el=e.target.closest('button');if(!el||pending)return;
     if(el.dataset.definition){pick(el.dataset.definition);return;}
@@ -228,6 +256,9 @@ export function createObjectEditor({map,parent,before,live,manager,getScale,area
         await refresh(true);notify('Objektmallen har sparats.');}catch(error){notify(error.message);}finally{pending=false;panel.inert=false;}return;
     }
     const obj=rowById(selected);if(!obj)return;
+    if(action==='move'&&!obj.locked){
+      cancel();moving=obj.id;armed=obj.object_definition_id;inspect();notify('Välj objektets nya position på kartan.');onPick();return;
+    }
     if(action==='values'){
       if('scale_factor' in values)values.scale_factor/=100;
       const patch=Object.fromEntries(Object.entries(values).filter(([k,v])=>v!==(obj[k]===null?null:Number(obj[k]))));
@@ -240,7 +271,7 @@ export function createObjectEditor({map,parent,before,live,manager,getScale,area
   on(panel,'dragstart',e=>{
     const id=e.target.closest('[data-definition]')?.dataset.definition;
     if(!available(entry(id)))return;
-    armed=id;templateId=null;selected=null;e.dataTransfer.setData('application/x-alea-map-object',id);
+    cancel();armed=id;templateId=null;selected=null;e.dataTransfer.setData('application/x-alea-map-object',id);
     e.dataTransfer.effectAllowed='copy';draw();
   });
   on(panel,'dragend',()=>{cancel();draw();list();inspect();});
@@ -266,7 +297,10 @@ export function createObjectEditor({map,parent,before,live,manager,getScale,area
     const dx=p[0]-obj.x,dy=p[1]-obj.y,ax=start[0]-obj.x,ay=start[1]-obj.y;
     if(mode==='rotate')gesture.patch={rotation:Number(obj.rotation)+(Math.atan2(dy,dx)-Math.atan2(ay,ax))*180/Math.PI};
     else if(mode==='scale')gesture.patch={scale_factor:Number(obj.scale_factor)*Math.max(.001,Math.hypot(dx,dy)/Math.max(.001,Math.hypot(ax,ay)))};
-    else gesture.patch={x:Number(obj.x)+p[0]-start[0],y:Number(obj.y)+p[1]-start[1]};
+    else {
+      const target=destination([Number(obj.x)+p[0]-start[0],Number(obj.y)+p[1]-start[1]]);
+      gesture.patch=target?{x:target[0],y:target[1]}:{};
+    }
     draw();
   });
   on(inputLayer,'pointerup',e=>{

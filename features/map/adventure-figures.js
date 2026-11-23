@@ -93,7 +93,7 @@ function toolPanel(v) {
 function renderBoard(v) {
   const owner=canManageCampaignMaps();
   const context=adventurePlayerPreview?'Spelarvy':v?.map.name||'Karta';
-  const content='<div data-map-controls></div>'+(v?.gm?'<section class="slcb-module"><button class="btn" type="button" data-objects-toggle aria-expanded="'+Boolean(v.objects?.active)+'">Objekt</button><div data-object-panel></div></section><section class="slcb-module"><h3>Figurer</h3>'+toolPanel(v)+'</section>':'');
+  const content='<div data-map-controls></div>'+(v?.gm?'<section class="slcb-module"><button class="btn" type="button" data-objects-toggle aria-expanded="'+Boolean(v.objects?.active)+'">'+(v.objects?.active?'Avsluta objektredigering':'Objekt')+'</button><div data-object-panel></div></section><section class="slcb-module"><h3>Figurer</h3>'+toolPanel(v)+'</section>':'');
   const html=owner?slControlBoardHtml({open:boardOpen,panelId:'adventureFigurePanel',toggle:'aleaAdventureFigures.toggle()',context,panel:boardOpen?content:''}):'<div data-map-controls></div>';
   if(board.htmlSignature!==html){
     if(board.contains(controls))board.after(controls);
