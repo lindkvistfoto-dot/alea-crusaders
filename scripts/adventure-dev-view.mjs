@@ -70,5 +70,12 @@ try{
  await page.evaluate(()=>resetMapView());
  await page.screenshot({path:path.join(output,'dev-skelettbyn-mobil.png')});
  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+ // Exercise the built Pages entry: missing nested gallery styles leave the metalwork
+ // in document flow and crop the shared picture on a phone.
+ await page.locator('#materialNavBtn').evaluate(button=>button.click());
+ await page.waitForFunction(()=>{
+  const art=document.querySelector('#arcaneGallery .arcane-kit-art');
+  return art&&getComputedStyle(art).position==='absolute'&&art.getBoundingClientRect().width>0;
+ });
  console.log('DEV Skelettbyn: '+expected.length+' explored rooms, verified projection, 3 Hero Class poses, desktop and mobile.');
 }finally{await browser.close();}
