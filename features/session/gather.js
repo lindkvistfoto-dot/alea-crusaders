@@ -6,6 +6,7 @@ export function createGather({identity, readSession, connect, publish, open, ann
  const current=b=>binding===b&&same(b,identity());
  function state(){
   return {ready:!!binding&&current(binding)&&joined,busy:submitting,session,
+   online:Object.values(members).filter(tabs=>tabs.some(t=>t.player===true)).length,
    report:report&&{view:report.view,total:report.expected.size,opened:report.opened.size}};
  }
  function disconnect(){
@@ -20,7 +21,11 @@ export function createGather({identity, readSession, connect, publish, open, ann
   members=rows;
   if(report){
    for(const [user,tabs] of Object.entries(rows)){
-    if(report.expected.has(user)&&tabs.some(t=>t.opened===report.id))report.opened.add(user);
+    // Presence and broadcast arrive independently. A rendered receipt can arrive
+    // before the sender has received this player's initial join.
+    if(tabs.some(t=>t.player===true&&t.opened===report.id)){
+     report.expected.add(user);report.opened.add(user);
+    }
    }
   }
   changed(state());

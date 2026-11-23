@@ -59,7 +59,8 @@ function render(state){
  for(const el of document.querySelectorAll('[data-gather-status]')){
   const r=state.report;
   el.textContent=r?.view===el.dataset.gatherStatus?
-   r.total?r.opened+' av '+r.total+' spelare har öppnat '+(r.view==='map'?'kartan.':'bilden.'):'Inga spelare var anslutna.':'';
+   r.total?r.opened+' av '+r.total+' spelare har öppnat '+(r.view==='map'?'kartan.':'bilden.'):'Inga spelare var anslutna.':
+   state.ready&&identity()?.gm?(state.online===1?'1 spelare ansluten.':state.online+' spelare anslutna.'):'';
  }
 }
 const gather=createGather({identity,connect,open:openDestination,announce:m=>showBackupToast(m),
