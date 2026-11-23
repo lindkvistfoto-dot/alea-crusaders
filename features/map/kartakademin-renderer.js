@@ -4,10 +4,11 @@ import { bakeFlameParts, flames, flameWeights } from './kartakademin-flame.js';
 import { isFree, prepareFreeSight } from './kartakademin-mask.js';
 import { blockers, directionalReach, isBlocked, parallelBeamQuads, resolveOrigin, roomVisibility, visibilityPolygon } from './kartakademin-geometry.js';
 
-export async function mountLighting(host, map) {
+export async function mountLighting(host, map, readCamera) {
   const app = new Application();
   let lightTexture, target, frame, imageTexture;
   let destroyed = false;
+  let resizeObserver, cameraFrame, bitmap;
   const projections = new Map();
   const wallProjections = new Map();
   function releaseProjection(entry) {
@@ -50,16 +51,20 @@ export async function mountLighting(host, map) {
   context.fillStyle = gradient;
   context.fillRect(0, 0, 128, 128);
   try {
+    // Bake lighting once in map coordinates. The adventure camera samples the
+    // original artwork separately at the resolution of the visible viewport.
     const scale = Math.min(1, 2048 / Math.max(map.width, map.height));
     const width = Math.max(1, Math.round(map.width * scale));
     const height = Math.max(1, Math.round(map.height * scale));
-    await app.init({ width, height, preference: 'webgl', background: 0, autoStart: false, sharedTicker: false });
-    const bitmap = await createImageBitmap(await (await fetch(map.image_url)).blob());
+    await app.init({ width: readCamera ? 1 : width, height: readCamera ? 1 : height, preference: 'webgl',
+      background: 0, backgroundAlpha: readCamera ? 0 : 1, autoStart: false, sharedTicker: false });
+    bitmap = await createImageBitmap(await (await fetch(map.image_url)).blob());
     imageTexture = Texture.from(bitmap);
     lightTexture = Texture.from(output);
     target = RenderTexture.create({ width, height });
     const world = new Container();
-    world.scale.set(width / map.width, height / map.height);
+    const scene = new Container();
+    app.stage.addChild(scene);
     const background = new Sprite(imageTexture);
     background.width = map.width;
     background.height = map.height;
@@ -73,26 +78,44 @@ export async function mountLighting(host, map) {
     world.addChild(discovery);
     world.mask = discovery;
     const blurLayer = new Container();
-    blurLayer.scale.copyFrom(world.scale);
     const blurred = new Sprite(imageTexture);
     blurred.width = map.width;
     blurred.height = map.height;
 
-    blurred.filters = [new BlurFilter({ strength: 7, quality: 2 })];
+    const roomBlur = new BlurFilter({ strength: 7, quality: 2 });
+    blurred.filters = [roomBlur];
     const unexplored = new Graphics();
     blurred.tint = 0xdddddd;
     blurLayer.addChild(blurred, unexplored);
     blurLayer.mask = unexplored;
     const unknown = new Graphics();
-    unknown.scale.copyFrom(world.scale);
-    app.stage.addChild(world, blurLayer, unknown);
+    if (readCamera) scene.addChild(new Graphics().rect(0, 0, map.width, map.height).fill(0));
+    scene.addChild(world, blurLayer, unknown);
+    scene.scale.set(width / map.width, height / map.height);
     const lightmap = new Container();
-    lightmap.scale.copyFrom(world.scale);
+    lightmap.scale.copyFrom(scene.scale);
     const ambient = new Graphics();
     lightmap.addChild(ambient);
     let lights = [];
     app.canvas.className = 'kartakademin-canvas';
     app.canvas.setAttribute('aria-hidden', 'true');
+
+    function drawCamera() {
+      cameraFrame = undefined;
+      const {width:w, height:h, x, y, scale:zoom} = readCamera();
+      if (!w || !h) return;
+      const density = window.devicePixelRatio || 1;
+      if (app.screen.width !== w || app.screen.height !== h || app.renderer.resolution !== density) {
+        app.renderer.resize(w, h, density);
+      }
+      scene.position.set(x, y);
+      scene.scale.set(zoom);
+      roomBlur.strength = 7 * zoom / scale;
+      app.render();
+    }
+    function syncCamera() {
+      if (readCamera && cameraFrame === undefined) cameraFrame = requestAnimationFrame(drawCamera);
+    }
 
     function paint(time) {
       for (const { sprites, light, flame } of lights) {
@@ -124,9 +147,11 @@ export async function mountLighting(host, map) {
       discovery.clear();
       unexplored.clear();
       unknown.clear();
+      blurLayer.visible = false;
       if (previewAll) discovery.rect(0, 0, map.width, map.height).fill(0xffffff);
       else for (const area of areas) {
         const presentation = roomVisibility(area.status);
+        if (presentation === 'blur') blurLayer.visible = true;
         const layer = presentation === 'sharp' ? discovery : presentation === 'blur' ? unexplored : unknown;
         const d = area.shape_data;
         const color = layer === unknown ? 0 : 0xffffff;
@@ -286,6 +311,8 @@ export async function mountLighting(host, map) {
 
     function destroy() {
       destroyed = true;
+      resizeObserver?.disconnect();
+      cancelAnimationFrame(cameraFrame);
       cancelAnimationFrame(frame);
       lightmap.destroy({ children: true });
       app.destroy({ removeView: true }, { children: true });
@@ -301,12 +328,20 @@ export async function mountLighting(host, map) {
     }
 
     host.prepend(app.canvas);
-    return { update, destroy };
+    if (readCamera) {
+      drawCamera();
+      resizeObserver = new ResizeObserver(syncCamera);
+      resizeObserver.observe(host);
+    }
+    return { update, syncCamera, destroy };
   } catch (error) {
+    resizeObserver?.disconnect();
+    cancelAnimationFrame(cameraFrame);
     if (app.renderer) app.destroy({ removeView: true }, { children: true });
     target?.destroy(true);
     lightTexture?.destroy(true);
     imageTexture?.destroy(true);
+    bitmap?.close();
     throw error;
   }
 }

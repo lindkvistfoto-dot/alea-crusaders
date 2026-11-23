@@ -4,6 +4,9 @@ on:
     branches: [development]
     paths:
       - 'features/map/adventure-*'
+      - 'features/map/kartakademin-renderer.js'
+      - 'features/map/kartakademin.css'
+      - 'features/map/kartakademin.js'
       - 'features/combat/paper-doll-map.js'
       - 'scripts/adventure-figures-visual.mjs'
       - 'scripts/adventure-dev-view.mjs'

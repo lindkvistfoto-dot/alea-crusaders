@@ -144,12 +144,20 @@ function sync(map) {
   const gm=adventureCanManage(), campaign=centralCampaignId;
   if (view?.map.id===map.id && view.gm===gm && view.campaign===campaign) { view.map=map;renderBoard(view);return; }
   close();
-  const layer=svg('svg',{class:'adventure-figure-layer',viewBox:'0 0 '+map.width+' '+map.height,width:map.width,height:map.height});
+  const layer=svg('svg',{class:'adventure-figure-layer',width:'100%',height:'100%'});
+  const bounds=svg('svg',{width:map.width,height:map.height,overflow:'hidden'});
   const lights=svg('g'),pieces=svg('g');
-  layer.append(lights,pieces); document.getElementById('mapCanvas').append(layer);
+  bounds.append(lights,pieces); layer.append(bounds); viewport.append(layer);
   view={map,campaign,gm,layer,pieces,lights,session:undefined,rows:[],open:false,ready:false,version:0,category:'character',hidden:true,prepared:new Set()};
-  renderBoard(view);
+  syncCamera();renderBoard(view);
   void refresh();
+}
+function syncCamera() {
+  if (!view) return;
+  const {width,height,x,y,scale} = adventureCameraFrame();
+  if (!width || !height) return;
+  view.layer.setAttribute('viewBox', [-x/scale,-y/scale,width/scale,height/scale].join(' '));
+  updatePointer();
 }
 function setGeometry(map,config) {
   if (view?.map.id!==map.id) return;
@@ -407,15 +415,14 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')cancel();});
 window.addEventListener('blur',cancel);
 window.addEventListener('scroll',updatePointer,true);
 window.addEventListener('resize',updatePointer);
-new MutationObserver(updatePointer).observe(document.getElementById('mapCanvas'),{attributes:true,attributeFilter:['style']});
 new MutationObserver(()=>{if(page.classList.contains('hidden')){adventureRequestedMap=null;close();}}).observe(page,{attributes:true,attributeFilter:['class']});
-window.aleaAdventureFigures=Object.freeze({sync,refresh,sessionChanged,setGeometry,geometryError,close,toggle});
+window.aleaAdventureFigures=Object.freeze({sync,syncCamera,refresh,sessionChanged,setGeometry,geometryError,close,toggle});
 if(typeof activeCampaignMap!=='undefined' && !page.classList.contains('hidden'))renderMapPanel();
 
 const header=document.querySelector('.alea-app-header');
 if(header)new ResizeObserver(()=>page.style.setProperty('--adventure-header',header.offsetHeight+'px')).observe(header);
 
-new ResizeObserver(()=>{if(view&&mapView.fitted)resetMapView();}).observe(viewport);
+new ResizeObserver(()=>{if(view&&mapView.fitted)resetMapView();else syncCamera();}).observe(viewport);
 
 document.getElementById('sharedMapList').addEventListener('click',event=>{
   const id=event.target.closest('[data-shared-map]')?.dataset.sharedMap;

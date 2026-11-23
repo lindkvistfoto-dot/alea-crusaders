@@ -10,7 +10,7 @@ const browser=await chromium.launch({channel:'chrome',args:['--enable-unsafe-swi
 let currentPage;
 try{
 for(const mobile of [false,true]){
- const page=await browser.newPage({viewport:mobile?{width:400,height:845}:{width:1440,height:980},hasTouch:mobile,isMobile:mobile});
+ const page=await browser.newPage({viewport:mobile?{width:400,height:845}:{width:1440,height:980},hasTouch:mobile,isMobile:mobile,deviceScaleFactor:mobile?2:1});
  currentPage=page;
  const errors=[];page.on('pageerror',e=>{errors.push(e.message);console.log('pageerror',e.stack)});
  await page.route('**/*',async route=>{
@@ -145,6 +145,7 @@ for(const mobile of [false,true]){
  await page.evaluate(()=>{centralCampaignRole='player';renderMapPanel()});
  await page.waitForFunction(()=>document.querySelectorAll('[data-figure-id]').length===4&&!document.querySelector('#adventureSlBoard .slcb-toggle'));
  assert.equal(await page.locator('[data-concealed]').count(),0);assert.deepEqual(errors,[]);
+ await verifyZoomDetail(page, mobile);
  console.log(mobile?'Touch PASS':'Desktop PASS');
  await page.close();
 }
@@ -156,3 +157,80 @@ for(const mobile of [false,true]){
   }
   throw error;
 } finally { await browser.close(); }
+
+// A one-pixel stripe disappears if the painting is first reduced to a 2048px light texture.
+async function verifyZoomDetail(page, mobile) {
+ const surface = page.locator('#mapViewport');
+ await page.evaluate(() => {
+  const { map, room } = fixture;
+  const width = 4096, height = 2048;
+  const artwork = document.createElement('canvas');
+  artwork.width = width; artwork.height = height;
+  const brush = artwork.getContext('2d');
+  brush.fillStyle = '#424242'; brush.fillRect(0, 0, width, height);
+  brush.fillStyle = 'black'; brush.fillRect(2700, 100, 200, 200);
+  brush.fillStyle = 'white';
+  for (let x = 2700; x < 2900; x += 2) brush.fillRect(x, 100, 1, 200);
+  const detailMap = {...map, id:crypto.randomUUID(), width, height, image_url:artwork.toDataURL()};
+  const lamp = {type:'lykta', color:'#ffffff', position:[2800,200], intensity:1, range:4,
+   on:true, motion:0, direction:0, aperture:360};
+  const config = {version:1, darkness:.5, pixelsPerMeter:25, lights:[lamp], geometry:[],
+   freeSight:{width, height, runs:[[0,width*height]]}};
+  const read = window.dbJson;
+  window.dbJson = (path, opts) => path.includes('read_campaign_map_academy_player')
+   ? Promise.resolve(config) : read(path, opts);
+  setCampaignMapData(detailMap, [{...room, shape_data:{x:0,y:0,width:3000,height}},
+   {...room, id:crypto.randomUUID(), status:'unknown', shape_data:{x:3000,y:0,width:1096,height}}]);
+ });
+ await surface.locator('.kartakademin-canvas').waitFor();
+ const hero = page.locator('[data-hero-class="astrid"] > image');
+ await hero.waitFor({state:'attached'});
+ await surface.scrollIntoViewIfNeeded();
+ const focus = async point => {
+  await page.evaluate(([x, y]) => {
+   Object.assign(mapView, {scale:6, x:-x*6, y:-y*6, fitted:false});
+   applyMapTransform();
+  }, point);
+  await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+ };
+ const sample = async () => {
+  const png = await surface.screenshot({scale:'css'});
+  return page.evaluate(async data => {
+   const img = new Image(); img.src = 'data:image/png;base64,' + data; await img.decode();
+   const crop = document.createElement('canvas'); crop.width = crop.height = 48;
+   const ctx = crop.getContext('2d');
+   ctx.drawImage(img, Math.floor((img.width-48)/2), Math.floor((img.height-48)/2), 48,48, 0,0,48,48);
+   return Array.from(ctx.getImageData(0,0,48,48).data.filter((_,i) => i%4===0));
+  }, png.toString('base64'));
+ };
+ await focus([2800,200]);
+ const stripe = await sample();
+ assert.ok(Math.max(...stripe)-Math.min(...stripe)>150, 'The lit map must retain one-source-pixel stripes at 600%');
+ await focus([3250,200]);
+ assert.ok(Math.max(...await sample())<12, 'Panning to an unknown area must keep the map dark');
+ const center = await hero.evaluate(img => {
+  const box=img.getBoundingClientRect(), layer=img.closest('.adventure-figure-layer');
+  const p=new DOMPoint(box.x+box.width/2,box.y+box.height/2).matrixTransform(layer.getScreenCTM().inverse());
+  return [p.x,p.y];
+ });
+ await focus(center);
+ const actual = await sample();
+ // Paint the same master at its final screen size as an independent reference.
+ await hero.evaluate(img => {
+  const viewport=document.getElementById('mapViewport'), b=img.getBoundingClientRect();
+  const ref=document.createElementNS(img.namespaceURI,'svg');
+  Object.assign(ref.style,{position:'absolute',inset:0,width:'100%',height:'100%',zIndex:3,pointerEvents:'none'});
+  viewport.append(ref);
+  const origin=new DOMPoint(b.x,b.y).matrixTransform(ref.getScreenCTM().inverse());
+  const master=img.cloneNode(false);
+  for (const [key,value] of Object.entries({x:origin.x,y:origin.y,width:b.width,height:b.height})) {
+   master.setAttribute(key,value);
+  }
+  ref.append(master); img.style.visibility='hidden';
+ });
+ const reference = await sample();
+ const difference = actual.reduce((sum,red,i)=>sum+Math.abs(red-reference[i]),0)/actual.length;
+ assert.ok(Math.max(...reference)-Math.min(...reference)>60, 'Reference crop must contain the figure');
+ assert.ok(difference<4, 'Astrid must retain the detail of the source at 600% (mean error '+difference+')');
+ console.log(mobile?'Touch zoom detail':'Desktop zoom detail', {mapContrast:Math.max(...stripe)-Math.min(...stripe), figureMeanError:difference});
+}
