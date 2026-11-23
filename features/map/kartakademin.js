@@ -1,3 +1,4 @@
+import {createObjectEditor} from './object-library.js';
 import './kartakademin.css';
 import { mountPolygonStudio } from './polygon-studio.js';
 import { mapPointer } from './polygon-edit-geometry.js';
@@ -118,6 +119,7 @@ function option(value, text) {
 
 function closeEditor() {
   if (!editor) return;
+  editor.objects?.destroy();
   editor.studio?.destroy();
   editor.disposeFlood?.();
   dispose(editor.view);
@@ -328,6 +330,10 @@ async function openEditor(map, areas, imageUrl, roomData) {
   const tokenLayer = node('g', { 'data-character-token-layer': '' });
   const rulerLayer = node('g', { 'data-ruler-layer': '', 'aria-hidden': 'true' });
   academyLayer.after(tokenLayer, rulerLayer);
+  state.objects=createObjectEditor({map,parent:svg,before:tokenLayer,live:false,manager:true,
+    getScale:()=>state.objectScaleKnown ? state.config.pixelsPerMeter : 0});
+  toolPanel.append(state.objects.panel);
+  state.objects.panel.hidden=true;
   const measurementOutput = get('[data-measurement]');
   let viewTool = '', measurement;
   const tokenPreview = get('[data-token-preview]');
@@ -513,7 +519,12 @@ async function openEditor(map, areas, imageUrl, roomData) {
     get('[data-tool-picker]').hidden = !get('[data-tool-picker]').childElementCount;
     get('[data-tool-controls]').hidden = !['sight', 'lights'].includes(modeKey) || state.tool === 'pan' || drawingMask;
     get('[data-mode-note]')?.remove();
-    if (modeKey === 'effects' || modeKey === 'objects') { const note=document.createElement('p'); note.dataset.modeNote=''; note.className='muted'; note.textContent=modeKey === 'effects' ? 'Förberett läge. PR #916 innehåller ingen kartbunden effektmodell.' : 'Förberett läge. Objektfunktioner ingår inte i den här versionen.'; body.append(note); }
+    state.objects.panel.hidden=modeKey !== 'objects';
+    state.objects.editing(modeKey === 'objects' && state.loaded && state.layers.objects);
+    if (modeKey === 'effects') {
+      const note=document.createElement('p'); note.dataset.modeNote=''; note.className='muted';
+      note.textContent='Förberett läge. PR #916 innehåller ingen kartbunden effektmodell.'; body.append(note);
+    }
     let elements;
     if (tool.value === 'light') elements = state.config.lights.map(light => option(light.id, light.name));
     else if (tool.value === 'surface') elements = state.config.geometry
@@ -669,6 +680,8 @@ async function openEditor(map, areas, imageUrl, roomData) {
     const lightOnly = get('[data-light-only]').checked;
     const discovery = get('[data-player]').checked;
     board.classList.toggle('kartakademin-light-only', lightOnly);
+    state.objects.show(state.layers.objects && !lightOnly);
+    state.objects.updateScale();
     state.view?.renderer?.update(state.config, areas, state.positions, lightOnly || !discovery, moving);
     get('[data-map-scale]').textContent = `${state.config.pixelsPerMeter.toLocaleString('sv-SE', { maximumFractionDigits: 2 })} px/m`;
     updateMaskOverlay();
@@ -831,6 +844,8 @@ async function openEditor(map, areas, imageUrl, roomData) {
         const data = await load(map);
         if (editor !== state) return;
         state.config = { ...defaults(), ...(data.config || {lightingModel:'painted'}) };
+        state.objectScaleKnown=Number(data.config?.pixelsPerMeter)>0 || Number(map.pixels_per_meter)>0;
+        if(!data.config?.pixelsPerMeter && Number(map.pixels_per_meter)>0)state.config.pixelsPerMeter=Number(map.pixels_per_meter);
         state.revision = data.revision ?? 0;
         state.positions = data.positions;
         mask = createMask(map.width, map.height, state.config.freeSight);
@@ -870,7 +885,7 @@ async function openEditor(map, areas, imageUrl, roomData) {
       claimEditPointer();
       state.selected = '';
       for (const button of modeButtons) button.setAttribute('aria-selected', String(button.dataset.modeButton === state.mode));
-      refreshToolPicker(state.mode === 'rooms' ? 'room' : state.mode === 'sight' ? 'mask' : state.mode === 'lights' ? 'light' : 'pan');
+      refreshToolPicker(state.mode === 'rooms' ? 'room' : state.mode === 'sight' ? 'mask' : state.mode === 'lights' ? 'light' : state.mode === 'objects' ? 'object' : 'pan');
       state.points = [];
       maskPoints.length = 0;
       resetFlood();
@@ -889,7 +904,7 @@ async function openEditor(map, areas, imageUrl, roomData) {
     const key = input.dataset.config;
     if (key) {
       if (!input.reportValidity()) return;
-      if (key === 'pixelsPerMeter') state.config[key] = map.width / input.valueAsNumber;
+      if (key === 'pixelsPerMeter') {state.objectScaleKnown=true; state.config[key] = map.width / input.valueAsNumber;}
       else state.config[key] = key === 'environment' ? input.value : input.valueAsNumber / (key === 'darkness' ? 100 : 1);
       markDirty();
     } else if (lightForm.contains(input)) {
@@ -1025,6 +1040,7 @@ async function openEditor(map, areas, imageUrl, roomData) {
     const input = get(`[data-layer="${layer}"]`);
     if (!input) return;
     state.layers[layer] = input.checked = visible;
+    if(layer==='objects')refreshList();
     draw();
     state.studio?.render();
   };
@@ -1143,6 +1159,7 @@ async function openEditor(map, areas, imageUrl, roomData) {
     if (!measurement || !state.loaded) return;
     const ppm = Math.hypot(measurement.end[0]-measurement.start[0],measurement.end[1]-measurement.start[1])/10;
     if (!(ppm > 0)) return;
+    state.objectScaleKnown=true;
     state.config.pixelsPerMeter = ppm;
     get('[data-config="pixelsPerMeter"]').value = Number((map.width/ppm).toPrecision(10));
     markDirty(); draw();
