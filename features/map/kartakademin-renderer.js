@@ -59,6 +59,18 @@ export async function mountLighting(host, map, readCamera) {
     await app.init({ width: readCamera ? 1 : width, height: readCamera ? 1 : height, preference: 'webgl',
       background: 0, backgroundAlpha: readCamera ? 0 : 1, autoStart: false, sharedTicker: false });
     bitmap = await createImageBitmap(await (await fetch(map.image_url)).blob());
+    const gl = app.renderer.gl;
+    const limit = gl ? gl.getParameter(gl.MAX_TEXTURE_SIZE) : app.renderer.gpu?.device?.limits.maxTextureDimension2D;
+    const longestSide = Math.max(bitmap.width, bitmap.height);
+    if (limit > 0 && longestSide > limit) {
+      const resized = await createImageBitmap(bitmap, {
+        resizeWidth: Math.max(1, Math.round(bitmap.width * limit / longestSide)),
+        resizeHeight: Math.max(1, Math.round(bitmap.height * limit / longestSide)),
+        resizeQuality: 'high',
+      });
+      bitmap.close();
+      bitmap = resized;
+    }
     imageTexture = Texture.from(bitmap);
     lightTexture = Texture.from(output);
     target = RenderTexture.create({ width, height });
