@@ -1,4 +1,5 @@
 import './object-library.css';
+import {objectCategories, filterObjectLibrary} from './object-categories.js';
 import {adventureCell, adventureGrid} from './adventure-hex.js';
 import {mapPointer} from './polygon-edit-geometry.js';
 import hermesAlea from '../hermes-alea/asset-resolver.js';
@@ -6,7 +7,6 @@ import hermesAlea from '../hermes-alea/asset-resolver.js';
 const svgNS = 'http://www.w3.org/2000/svg';
 const editors = new Set();
 const cropCache = new Map();
-const category = type => ({table:'Bord',chair:'Stolar',chest:'Kistor'}[type] || type);
 const escape = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const format = value => Number(value).toLocaleString('sv-SE',{maximumFractionDigits:3});
 const rpc = (name,args) => dbJson('rpc/'+name,{method:'POST',body:JSON.stringify(args)});
@@ -80,8 +80,11 @@ export function createObjectEditor({map,parent,before,live,manager,getScale,area
   layer.append(mask,pieces);
   parent.append(inputLayer);
   const panel=document.createElement('section');panel.className='living-objects';
-  panel.innerHTML='<label>Sök objekt<input type="search" placeholder="Namn eller kategori" data-search></label><div class="living-catalog" data-catalog></div><label class="living-snap"><input type="checkbox" data-snap> Fäst vid hexcentrum</label><label data-instances hidden>På kartan<select data-instance-picker></select></label><div data-inspector></div><p role="status" aria-live="polite"></p>';
+  const categoryOptions=objectCategories.map(name=>'<option>'+name+'</option>').join('');
+  panel.innerHTML='<div class="living-library-filters"><label>Samling<select data-collection><option value="all">Alla tillgängliga</option><option value="shared">Gemensamma objekt</option><option value="campaign">Kampanjspecifika objekt</option></select></label>'+
+    '<label>Kategori<select data-category><option value="">Alla kategorier</option>'+categoryOptions+'</select></label></div><label>Sök objekt<input type="search" placeholder="Namn eller kategori" data-search></label><div class="living-catalog" data-catalog></div><label class="living-snap"><input type="checkbox" data-snap> Fäst vid hexcentrum</label><label data-instances hidden>På kartan<select data-instance-picker></select></label><div data-inspector></div><p role="status" aria-live="polite"></p>';
   const catalog=panel.querySelector('[data-catalog]'), inspector=panel.querySelector('[data-inspector]');
+  const collection=panel.querySelector('[data-collection]'), category=panel.querySelector('[data-category]');
   const instancePicker=panel.querySelector('[data-instance-picker]');
   const search=panel.querySelector('[data-search]'), status=panel.querySelector('[role=status]');
   let definitions=new Map(),rows=[],selected=null,armed=null,moving=null,gesture=null,active=false,shown=true;
@@ -160,23 +163,31 @@ export function createObjectEditor({map,parent,before,live,manager,getScale,area
       return new Option((d?.name||'Objekt')+' · '+format(row.x)+', '+format(row.y)+(row.player_visible?'':' · dold'),row.id);
     }));
     instancePicker.value=selected||'';
-    const query=search.value.trim().toLocaleLowerCase('sv');
-    catalog.innerHTML=[...definitions.values()].filter(d=>d.active!==false && (d.name+' '+category(d.object_type)).toLocaleLowerCase('sv').includes(query)).map(d=>
-      '<div class="living-card"><button type="button" data-definition="'+escape(d.id)+'" draggable="'+Boolean(available(d))+'" aria-pressed="'+(armed===d.id)+'" '+(!available(d)?'disabled':'')+'>'+
-      (d.url?'<img src="'+escape(d.url)+'" alt="">':'')+'<span><strong>'+escape(d.name)+'</strong><small>'+escape(category(d.object_type))+' · '+
-      (!d.width_m||!d.depth_m||!d.height_m?'Mått saknas':!d.url||!d.bounds?'Bild saknas':!(getScale()>0)?'Kalibrera kartan':format(d.width_m)+' × '+format(d.depth_m)+' m')+'</small></span></button>'+
-      (!live&&activeUser()?.admin?'<button type="button" data-template="'+escape(d.id)+'" aria-label="Redigera mall '+escape(d.name)+'">✎</button>':'')+'</div>').join('');
+    const matches=filterObjectLibrary([...definitions.values()],map.campaign_id,collection.value,category.value,search.value);
+    if(armed&&!moving&&!matches.some(d=>d.id===armed)){cancel();inspect();notify('');}
+    if(templateId&&!matches.some(d=>d.id===templateId)){templateId=null;inspect();}
+    catalog.innerHTML=matches.map(d=>
+      '<div class="living-card">'+
+      (!live&&activeUser()?.admin?'<button type="button" data-template="'+escape(d.id)+'" aria-label="Redigera mall '+escape(d.name)+'">✎</button>':'')+
+      '<button type="button" data-definition="'+escape(d.id)+'" draggable="'+Boolean(available(d))+'" aria-pressed="'+(armed===d.id)+'" '+(!available(d)?'disabled':'')+'>'+
+      (d.url?'<img src="'+escape(d.url)+'" alt="">':'')+'<span><strong>'+escape(d.name)+'</strong><small>'+escape(d.library_category)+(d.campaign_id?' · Kampanjspecifik':'')+' · '+
+      (!d.width_m||!d.depth_m||!d.height_m?'Mått saknas':!d.url||!d.bounds?'Bild saknas':!(getScale()>0)?'Kalibrera kartan':format(d.width_m)+' × '+format(d.depth_m)+' m')+'</small></span></button></div>').join('');
+    if(!matches.length)catalog.textContent=collection.value==='campaign'&&!search.value&&!category.value?'Inga kampanjspecifika objekt ännu.':'Inga objekt matchar urvalet.';
   }
   function inspect(){
     instancePicker.value=selected||'';
     const obj=rowById(selected),d=entry(templateId);
     if(d){
       const battle=!!d.battle_object_key;
-      inspector.innerHTML='<fieldset><legend>'+escape(d.name)+' · objektmall</legend><div class="living-fields">'+
+      inspector.innerHTML='<fieldset><legend>'+escape(d.name)+' · objektmall</legend>'+
+        '<label>Kategori<select data-template-category>'+categoryOptions+'</select></label><div class="living-fields">'+
         input('width_m','Längd (m)',d.width_m,'min=".001" step=".001"')+input('depth_m','Bredd (m)',d.depth_m,'min=".001" step=".001"')+
         input('height_m','Höjd (m)',d.height_m,'min=".001" step=".001"')+input('max_bep','Max BEP',d.max_bep,'min="0" step="1" '+(battle?'disabled':''))+
         '</div><label>Beskrivning<textarea data-description '+(battle?'disabled':'')+'>'+escape(d.description)+'</textarea></label>'+
-        (battle?'<small>Beskrivning och Max BEP hämtas från Battle Library.</small>':'')+button('template','Spara mall')+'</fieldset>';return;
+        (battle?'<small>Beskrivning och Max BEP hämtas från Battle Library.</small>':'')+button('template','Spara mall')+
+        (!d.campaign_id?'<details><summary>Skapa kampanjmall</summary><label>Namn på kampanjmallen<input type="text" data-copy-name></label>'+button('campaign-copy','Skapa i aktuell kampanj')+'</details>':'')+'</fieldset>';
+      inspector.querySelector('[data-template-category]').value=d.library_category;
+      return;
     }
     if(armed||!obj){inspector.innerHTML=armed?button('cancel','Avbryt placering'):'';return;}
     const def=entry(obj.object_definition_id),scale=Number(obj.scale_factor),lock=obj.locked?' disabled':'';
@@ -194,7 +205,7 @@ export function createObjectEditor({map,parent,before,live,manager,getScale,area
       const args={p_map_id:map.id};
       const [objects,defs]=await Promise.all([
         manager?rpc('read_living_map_objects',{...args,p_live:live}):rpc('read_adventure_player_objects',args),
-        manager&&(!loaded||reloadCatalog)?dbJson('arcane_object_definitions?select=*&order=name'):null,
+        manager&&(!loaded||reloadCatalog)?dbJson('arcane_object_definitions?select=*&or=(campaign_id.is.null,campaign_id.eq.'+encodeURIComponent(map.campaign_id)+')&order=name,id'):null,
       ]);
       const fresh=manager?defs:[...new Map(objects.map(o=>[o.definition.id,o.definition])).values()];
       const art=fresh?await loadArt(fresh):null;
@@ -236,6 +247,8 @@ export function createObjectEditor({map,parent,before,live,manager,getScale,area
     else void save('place',crypto.randomUUID(),{definition,x:p[0],y:p[1]});
   }
   on(search,'input',list);
+  on(collection,'change',list);
+  on(category,'change',list);
   on(instancePicker,'change',()=>{
     cancel();selected=instancePicker.value||null;templateId=null;inspect();list();draw();notify('');
   });
@@ -247,13 +260,32 @@ export function createObjectEditor({map,parent,before,live,manager,getScale,area
     if(!action)return;
     if(action==='cancel'){cancel();inspect();list();notify('');return;}
     const fields=[...inspector.querySelectorAll('[data-value]:enabled')];
-    if(['template','values'].includes(action)&&!fields.every(f=>f.reportValidity()))return;
+    if(['template','campaign-copy','values'].includes(action)&&!fields.every(f=>f.reportValidity()))return;
     const values=Object.fromEntries(fields.map(f=>[f.dataset.value,f.value===''?null:f.valueAsNumber]));
-    if(action==='template'){
-      const d=entry(templateId);
+    if(action==='template'||action==='campaign-copy'){
+      const d=entry(templateId),copy=action==='campaign-copy';
+      values.library_category=inspector.querySelector('[data-template-category]').value;
       if(!d.battle_object_key)values.description=inspector.querySelector('textarea').value;
-      try{pending=true;panel.inert=true;await dbJson('arcane_object_definitions?id=eq.'+encodeURIComponent(d.id),{method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify(values)});
-        await refresh(true);notify('Objektmallen har sparats.');}catch(error){notify(error.message);}finally{pending=false;panel.inert=false;}return;
+      if(copy){
+        const nameInput=inspector.querySelector('[data-copy-name]');
+        if(!nameInput.value.trim()){notify('Ange ett namn på kampanjmallen.');nameInput.focus();return;}
+        for(const key of ['object_type','image_asset_key','image_crop','footprint','default_rotation','movement_blocking','light_blocking','shadow_casting'])
+          values[key]=d[key];
+        const id=crypto.randomUUID();
+        Object.assign(values,{id,object_key:'campaign-'+id,campaign_id:map.campaign_id,name:nameInput.value.trim()});
+        if(d.battle_object_key)Object.assign(values,{description:d.description,max_bep:d.max_bep});
+      }
+      try{
+        pending=true;panel.inert=true;
+        const saved=await dbJson('arcane_object_definitions'+(copy?'':'?id=eq.'+encodeURIComponent(d.id)),{
+          method:copy?'POST':'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify(values)});
+        if(!saved?.length)throw new Error('Objektmallen kunde inte sparas.');
+        if(disposed)return;
+        if(copy){collection.value='campaign';category.value='';search.value='';templateId=saved[0].id;}
+        await refresh(true);inspect();notify(copy?'Kampanjmallen har skapats.':'Objektmallen har sparats.');
+        for(const other of editors)if(other!==api)void other.refresh(true);
+      }catch(error){notify(error.message);}finally{pending=false;panel.inert=false;}
+      return;
     }
     const obj=rowById(selected);if(!obj)return;
     if(action==='move'&&!obj.locked){

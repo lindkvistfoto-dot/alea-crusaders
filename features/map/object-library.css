@@ -1,12 +1,14 @@
 .living-objects { display:grid; gap:.6rem; min-width:0; color:#eadcc4 }
 .living-objects[hidden], .living-objects [hidden], [data-object-panel][hidden] { display:none }
 .living-objects label { display:grid; gap:.22rem; font-size:.87rem }
-.living-objects :is(input,textarea,button) { box-sizing:border-box; min-width:0; max-width:100%; font:inherit }
-.living-objects input:not([type=checkbox]), .living-objects textarea { width:100% }
+.living-objects :is(input,textarea,select,button) { box-sizing:border-box; min-width:0; max-width:100%; font:inherit }
+.living-objects input:not([type=checkbox]), .living-objects textarea, .living-objects select { width:100% }
+.living-library-filters { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(11rem,100%),1fr)); gap:.4rem }
 .living-catalog { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(12rem,100%),1fr)); gap:.35rem; max-height:18rem; overflow:auto }
 .living-card { display:flex; border:1px solid #725735; background:#241e18; border-radius:.45rem; overflow:hidden }
 .living-card button { background:transparent; color:inherit; border:0; cursor:pointer; padding:.35rem }
-.living-card button:first-child { flex:1; display:flex; align-items:center; gap:.5rem; text-align:left }
+.living-card button[data-definition] { flex:1; display:flex; align-items:center; gap:.5rem; text-align:left }
+.living-card button[data-template] { min-width:2.75rem }
 .living-card img { width:2.9rem; height:2.9rem; object-fit:contain }
 .living-card small,.living-card strong { display:block }
 .living-card small { font-size:.75rem; color:#cfbd9e }
@@ -21,7 +23,7 @@
 .living-editing [data-object-hit] { cursor:grab }
 .living-outline { fill:transparent; stroke:#ffda86; stroke-width:2px; vector-effect:non-scaling-stroke }
 .living-handle { fill:#463721; stroke:#fff0cd; stroke-width:2px; vector-effect:non-scaling-stroke; cursor:crosshair }
-.living-objects :is(button,input):focus-visible { outline:2px solid #ffda86; outline-offset:-2px }
+.living-objects :is(button,input,select):focus-visible { outline:2px solid #ffda86; outline-offset:-2px }
 @media(max-width:680px){.living-catalog{max-height:12rem}.living-objects button{min-height:2.6rem}}
 
 .living-objects label.living-snap { display:flex; align-items:center; gap:.45rem }
