@@ -4188,9 +4188,15 @@ function mapAreaHitSvg(a){
  return shape.replace('/>',`><title>${escAttr(a.name||'Område')} · ${statusLabel(a.status)}</title></${a.shape_type==='rect'?'rect':'polygon'}>`);
 }
 
+function adventureCameraFrame(){
+ const viewport=$('mapViewport'),width=viewport.clientWidth,height=viewport.clientHeight;
+ return {width,height,x:width/2+mapView.x,y:height/2+mapView.y,scale:mapView.scale};
+}
 function applyMapTransform(){
  let canvas=$('mapCanvas');if(!canvas)return;
  canvas.style.transform=`translate(${mapView.x}px,${mapView.y}px) scale(${mapView.scale})`;
+ window.aleaAdventureFigures?.syncCamera?.();
+ window.aleaKartakademin?.syncCamera?.();
  if($('mapZoomLabel'))$('mapZoomLabel').textContent=Math.round(mapView.scale*100)+'%';
 }
 function resetMapView(){

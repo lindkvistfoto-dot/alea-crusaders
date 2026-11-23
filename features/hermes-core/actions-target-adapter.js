@@ -83,6 +83,12 @@ export function createCoreActionsTargetAdapter({db,prepared,registryKey}) {
    if(prepared.profile_id==="spell-cutout"&&expectedKey&&expectedKey!==metadata.path)throw new Error("EXISTING_CUTOUT_PROTECTED");
    const previous=await readTarget(target);
    if(!previous||previous.key!==expectedKey)throw new Error("CORE_APP_TARGET_CHANGED");
+   if(appTarget.preserve_map_extent){
+    const {width,height}=previous.row;
+    if(!previous.key||!(width>0&&height>0&&metadata.width>0&&metadata.height>0)||
+       metadata.width*height!==metadata.height*width)
+     throw new Error("CORE_MAP_EXTENT_MISMATCH");
+   }
    if(appTarget.binding_type==="record-image"&&expectedKey!==null&&expectedKey!==metadata.path)
     throw new Error("CORE_RECORD_IMAGE_REPLACE_PROTECTED");
    let update=db.from(appTarget.table).update(appImageUpdate(previous,metadata)).eq(appTarget.lookup_column,previous.row[appTarget.lookup_column]);

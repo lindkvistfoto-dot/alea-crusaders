@@ -224,14 +224,9 @@
       "bucket": "campaign-maps",
       "visibility": "private",
       "key_pattern": "uuid",
-      "path_template": "{campaign_id}/{id}/image-{image_uuid}.webp",
       "path_columns": [
         "campaign_id"
-      ],
-      "write_fields": {
-        "width": "width",
-        "height": "height"
-      }
+      ]
     },
     "combat-scene-background": {
       "kind": "app-image",
@@ -894,6 +889,7 @@
     },
     "campaign-map": {
       "adapter": "campaign-map",
+      "path_template": "{campaign_id}/{id}/image-{image_uuid}.webp",
       "source_formats": [
         "PNG",
         "JPEG",
@@ -911,7 +907,38 @@
       "quality_start": 90,
       "quality_min": 50,
       "quality_step": 4,
-      "max_source_bytes": 67108864
+      "max_source_bytes": 67108864,
+      "write_fields": {
+        "width": "width",
+        "height": "height"
+      }
+    },
+    "campaign-map-detail": {
+      "adapter": "campaign-map",
+      "path_template": "{campaign_id}/{id}/detail-{image_uuid}.webp",
+      "source_formats": [
+        "PNG",
+        "JPEG",
+        "WEBP"
+      ],
+      "source_min_edge": 1,
+      "source_max_edge": 8192,
+      "aspect": "any",
+      "alpha": "preserve",
+      "fit": "contain",
+      "output_width": null,
+      "output_height": null,
+      "output_max_edge": 8192,
+      "max_webp_bytes": 12000000,
+      "quality_start": 94,
+      "quality_min": 50,
+      "quality_step": 4,
+      "max_source_bytes": 67108864,
+      "preserve_map_extent": true,
+      "guard_columns": [
+        "width",
+        "height"
+      ]
     },
     "combat-scene-background": {
       "adapter": "combat-scene-background",

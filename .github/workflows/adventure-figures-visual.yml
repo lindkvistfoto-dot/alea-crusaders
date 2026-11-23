@@ -1,0 +1,65 @@
+name: Living Hex desktop and touch
+on:
+  pull_request:
+    branches: [development]
+    paths:
+      - 'features/map/adventure-*'
+      - 'features/map/kartakademin-renderer.js'
+      - 'features/map/kartakademin.css'
+      - 'features/map/kartakademin.js'
+      - 'features/combat/paper-doll-map.js'
+      - 'scripts/adventure-figures-visual.mjs'
+      - 'scripts/adventure-dev-view.mjs'
+      - 'supabase/functions/adventure-player-map/**'
+      - 'tests/fixtures/adventure-figure-art.json'
+      - '.github/workflows/adventure-figures-visual.yml'
+permissions:
+  contents: read
+jobs:
+  placement:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci && npm install --no-save --package-lock=false playwright@1.56.1
+      - uses: actions/checkout@v4
+        with:
+          ref: 50e116696aa47a8f4179874638a149e4cc510fd0
+          path: crypt-fixture
+          sparse-checkout: preview/art-first
+          persist-credentials: false
+      - name: Exercise the DEV preview with an isolated session and published HEXAGONIA artwork
+        env:
+          SOURCE_SHA: ${{ github.event.pull_request.head.sha }}
+          SOURCE_BRANCH: ${{ github.head_ref }}
+        run: |
+          set -euo pipefail
+          alias=$(echo "$SOURCE_BRANCH" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9-]+/-/g' | cut -c1-28)
+          for attempt in {1..35}; do
+            manifest=$(curl -fsS --max-time 8 "https://${alias}.alea-crusaders.pages.dev/deployment-manifest.json?sha=$SOURCE_SHA&attempt=$attempt" || true)
+            preview=$(jq -er --arg sha "$SOURCE_SHA" 'select(.source_sha == $sha) | .deployment_url' <<<"$manifest" 2>/dev/null || true)
+            [[ -n "$preview" ]] && break
+            sleep 5
+          done
+          test -n "$preview"
+          echo "Verified preview $preview for $SOURCE_SHA"
+          echo "ALEA_VERIFIED_PREVIEW=$preview" >> "$GITHUB_ENV"
+          node scripts/adventure-figures-visual.mjs "$preview" crypt-fixture/preview/art-first/warm-floor.webp visual-results
+      - name: Check the real campaign in DEV (read only)
+        if: ${{ !cancelled() && env.ALEA_VERIFIED_PREVIEW != '' && github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'feat/adventure-command-center-v11' }}
+        env:
+          ALEA_DEV_TEST_EMAIL: ${{ secrets.ALEA_DEV_TEST_EMAIL }}
+          ALEA_DEV_TEST_PASSWORD: ${{ secrets.ALEA_DEV_TEST_PASSWORD }}
+        run: node scripts/adventure-dev-view.mjs "$ALEA_VERIFIED_PREVIEW" visual-results
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: living-hex-desktop-mobile
+          path: visual-results/
