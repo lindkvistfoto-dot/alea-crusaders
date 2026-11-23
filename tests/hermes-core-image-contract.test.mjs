@@ -19,7 +19,7 @@ describe('HERMES CORE declarative image contract',()=>{
    expect(resolved.kind).toBe(contract.adapters[profile.adapter].kind);
    expect(['public','private']).toContain(resolved.visibility);
   }
-  expect(CORE_APP_IMAGE_PROFILES.length).toBe(31);
+  expect(CORE_APP_IMAGE_PROFILES.length).toBe(32);
  });
  it('normalizes generic requests without accepting caller-selected destinations',()=>{
   const target=normalizeCoreQueueTarget({schema:3,label:'Portrait',target:{
@@ -65,7 +65,7 @@ describe('HERMES CORE declarative image contract',()=>{
   expect(row.image_reference.source_sha256).toBe(prepared.source_sha256);
   expect(row.image_reference.verified).toBe(true);
  });
- it('updates only the approved campaign map pointer and output dimensions',async()=>{
+ it.each(['campaign-map','campaign-map-detail'])('keeps the intended campaign map dimensions for %s',async(profileId)=>{
   const row={id:'123e4567-e89b-42d3-a456-426614174000',campaign_id:'987e6543-e21b-43d2-b654-426614174111',
    image_path:'old-map.webp',width:1200,height:800};
   const db={from(table){
@@ -83,13 +83,19 @@ describe('HERMES CORE declarative image contract',()=>{
    }
    return q;
   }};
-  const prepared={target:{kind:'app-image',id:row.id},profile_id:'campaign-map'};
+  const prepared={target:{kind:'app-image',id:row.id},profile_id:profileId};
   const adapter=createCoreActionsTargetAdapter({db,prepared,registryKey:'unused'});
-  const result=await adapter.activate(prepared.target,0,row.image_path,{
-   path:'new-map.webp',sha256:'a'.repeat(64),bytes:3200,width:2048,height:1365,alphaPreserved:false,
-  },false);
+  const metadata={path:'new-map.webp',sha256:'a'.repeat(64),bytes:3200,width:4800,height:3200,alphaPreserved:false};
+  const detail=profileId==='campaign-map-detail';
+  if(detail){
+   await expect(adapter.activate(prepared.target,0,row.image_path,{...metadata,height:3000},false))
+    .rejects.toThrow('CORE_MAP_EXTENT_MISMATCH');
+   expect(row.image_path).toBe('old-map.webp');
+  }
+  const result=await adapter.activate(prepared.target,0,row.image_path,metadata,false);
   expect(result.key).toBe('new-map.webp');
-  expect(row).toMatchObject({campaign_id:'987e6543-e21b-43d2-b654-426614174111',image_path:'new-map.webp',width:2048,height:1365});
+  expect(row).toMatchObject({campaign_id:'987e6543-e21b-43d2-b654-426614174111',image_path:'new-map.webp',
+   width:detail?1200:4800,height:detail?800:3200});
  });
  it('keeps earlier schema-2 targets compatible and hashes profile paths immutably',()=>{
   const target=normalizeCoreQueueTarget({schema:2,label:'Skill',target:{kind:'skill',id:'combat-training'}});

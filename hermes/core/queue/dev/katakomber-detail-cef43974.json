@@ -1,0 +1,12 @@
+{
+  "schema": 3,
+  "label": "Katakomber – högupplöst kartbild",
+  "target": {
+    "kind": "profile",
+    "profile_id": "campaign-map-detail",
+    "id": "e99ee62c-549b-48f8-942b-5a09d0dac175"
+  },
+  "drive_file_id": "1xhGdfw9WNiL3722cd6gVL7QT8DyBeWHE",
+  "archive_file_id": "1bTFvZ6FMupS575ozYqtvixl6VyrGc7T1",
+  "source_sha256": "cef439743da8bd24e3662a301c9755be9afc9398cf510b6e8365f493e1eb3e0f"
+}

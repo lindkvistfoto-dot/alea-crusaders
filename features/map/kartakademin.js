@@ -39,10 +39,10 @@ async function load(map, manager = canManageCampaignMaps()) {
   return { config, positions, revision: rows[0]?.revision ?? 0 };
 }
 
-function mount(host, map) {
+function mount(host, map, readCamera) {
   const view = { host, map, renderer: null };
   host.dataset.kartakademinMount = map.id;
-  view.ready = (rendererModule ??= import('./kartakademin-renderer.js')).then(module => module.mountLighting(host, map)).then(renderer => {
+  view.ready = (rendererModule ??= import('./kartakademin-renderer.js')).then(module => module.mountLighting(host, map, readCamera)).then(renderer => {
     if (view.closed) {
       renderer.destroy();
       return null;
@@ -67,7 +67,7 @@ function clearCampaign() {
 }
 
 async function syncCampaign(map, areas, refresh = false) {
-  const host = document.getElementById('mapCanvas');
+  const host = document.getElementById('mapViewport');
   if (!map?.image_url || document.getElementById('mapPage')?.classList.contains('hidden')) {
     clearCampaign();
     return;
@@ -93,7 +93,7 @@ async function syncCampaign(map, areas, refresh = false) {
       state.view = null;
       return;
     }
-    state.view ??= mount(host, map);
+    state.view ??= mount(host, map, adventureCameraFrame);
     const renderer = await state.view.ready;
     if (current === state && state.request === request) renderer?.update(state.data.config, state.areas, state.data.positions);
   } catch (error) {
@@ -1480,4 +1480,4 @@ async function openEditor(map, areas, imageUrl, roomData) {
   };
 }
 
-window.aleaKartakademin = { openEditor, closeEditor, syncCampaign, clearCampaign, getEditMode: () => editor?.mode ?? null, getTool: () => editor?.tool ?? null, isLayerVisible: name => editor?.layers?.[name] ?? true, setLayer: (name, visible) => editor?.setLayer?.(name, visible), updateEditorAreas: areas => editor?.updateAreas?.(areas), hasPendingChanges: () => Boolean(editor?.dirty || editor?.saving || editor?.studio?.pending), isSaving: () => Boolean(editor?.saving || editor?.studio?.busy) };
+window.aleaKartakademin = { openEditor, closeEditor, syncCampaign, clearCampaign, syncCamera: () => current?.view?.renderer?.syncCamera(), getEditMode: () => editor?.mode ?? null, getTool: () => editor?.tool ?? null, isLayerVisible: name => editor?.layers?.[name] ?? true, setLayer: (name, visible) => editor?.setLayer?.(name, visible), updateEditorAreas: areas => editor?.updateAreas?.(areas), hasPendingChanges: () => Boolean(editor?.dirty || editor?.saving || editor?.studio?.pending), isSaving: () => Boolean(editor?.saving || editor?.studio?.busy) };

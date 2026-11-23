@@ -60,29 +60,36 @@ async function publishWebP({target, webp: image, current}: any) {
   }
   const asset = await reserveAsset({target, metadata, current});
   const storage = db.storage.from(appTarget?.bucket || "alea-hermes-public");
-  const {error: uploadError} = await storage.upload(asset.path, image, {
-    contentType: "image/webp", upsert: false, cacheControl: "31536000",
-  });
-  if (uploadError && !/already exists|duplicate|409|resource already/i.test(uploadError.message || "")) {
-    throw new Error("SUPABASE_UPLOAD_FAILED " + uploadError.message);
+  async function storeVerified(path: string, blob: Blob, expectedHash: string) {
+    const {error: uploadError} = await storage.upload(path, blob, {
+      contentType: blob.type, upsert: false, cacheControl: "31536000",
+    });
+    if (uploadError && !/already exists|duplicate|409|resource already/i.test(uploadError.message || "")) {
+      throw new Error("SUPABASE_UPLOAD_FAILED " + uploadError.message);
+    }
+    const {data: downloaded, error: downloadError} = await storage.download(path);
+    if (downloadError || !downloaded) throw new Error("SUPABASE_READBACK_FAILED");
+    if (await sha256(new Uint8Array(await downloaded.arrayBuffer())) !== expectedHash) {
+      throw new Error("SUPABASE_READBACK_HASH_MISMATCH");
+    }
+    let readbackUrl: string | null = null;
+    if (appTarget?.visibility === "private") {
+      const {data:signed,error:signedError}=await storage.createSignedUrl(path,60);
+      if (signedError) throw new Error("SUPABASE_SIGNED_READBACK_URL_FAILED");
+      readbackUrl=signed?.signedUrl??null;
+    } else {
+      readbackUrl=storage.getPublicUrl(path).data?.publicUrl??null;
+    }
+    const response = readbackUrl ? await fetch(readbackUrl, {cache: "no-store"}) : null;
+    if (!response?.ok || await sha256(new Uint8Array(await response.arrayBuffer())) !== expectedHash) {
+      throw new Error("SUPABASE_PUBLIC_IMAGE_READBACK_FAILED");
+    }
   }
-  const {data: downloaded, error: downloadError} = await storage.download(asset.path);
-  if (downloadError || !downloaded) throw new Error("SUPABASE_READBACK_FAILED");
-  if (await sha256(new Uint8Array(await downloaded.arrayBuffer())) !== metadata.sha256) {
-    throw new Error("SUPABASE_READBACK_HASH_MISMATCH");
+  if (appTarget?.preserve_map_extent) {
+    const bands = new Blob([await Deno.readFile(`${outputDir}/bands.zip`)], {type: "application/zip"});
+    await storeVerified(asset.path + ".bands.zip", bands, prepared.bands_sha256);
   }
-  let readbackUrl: string | null = null;
-  if (appTarget?.visibility === "private") {
-    const {data:signed,error:signedError}=await storage.createSignedUrl(asset.path,60);
-    if (signedError) throw new Error("SUPABASE_SIGNED_READBACK_URL_FAILED");
-    readbackUrl=signed?.signedUrl??null;
-  } else {
-    readbackUrl=storage.getPublicUrl(asset.path).data?.publicUrl??null;
-  }
-  const response = readbackUrl ? await fetch(readbackUrl, {cache: "no-store"}) : null;
-  if (!response?.ok || await sha256(new Uint8Array(await response.arrayBuffer())) !== metadata.sha256) {
-    throw new Error("SUPABASE_PUBLIC_IMAGE_READBACK_FAILED");
-  }
+  await storeVerified(asset.path, image, metadata.sha256);
   return {key: asset.key, verified: true, metadata};
 }
 

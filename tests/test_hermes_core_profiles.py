@@ -1,5 +1,6 @@
 import io
 import tempfile
+import zipfile
 import unittest
 from pathlib import Path
 
@@ -10,6 +11,18 @@ from scripts.hermes_system_assets import system_asset
 from scripts.hermes_core_workflow_paths import route_changed_paths
 
 class CoreImageProfileTests(unittest.TestCase):
+    def test_map_detail_preserves_high_resolution_across_private_strips(self):
+        source = io.BytesIO()
+        Image.new("RGBA", (5016, 129), (100, 70, 35, 140)).save(source, "PNG")
+        with tempfile.TemporaryDirectory() as directory:
+            result = prepare(source.getvalue(), Path(directory), "campaign-map-detail")
+            self.assertEqual((result["width"], result["height"]), (5016, 129))
+            with zipfile.ZipFile(Path(directory) / "bands.zip") as bands:
+                self.assertEqual(bands.namelist(), ["size.json", "0.image", "128.image"])
+                with Image.open(io.BytesIO(bands.read("128.image"))) as last:
+                    self.assertEqual(last.size, (5016, 1))
+                    self.assertEqual(last.convert("RGBA").getpixel((5000, 0))[3], 140)
+
     def test_uppercase_arcane_map_system_asset_keys_are_supported(self):
         keys = [
             "ARCANE_MAP_ICON_HIDDEN",

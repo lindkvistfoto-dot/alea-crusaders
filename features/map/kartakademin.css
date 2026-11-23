@@ -1,6 +1,8 @@
 .kartakademin-canvas { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:1 }
 #mapOverlay { z-index:2 }
-#mapCanvas:has(> .kartakademin-canvas) .map-fog { visibility:hidden }
+#mapViewport > .kartakademin-canvas { z-index:0 }
+#mapCanvas { z-index:1; will-change:auto }
+#mapViewport:has(> .kartakademin-canvas) :is(#mapImage, .map-fog) { visibility:hidden }
 .kartakademin-editor { display:grid; gap:.6rem; margin-top:1rem }
 .kartakademin-editor [hidden] { display:none }
 .kartakademin-controls { display:flex; flex-wrap:wrap; align-items:end; gap:.55rem }

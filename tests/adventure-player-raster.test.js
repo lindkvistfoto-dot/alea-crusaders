@@ -1,5 +1,5 @@
 import { describe,it,expect } from 'vitest';
-import { redactRaster } from '../supabase/functions/adventure-player-map/mask.js';
+import { discoveryMask, redactRaster } from '../supabase/functions/adventure-player-map/mask.js';
 function raster(areas){
  const pixels={width:8,height:6,data:new Uint8Array(8*6*4).fill(171)};
  redactRaster(pixels,areas);
@@ -13,6 +13,13 @@ describe('protected adventure raster',()=>{
  });
  it('conceals overlapping rooms regardless of draw order',()=>{
   for(const shapes of [[room,closed],[closed,room]])expect(raster(shapes)(4,3)).toEqual([0,0,0,255]);
+ });
+ it('applies the same map coordinates in high-density strips, including concealed overlaps',()=>{
+  const expected=discoveryMask(32,24,[room,closed],4);
+  const bottom=discoveryMask(32,12,[room,closed],4,12);
+  expect(bottom).toEqual(expected.slice(32*12));
+  expect(expected[9*32+7]).toBe(1);
+  expect(expected[12*32+14]).toBe(0);
  });
  it('fails closed if an invalid concealed shape cannot be evaluated',()=>{
   expect(()=>raster([room,{...closed,shape_data:{points:[]}}])).toThrow();

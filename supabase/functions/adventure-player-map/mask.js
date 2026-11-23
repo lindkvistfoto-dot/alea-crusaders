@@ -5,14 +5,14 @@ function vertices(area) {
     ? [[d.x,d.y],[d.x+d.width,d.y],[d.x+d.width,d.y+d.height],[d.x,d.y+d.height]]
     : d.points;
 }
-export function redactRaster(image,areas) {
-  const {width,height,data}=image;
+export function discoveryMask(width,height,areas,scale=1,top=0) {
   const mask=new Uint8Array(width*height);
   for(const reveal of [true,false]){
     for(const area of areas){
       if(area.explored!==reveal)continue;
-      const points=vertices(area);
-      if(!Array.isArray(points)||points.length<3||points.some(p=>p.length!==2||!p.every(Number.isFinite)))throw Error('Invalid area');
+      const verticesInMap=vertices(area);
+      if(!Array.isArray(verticesInMap)||verticesInMap.length<3||verticesInMap.some(p=>p.length!==2||!p.every(Number.isFinite)))throw Error('Invalid area');
+      const points=verticesInMap.map(([x,y])=>[x*scale,y*scale-top]);
       const ys=points.map(p=>p[1]);
       const start=Math.max(0,Math.ceil(Math.min(...ys)-.5));
       const end=Math.min(height,Math.ceil(Math.max(...ys)-.5));
@@ -30,8 +30,14 @@ export function redactRaster(image,areas) {
       }
     }
   }
+  return mask;
+}
+export function applyDiscoveryMask(data,mask) {
   for(let i=0;i<mask.length;i++)if(!mask[i]){
     const offset=i*4;data[offset]=data[offset+1]=data[offset+2]=0;data[offset+3]=255;
   }
+}
+export function redactRaster(image,areas) {
+  applyDiscoveryMask(image.data,discoveryMask(image.width,image.height,areas));
   return image;
 }

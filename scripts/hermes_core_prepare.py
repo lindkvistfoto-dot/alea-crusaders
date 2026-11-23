@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import zipfile
 import hashlib
 import io
 import json
@@ -189,7 +190,21 @@ def prepare(source: bytes, output_dir: Path, profile_id: str) -> dict:
     webp_path = output_dir / "image.webp"
     source_path.write_bytes(source)
     webp_path.write_bytes(webp)
+    band_metadata = {}
+    if profile.get("preserve_map_extent"):
+        # The private player renderer decodes one strip at a time. A full RGBA
+        # decode of this artwork would exhaust the Edge worker's memory.
+        band_file = output_dir / "bands.zip"
+        with Image.open(io.BytesIO(webp)) as artwork, zipfile.ZipFile(band_file, "w") as bands:
+            bands.writestr(zipfile.ZipInfo("size.json"), json.dumps([width, height]))
+            for y in range(0, height, 128):
+                strip = artwork.crop((0, y, width, min(height, y + 128)))
+                buffer = io.BytesIO()
+                strip.save(buffer, "WEBP", quality=94, method=4, exact=True)
+                bands.writestr(zipfile.ZipInfo(f"{y}.image"), buffer.getvalue())
+        band_metadata["bands_sha256"] = digest(band_file.read_bytes())
     return {
+        **band_metadata,
         "profile_id": profile_id,
         "source_file": source_path.name,
         "source_mime": source_mime,

@@ -2,6 +2,7 @@ import { Buffer } from 'node:buffer';
 import { PNG } from 'npm:pngjs@7.0.0';
 import jpeg from 'npm:jpeg-js@0.4.4';
 import { redactRaster } from './mask.js';
+import { projectBands } from './bands.js';
 
 const base=Deno.env.get('SUPABASE_URL')!;
 const service=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -37,7 +38,9 @@ Deno.serve(async req=>{
     if(!plan)return empty(403);
     let pixels,tag='';
     if(plan.areas.some(a=>a.explored)){
-      const url=base+'/storage/v1/object/authenticated/campaign-maps/'+plan.path.split('/').map(encodeURIComponent).join('/');
+      const detail=/\/detail-[a-f0-9-]{36}\.webp$/.test(plan.path);
+      const sourcePath=detail?plan.path+'.bands.zip':plan.path;
+      const url=base+'/storage/v1/object/authenticated/campaign-maps/'+sourcePath.split('/').map(encodeURIComponent).join('/');
       if(typeof previous==='string'){
         const meta=await fetch(url,{method:'HEAD',headers});
         const sourceTag=meta.headers.get('ETag');
@@ -48,6 +51,10 @@ Deno.serve(async req=>{
       const sourceTag=file.headers.get('ETag');
       if(sourceTag)tag=await projectionTag(plan,sourceTag);
       const bytes=new Uint8Array(await file.arrayBuffer());
+      if(detail){
+        const body=await projectBands(bytes,plan);
+        return new Response(body,{headers:{...cors,'Content-Type':'image/png',...(tag?{ETag:tag}:{})}});
+      }
       if(bytes[0]===0x89)pixels=PNG.sync.read(Buffer.from(bytes.buffer));
       else if(bytes[0]===0xff)pixels=jpeg.decode(bytes,{useTArray:true});
       else {
