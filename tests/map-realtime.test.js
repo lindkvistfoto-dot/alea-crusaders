@@ -144,7 +144,7 @@ function uiHarness({gm=false,maps=[{id:'old',player_visible:true}],state='explor
   campaignActiveMapId:'old',campaignMaps:maps,
   campaignMapAreas:[],mapSelectedAreaId:null,
   mapView:{scale:1.8,x:124,y:-30},
-  canManageCampaignMaps:()=>gm,
+  adventureRequestedMap:null,requestedAdventureMap:rows=>rows.find(m=>m.id===context.adventureRequestedMap?.id),adventureCanManage:()=>gm,adventureReadVersion:0,adventureLoading:false,adventurePlayerPreview:false,
   loadCampaignMaps:async()=>{context.campaignActiveMapId=current;context.campaignMaps=maps;actions.push('library')},
   loadCampaignMapAreas:async()=>[{id:'polygon',status:state,location_id:'place'}],
   renderMapPanel:()=>actions.push('render'),
@@ -161,13 +161,12 @@ function uiHarness({gm=false,maps=[{id:'old',player_visible:true}],state='explor
  return {context,actions,setMaps:x=>{maps=x},setCurrent:x=>{current=x},refresh:()=>context.window.aleaMapRealtime.refresh()};
 }
 describe('v0.34.95 – map screen reconciliation',()=>{
- it('updates fog without resetting player zoom or image',async()=>{
+ it('refreshes the protected player raster without resetting zoom',async()=>{
   const h=uiHarness();await h.refresh();
-  expect(h.context.campaignMapAreas[0].status).toBe('explored');
-  expect(h.context.activeCampaignMap.image_url).toBe('blob:map');
+  expect(h.actions).toContain('switch:old');
+  expect(h.context.activeCampaignMap.image_url).toBe('blob:new');
   expect(h.context.mapView).toEqual({scale:1.8,x:124,y:-30});
-  expect(h.actions).not.toContain('switch:old');
-  expect(h.actions).toContain('render');
+
  });
  it('switches the player to a newly active visible map',async()=>{
   const h=uiHarness();await h.refresh();
@@ -175,11 +174,27 @@ describe('v0.34.95 – map screen reconciliation',()=>{
   h.setCurrent('next');await h.refresh();
   expect(h.actions).toContain('switch:next');
  });
+ it('leaves a player in the shared archive until they return to the current map',async()=>{
+  const h=uiHarness();await h.refresh();
+  h.context.adventureRequestedMap={id:'old'};
+  h.setMaps([{id:'old',player_visible:true},{id:'next',player_visible:true}]);
+  h.setCurrent('next');await h.refresh();
+  expect(h.context.activeCampaignMap.id).toBe('old');
+  h.context.adventureRequestedMap=null;await h.refresh();
+  expect(h.context.activeCampaignMap.id).toBe('next');
+ });
  it('immediately clears a map that has been hidden from a player',async()=>{
   const h=uiHarness();await h.refresh();
   h.setMaps([{id:'old',player_visible:false}]);await h.refresh();
   expect(h.actions).toContain('clear');
   expect(h.context.activeCampaignMap).toBe(null);
+ });
+ it('keeps the explicit SL choice while its first image is still loading',async()=>{
+  const h=uiHarness({gm:true,maps:[{id:'old',player_visible:true},{id:'chosen',player_visible:true}]});
+  h.context.activeCampaignMap=null;h.context.adventureRequestedMap={id:'chosen'};
+  await h.refresh();
+  expect(h.actions).toContain('switch:chosen');
+  expect(h.actions).not.toContain('switch:old');
  });
  it('does not force a GM away from the map being previewed',async()=>{
   const h=uiHarness({gm:true});

@@ -32,6 +32,39 @@
       "app_sha256": "59d0c314e733bdd933053685f55dd6daec65bf60bd38d805286317cd2f4e0603",
       "asset_path": "hermes/system-asset/arcane-bronze-ivory-pointed-hex-high-angle/59d0c314e733bdd933053685f55dd6daec65bf60bd38d805286317cd2f4e0603.webp",
       "alpha_preserved": true
+    },
+    {
+      "id": "79c56036-5454-430f-8c74-cc4746b51372",
+      "asset_key": "arcane-hero-class-astrid",
+      "label": "Astrid Eldhjärta · Hero Class",
+      "asset_path": "hermes/system-asset/arcane-hero-class-astrid/7251c2edf193a028f6af0db819e6723beae80a6def7bf63178f19b98b8e7e3b1.webp",
+      "app_sha256": "7251c2edf193a028f6af0db819e6723beae80a6def7bf63178f19b98b8e7e3b1",
+      "app_bytes": 416474,
+      "width": 1200,
+      "height": 1311,
+      "alpha_preserved": true
+    },
+    {
+      "id": "b1c37a7f-3f58-4cea-a016-7bf82e8b302a",
+      "asset_key": "arcane-hero-class-evalin",
+      "label": "Evalin Hugger från Caddo · Hero Class",
+      "asset_path": "hermes/system-asset/arcane-hero-class-evalin/fa8bb32263fddc582e0eb9ba52ccd807aa9543f255bb4aee6050f38fa1b33e59.webp",
+      "app_sha256": "fa8bb32263fddc582e0eb9ba52ccd807aa9543f255bb4aee6050f38fa1b33e59",
+      "app_bytes": 337818,
+      "width": 1086,
+      "height": 1448,
+      "alpha_preserved": true
+    },
+    {
+      "id": "92c00f86-5aeb-46b7-bbca-81240da3d1ad",
+      "asset_key": "arcane-hero-class-lyra",
+      "label": "Lyra Gråväv · Hero Class",
+      "asset_path": "hermes/system-asset/arcane-hero-class-lyra/2406037f517ab9e6090e74483540aaa11ca11efcdee6bf4220b33a4e63dea307.webp",
+      "app_sha256": "2406037f517ab9e6090e74483540aaa11ca11efcdee6bf4220b33a4e63dea307",
+      "app_bytes": 396742,
+      "width": 1086,
+      "height": 1448,
+      "alpha_preserved": true
     }
   ],
   "poses": [

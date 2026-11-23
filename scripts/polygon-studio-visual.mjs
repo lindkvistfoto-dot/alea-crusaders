@@ -82,6 +82,8 @@ function database(path, request) {
       }
       return versions();
     }
+    case 'rpc/read_adventure_player_areas':return readRows(JSON.parse(request.body).p_map_id)
+      .filter(row=>states.get(row.location_id)==='explored').map(row=>({...row,status:'explored'}));
     case 'campaign_map_areas': return readRows(params.get('map_id')?.replace(/^eq\./,''));
     case 'campaign_sites': return db.sites;
     case 'campaign_maps': return db.maps;
@@ -116,6 +118,7 @@ async function session(touch=false) {
           const c=canvas.getContext('2d'); c.fillStyle='#353936';c.fillRect(0,0,m.width,m.height);
           return canvas.toDataURL();
         };
+        window.readAdventureRaster=async m=>{const canvas=document.createElement('canvas');canvas.width=m.width;canvas.height=m.height;return {url:canvas.toDataURL(),tag:''};};
         document.querySelector('#loginScreen').classList.add('hidden');
         document.querySelectorAll('header,main,#admin,#adminNavBtn').forEach(el=>el.classList.remove('hidden'));
         document.querySelectorAll('main > section:not(#admin)').forEach(el=>el.classList.add('hidden'));
@@ -437,7 +440,7 @@ try {
       return {hits:overlay.querySelectorAll('.player-hit').length,fills:[...overlay.querySelectorAll('mask polygon')].map(p=>p.getAttribute('fill')),
         editorHandles:overlay.querySelectorAll('[data-vertex-index]').length};
     },map.id);
-    assert.deepEqual(visible,{hits:status==='unknown'?0:1,fills:status==='unknown'?[]:[status==='explored'?'black':'#666'],editorHandles:0});
+    assert.deepEqual(visible,{hits:status==='explored'?1:0,fills:status==='explored'?['black']:[],editorHandles:0});
   }
   if (visibilityPath) {
     for (const name of ['Grottsystem','Skelettbyn']) {
@@ -449,8 +452,7 @@ try {
           unexplored:svg.querySelectorAll('mask [fill="#666"]').length};
       },level.id);
       const known=rooms.filter(a=>states.get(a.location_id)==='explored').length;
-      const partial=rooms.filter(a=>states.get(a.location_id)==='unexplored').length;
-      assert.deepEqual(actual,{hits:known+partial,explored:known,unexplored:partial});
+      assert.deepEqual(actual,{hits:known,explored:known,unexplored:0});
     }
   }
   await page.close();

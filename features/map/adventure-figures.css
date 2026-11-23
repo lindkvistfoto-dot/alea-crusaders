@@ -20,3 +20,55 @@
 body:has(.adventure-figure-layer[data-gm]) .arcane-character-portrait[data-character] { cursor:grab; touch-action:none; user-select:none }
 body:has(.adventure-figure-ghost), body:has(.adventure-figure-ghost) * { cursor:grabbing!important; user-select:none!important }
 @media (prefers-reduced-motion:reduce) { .adventure-hex-light[data-fading] { animation-duration:1ms } }
+#mapPage #adventureControls[hidden] { display:none }
+.adventure-figure-layer [data-selected] > ellipse { fill:#d4b16444; stroke:#ffe4a1; stroke-width:2; vector-effect:non-scaling-stroke }
+.adventure-figure-layer [data-figure-id] { pointer-events:all }
+body:has(#mapPage:not(.hidden)) .alea-app-header > .bar { max-width:none }
+body:has(#mapPage:not(.hidden)) main:has(#mapPage) {
+  box-sizing:border-box; width:100%; max-width:none; margin:0;
+  padding:0 var(--alea-navigation-inline-padding);
+}
+#mapPage .mappage { max-width:none; margin:0; padding:0; border:0 }
+#mapPage .mapviewport {
+  width:100%; height:auto; min-height:0;
+  max-height:max(12rem,calc(100dvh - var(--adventure-header, 130px) - 5rem));
+  scroll-margin-top:var(--adventure-header,130px);
+  aspect-ratio:var(--campaign-map-aspect-ratio, 16 / 10);
+}
+#mapPage .maptoolbar { margin:0; flex-wrap:wrap }
+#mapPage .maptoolbar select { min-width:0; max-width:100% }
+#mapPage .map-location-images-panel, #mapPage .map-location-panel { position:static }
+@media(min-width:901px){
+  #mapPage .mapworkarea {
+    grid-template-columns:minmax(0,1fr) minmax(0,2fr) minmax(0,1fr);
+    grid-template-areas:"images map info"; gap:8px;
+  }
+  #mapPage .map-location-images-panel, #mapPage .map-location-panel {
+    max-height:calc(100dvh - var(--adventure-header, 130px) - .5rem); overflow:auto;
+  }
+}
+@media(max-width:900px){
+  #mapPage .mapworkarea { grid-template-columns:minmax(0,1fr); grid-template-areas:"map" "images" "info";gap:.45rem }
+  #mapPage .map-location-images-panel, #mapPage .map-location-panel {max-height:none}
+}
+
+@media(min-width:901px) {
+  body:has(#mapPage:not(.hidden)) .alea-app-header { --adventure-nav-size:clamp(54px,6.3vw,104px); padding-inline:var(--alea-navigation-inline-padding) }
+  body:has(#mapPage:not(.hidden)) .alea-app-header > .bar {width:100%;padding-inline:0}
+  body:has(#mapPage:not(.hidden)) .alea-app-header::before {width:calc(100% - 2 * var(--alea-navigation-inline-padding))}
+  body:has(#mapPage:not(.hidden)) .alea-toolstrip {min-height:var(--adventure-nav-size);padding-left:calc(var(--adventure-nav-size) + 12px)}
+  body:has(#mapPage:not(.hidden)) .alea-banner-home-link,
+  body:has(#mapPage:not(.hidden)) .alea-banner-home-icon {width:var(--adventure-nav-size);height:var(--adventure-nav-size)}
+  body:has(#mapPage:not(.hidden)) .alea-toolstrip > .btn.alea-nav-art {
+    flex-basis:var(--adventure-nav-size)!important;width:var(--adventure-nav-size)!important;
+    min-width:var(--adventure-nav-size)!important;max-width:var(--adventure-nav-size)!important;
+    height:var(--adventure-nav-size)!important;min-height:var(--adventure-nav-size)!important;
+  }
+  body:has(.arcane-character-rail:not([hidden])) #mapPage #mapLocationPanel {padding-inline-end:4.25rem}
+}
+
+#sharedMapArchive {margin-top:.65rem;border-top:1px solid #685137;padding-top:.5rem}
+#sharedMapArchive summary {cursor:pointer;font-weight:600}
+#sharedMapList {display:grid;gap:.35rem;padding:.5rem 0}
+#sharedMapList .btn {text-align:left;white-space:normal}
+#sharedMapList [aria-pressed=true] {border-color:#c8a36b}

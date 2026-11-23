@@ -1262,7 +1262,7 @@ describe("application architecture smoke checks", () => {
   test("map glowup uses a bronze frame and warm brown map treatment", () => {
     const html = read("index.html");
     const css = read("features/map/glowup.css");
-    expect(html).toContain('class="map-title-icon"');
+    expect(html).not.toContain('class="maphead"');
     expect(html).toContain("./features/map/glowup.css?v="+JSON.parse(read("package.json")).version);
     expect(css).toContain("#mapPage .mapviewport");
     expect(css).toContain("filter:sepia(.68)");

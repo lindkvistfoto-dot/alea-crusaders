@@ -126,7 +126,7 @@ export function mountFrodo({
    // A fullscreen preview must not conceal a newly presented GM picture.
    if(changedPicture&&legolas.state.viewerOpen)
     legolas.closeViewer({restoreFocus:false});
-   legolas.openPanel();
+   // A presentation updates the displayed image. Navigation belongs to Samla spelarna.
    if(legolas.state.panelOpen)void legolas.loadPage();
   },
   onCleared:()=>{
@@ -171,6 +171,7 @@ export function mountFrodo({
   if(sceneIndicator)sceneIndicator.textContent=activeRow?'● LIVE':'—';
   const openLarge=el('frodoGmOpenLarge');
   if(openLarge)openLarge.disabled=!activeRow;
+  el('frodoGatherControls')?.classList.toggle('hidden',!gm);
   el('frodoGmActions').classList.toggle('hidden',!gm);
   el('frodoGmAdmin')?.classList.toggle('hidden',!gm);
   el('frodoGooseTestControls')?.classList.toggle('hidden',!gm||!authenticated());
@@ -183,6 +184,7 @@ export function mountFrodo({
   gallery.sync(state.row,state.revision);
   const rows=selection(),idx=rows.findIndex(x=>x.id===state.materialId);
   renderQueue(rows,gm);
+  win().aleaGather?.render();
   // Only the shared presentation history may populate the big gallery.
   for(const [id,disabled] of [
    ['frodoShowQueue',!gm||!rows.length||state.busy],
@@ -265,6 +267,7 @@ export function mountFrodo({
     '<button type="button" id="frodoGooseTestOpen">Öppna</button>'+
     '<button type="button" id="frodoGooseTestClose">Stäng</button>'+
     '<span id="frodoGooseTestStatus" role="status" aria-live="polite"></span></div>'+
+   '<div id="frodoGatherControls" class="frodo-actions hidden"><button type="button" data-gather-view="image" disabled>Samla spelarna</button><span data-gather-status="image" role="status"></span></div>'+
    '<details id="frodoGmAdmin" class="frodo-gm-admin hidden" open>'+
     '<summary><span>⚙ Bildadministration</span><small>Förberedelser · endast SL</small></summary>'+
     '<div class="frodo-gm-admin-body">'+
@@ -275,6 +278,7 @@ export function mountFrodo({
     '<p id="frodoQueueHint" class="frodo-queue-hint"></p></div>'+
    '<div id="frodoGmActions" class="frodo-actions hidden">'+
     '<button type="button" id="frodoShowQueue" class="frodo-primary">◉ Visa vald bild</button>'+
+    '<button type="button" data-gather-view="staged" disabled>Dela och samla spelarna</button>'+
     '<button type="button" id="frodoPrev">← Föregående</button>'+
     '<button type="button" id="frodoNext">Nästa →</button>'+
     '<button type="button" id="frodoStop" class="frodo-stop">■ Avsluta visning</button></div>'+
@@ -333,5 +337,31 @@ export function mountFrodo({
   }
   render();
  }
- return {frodo,mount,refresh,showRow,showQueue,step,render};
+ const gatherGallery={
+  target(kind){
+   if(!authenticated()||!isGM())return null;
+   if(kind==='staged'){
+    const row=selection().find(r=>r.id===stagedId);
+    return row?{id:row.id,prepare:async()=>!!await showRow(row)}:null;
+   }
+   const id=gallery.state.selected;
+   return id&&gallery.state.rows.some(r=>r.id===id)?{id}:null;
+  },
+  async accessible(id){
+   const rows=await request('campaign_materials?campaign_id=eq.'+encodeURIComponent(scope())+
+    '&id=eq.'+encodeURIComponent(id)+'&asset_kind=eq.image&archived_at=is.null&select=id&limit=1');
+   return rows?.[0]?.id===id;
+  },
+  async focus(id,valid){
+   await refresh(true);
+   if(!valid()||el('legolasPanel')?.classList.contains('hidden'))return false;
+   await gallery.refresh();
+   if(!valid()||el('legolasPanel')?.classList.contains('hidden')||!gallery.state.rows.some(r=>r.id===id))return false;
+   if(gallery.state.visible!==id)await gallery.select(id);
+   return true;
+  },
+  visibleId:()=>gallery.state.visible,
+  closeViewer:()=>{if(legolas.state.viewerOpen)legolas.closeViewer({restoreFocus:false});}
+ };
+ return {frodo,mount,refresh,showRow,showQueue,step,render,gatherGallery};
 }

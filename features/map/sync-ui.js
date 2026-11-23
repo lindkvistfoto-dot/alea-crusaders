@@ -3,7 +3,7 @@
  */
 import {createMapRealtime} from './realtime.js?v=0.34.95';
 
-let syncing=null,queued=false,seenCampaign='',seenActiveMap=undefined;
+let syncing=null,queued=false;
 
 function mapPanelOpen(){
  return !!document.getElementById('mapPage')&&
@@ -12,18 +12,17 @@ function mapPanelOpen(){
 
 async function refreshMapOnce(){
  const campaign=String(centralCampaignId||'');
- if(!campaign||!supabaseSession?.access_token||!mapPanelOpen())return;
+ if(adventureLoading||!campaign||!supabaseSession?.access_token||!mapPanelOpen())return;
+ const version=adventureReadVersion;
  const priorMap=activeCampaignMap?.id||null;
  await loadCampaignMaps(false);
- if(campaign!==String(centralCampaignId||'')||!mapPanelOpen())return;
- const currentChanged=seenCampaign===campaign&&
-  seenActiveMap!==undefined&&seenActiveMap!==campaignActiveMapId;
- seenCampaign=campaign;seenActiveMap=campaignActiveMapId;
- const isGM=canManageCampaignMaps();
+ if(version!==adventureReadVersion||campaign!==String(centralCampaignId||'')||!mapPanelOpen())return;
+ const isGM=adventureCanManage();
  const available=campaignMaps.filter(m=>isGM||m.player_visible);
  const current=available.find(m=>m.id===campaignActiveMapId);
  const previous=available.find(m=>m.id===priorMap);
- const desired=(!isGM&&currentChanged&&current?current:previous||current||available[0])||null;
+ const desired=requestedAdventureMap(available)||(!isGM?current:previous||current||available[0])||null;
+ if(adventurePlayerPreview&&!priorMap)return;
  if(desired?.id!==priorMap){
   if(desired)await viewCampaignMap(desired.id,false);
   else{
@@ -33,8 +32,13 @@ async function refreshMapOnce(){
   return;
  }
  if(!desired){renderMapLibraryControls();return;}
+ if(!isGM){
+  await viewCampaignMap(desired.id,false);
+  await window.aleaAdventureFigures?.refresh();
+  return;
+ }
  const areas=await loadCampaignMapAreas(desired.id);
- if(campaign!==String(centralCampaignId||'')||!mapPanelOpen()||
+ if(version!==adventureReadVersion||campaign!==String(centralCampaignId||'')||!mapPanelOpen()||
     activeCampaignMap?.id!==desired.id)return;
  // Keep the image blob, current zoom and pan. Refresh only the fog overlay.
  const existingUrl=activeCampaignMap.image_url||activeCampaignMap.imageUrl||'';
@@ -71,7 +75,7 @@ const mapSync=createMapRealtime({
  isAuthenticated:()=>Boolean(activeUser()&&supabaseSession?.access_token),
  supabaseUrl:SUPABASE_URL,
  publishableKey:SUPABASE_KEY,
- onRefresh:reconcileCampaignMap,
+ onRefresh:()=>{void window.aleaGather?.refresh();return reconcileCampaignMap();},
  onStatus:(label,connected)=>{
   const page=document.getElementById('mapPage');
   const status=document.getElementById('mapStatusText');

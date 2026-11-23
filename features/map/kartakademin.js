@@ -72,7 +72,7 @@ async function syncCampaign(map, areas, refresh = false) {
     clearCampaign();
     return;
   }
-  const manager = canManageCampaignMaps();
+  const manager = adventureCanManage();
   if (current?.map.id !== map.id || current.map.image_url !== map.image_url || current.manager !== manager) {
     clearCampaign();
     current = { map, host, manager };

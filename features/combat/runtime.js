@@ -7491,9 +7491,14 @@ if(typeof window!=='undefined'&&typeof window.addEventListener==='function')
  window.addEventListener('focus',()=>{void combatSyncActiveSpellArtwork(true)});
 
 document.addEventListener('keydown',event=>{if(event.key==='Escape'&&combatantDetailCombatantId&&!$('combatPage')?.classList.contains('hidden')){event.preventDefault();combatCloseCombatantDetails(event)}});
-window.addEventListener('resize',()=>{if(!$('combatPage')?.classList.contains('hidden'))combatPositionDiceLayer()});
-window.visualViewport?.addEventListener('resize',()=>{if(!$('combatPage')?.classList.contains('hidden'))combatPositionDiceLayer()});
-window.addEventListener('scroll',()=>{if(!$('combatPage')?.classList.contains('hidden'))combatPositionDiceLayer()},{passive:true});
+// Mobile viewports can resize before the legacy DOM helper has loaded.
+function repositionVisibleCombatDice(){
+ const page=document.getElementById('combatPage');
+ if(page&&!page.classList.contains('hidden'))combatPositionDiceLayer();
+}
+window.addEventListener('resize',repositionVisibleCombatDice);
+window.visualViewport?.addEventListener('resize',repositionVisibleCombatDice);
+window.addEventListener('scroll',repositionVisibleCombatDice,{passive:true});
 
 /* v0.33.82 — never allow the active combatant to be an attack target */
 

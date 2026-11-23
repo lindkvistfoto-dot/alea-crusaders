@@ -12,7 +12,7 @@ try{
 for(const mobile of [false,true]){
  const page=await browser.newPage({viewport:mobile?{width:400,height:845}:{width:1440,height:980},hasTouch:mobile,isMobile:mobile});
  currentPage=page;
- const errors=[];page.on('pageerror',e=>{errors.push(e.message);console.log('pageerror',e.message)});
+ const errors=[];page.on('pageerror',e=>{errors.push(e.message);console.log('pageerror',e.stack)});
  await page.route('**/*',async route=>{
   const u=new URL(route.request().url());
   if(u.pathname==='/fixture-map.webp')return route.fulfill({path:painting,contentType:'image/webp'});
@@ -31,7 +31,7 @@ for(const mobile of [false,true]){
   const session={id:crypto.randomUUID(),campaign_id:map.campaign_id,status:'active'};
   const rows=[], requests=[];
   const enemy={id:crypto.randomUUID(),name:'Kryptväktare',active:true},npc={id:crypto.randomUUID(),name:'Vägvisaren',active:true};
-  chars=heroes.map(x=>({id:x.id,_dbId:x.id,name:x.name,isNpc:false,live:{KP:12,KPmax:12,PSY:10,PSYmax:10},identity:{namn:x.name},ownerId:'fixture'}));
+  chars=heroes.map(x=>({id:x.name.split(' ')[0].toLowerCase(),_dbId:x.id,name:x.name,isNpc:false,live:{KP:12,KPmax:12,PSY:10,PSYmax:10},identity:{namn:x.name},ownerId:'fixture'}));
   campaignNpcs=[npc];campaignMonsters=[enemy];campaignMaps=[map];centralCampaignId=map.campaign_id;centralCampaignRole='gm';
   const config={version:1,darkness:0,pixelsPerMeter:25,lights:[],geometry:[],freeSight:null};
   const room={id:crypto.randomUUID(),location_id:crypto.randomUUID(),name:'Kryptan',status:'explored',shape_type:'rect',shape_data:{x:0,y:0,width:800,height:680}};
@@ -47,6 +47,7 @@ for(const mobile of [false,true]){
     if(old){Object.assign(old,body);return [old];}
     const row={id:crypto.randomUUID(),player_visible:true,...body};rows.push(row);return [row];
    }
+   if(path.includes('read_adventure_player_figures'))return structuredClone(rows.filter(r=>r.player_visible));
    if(path.startsWith('arcane_system_assets?'))return assets;
    if(path.startsWith('combatant_battle_poses?'))return poses;
    if(path.startsWith('characters?'))return heroes.map(h=>({id:h.id,is_npc:false}));
@@ -66,7 +67,17 @@ for(const mobile of [false,true]){
  await layer.waitFor();await page.waitForFunction(()=>document.querySelector('.adventure-figure-layer[data-gm]')&&window.aleaCombatPaperDollMap.renderMapToken(chars[0]._dbId,100));
  await page.locator('#mapViewport').scrollIntoViewIfNeeded();
  const point=async(q,r)=>layer.evaluate((el,[q,r])=>{const p=new DOMPoint(25*Math.sqrt(3)*(q+r/2),37.5*r).matrixTransform(el.getScreenCTM());return [p.x,p.y]},[q,r]);
- const touch=async(q,r)=>{const xy=await point(q,r);if(mobile)await page.touchscreen.tap(...xy);else await page.mouse.click(...xy)};
+ const touch=async(q,r)=>{
+  // Wait for the map to settle after closing the board and scrolling it into view.
+  await layer.evaluate(async el=>{
+   let prior='',stable=0;
+   for(let i=0;i<90&&stable<4;i++){
+    await new Promise(resolve=>requestAnimationFrame(resolve));
+    const t=el.getScreenCTM(),signature=[t.a,t.d,t.e,t.f].join(',');
+    stable=signature===prior?stable+1:0;prior=signature;
+   }
+  });
+  const xy=await point(q,r);if(mobile)await page.touchscreen.tap(...xy);else await page.mouse.click(...xy)};
  const verifyCount=async n=>page.waitForFunction(n=>window.fixture.rows.length===n,n,{timeout:5500});
  const waitToken=async()=>page.waitForFunction(()=>document.querySelector('[data-figure-id] .combat-paper-doll-universal'));
  const arm=async(label,category,hidden=true)=>{
@@ -84,7 +95,7 @@ for(const mobile of [false,true]){
   await page.keyboard.press('Escape');await page.locator('.arcane-character-drawer.is-open').waitFor({state:'detached'});
   await start();
   await page.mouse.move(...await point(4,6));await page.locator('[data-cell="4,6"]:not([data-fading])').waitFor();
-  assert.ok(await page.locator('.adventure-figure-ghost').innerHTML().then(h=>h.includes('0523350e')&&h.includes('59d0c314')));
+  assert.ok(await page.locator('.adventure-figure-ghost').innerHTML().then(h=>h.includes('arcane-hero-class-astrid')&&h.includes('arcane-bronze-ivory-pointed-hex-high-angle')));
   await page.mouse.move(...await point(5,6));await page.locator('[data-cell="5,6"]:not([data-fading])').waitFor();
   await page.screenshot({path:path.join(output,'lift.png')});
   await page.mouse.up();await verifyCount(1); await waitToken();
@@ -98,8 +109,14 @@ for(const mobile of [false,true]){
   await start();await page.mouse.move(4,4);await page.mouse.up();assert.equal(await page.evaluate(()=>fixture.rows.length),1);
   await page.mouse.move(...await point(3,7));await page.mouse.down();await page.mouse.move(...await point(4,7),{steps:6});await page.mouse.up();
   await page.waitForFunction(id=>fixture.rows[0].id===id && fixture.rows[0].q===4,id);
- }else{await arm('Astrid Eldhjärta','character');await touch(3,7);await verifyCount(1);}
+ }else{
+  await arm('Astrid Eldhjärta','character');await touch(3,7);await verifyCount(1);
+  await touch(3,7);await page.locator('[data-figure-id][data-selected]').waitFor();
+  assert.equal(await page.locator('#mapStatusMenu').isVisible(),false);
+  assert.equal(await page.evaluate(()=>mapSelectedAreaId),null);
+ }
  await arm('Lyra Gråväv','character');await touch(5,5);await verifyCount(2);
+ assert.deepEqual(await page.evaluate(()=>{const {q,r}=fixture.rows.find(row=>row.name==='Lyra Gråväv');return [q,r]}),[5,5]);
  await arm('Evalin Hugger','character');await touch(5,5);
  assert.equal(await page.evaluate(()=>fixture.rows.length),2);
  await arm('Evalin Hugger','character');await touch(1,8);await verifyCount(3);
@@ -108,6 +125,17 @@ for(const mobile of [false,true]){
  await arm('Kryptväktare','monster');await touch(5,7);await verifyCount(6);
  await page.waitForFunction(()=>document.querySelectorAll('[data-concealed]').length===2);
  await page.screenshot({path:path.join(output,(mobile?'mobile':'desktop')+'.png')});
+ const hero=page.locator('[data-figure-id]').filter({has:page.locator('[data-hero-class="lyra"]')});
+ await hero.click({force:true});
+ await page.evaluate(()=>openMapLocationInfoByArea(fixture.room.id));
+ await page.locator('#adventureSlBoard .slcb-toggle').click();
+ for(const preset of ['all','room','battle','group','person']){
+  await page.locator('#adventureZoomPreset').selectOption(preset);
+  assert.ok(await page.evaluate(()=>Number.isFinite(mapView.scale)&&mapView.scale>0));
+ }
+ const camera=await page.evaluate(()=>({...mapView}));
+ await page.locator('#adventureSlBoard .slcb-toggle').click();
+ assert.deepEqual(await page.evaluate(()=>({...mapView})),camera);
  await page.locator('#adventureSlBoard .slcb-toggle').click();
  await page.locator('.slcb-visibility-row').filter({hasText:'Kryptväktare'}).first().getByRole('button',{name:'Visa',exact:true}).click();
  await page.waitForFunction(()=>fixture.rows.filter(r=>!r.player_visible).length===1);

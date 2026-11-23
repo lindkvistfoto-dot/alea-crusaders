@@ -45,7 +45,7 @@
     // Icon-only UI: title provides the hover tooltip; aria-label supports assistive tech.
     button.append(visual);
     button.addEventListener('click', () => {
-      const target = panel.querySelector(selector);
+      const target = document.querySelector(selector === '#mapLocationImagesPanel' ? selector : '#mapLocationPanel '+selector);
       if (target) target.scrollIntoView({behavior:'smooth',block:'start'});
     });
     root.appendChild(button);
@@ -57,10 +57,10 @@
     const selected = !panel.classList.contains('empty') && !panel.querySelector('.map-location-loading');
     // Show all seven slots in SL mode even before selecting a polygon.
     // Do not infer SL permissions from the currently loaded place content.
-    const gm = typeof canManageCampaignMaps === 'function' && canManageCampaignMaps();
+    const gm = typeof adventureCanManage === 'function' && adventureCanManage();
     root.hidden = !gm;
     for (const [key,entry] of icons) {
-      const section = selected ? panel.querySelector(entry.selector) : null;
+      const section = selected ? document.querySelector(key==='image'?entry.selector:'#mapLocationPanel '+entry.selector) : null;
       let populated = !!section;
       if (key === 'event') populated = !!section?.querySelector('.map-event-row');
       if (key === 'image') populated = !!section?.querySelector('img');
