@@ -17,6 +17,7 @@
     "vitest": "4.1.0"
   },
   "dependencies": {
+    "@supabase/realtime-js": "2.101.0",
     "pixi.js": "8.15.0"
   }
 }

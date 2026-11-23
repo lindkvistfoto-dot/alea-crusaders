@@ -3201,13 +3201,15 @@ async function deleteCampaignMonster(id){
 
 let activatingCampaignMap=false,changingMapVisibilityId=null,mapReturn='home',activeCampaignMap=null,campaignMapAreas=[],campaignMaps=[],campaignActiveMapId=null,mapView={scale:1,x:0,y:0},mapPointers=new Map(),mapDragStart=null,mapPinchStart=null,mapDidDrag=false,mapPointerAreaId=null,mapSelectedAreaId=null,mapLocationInfoToken=0,mapImageCache=new Map();
 function canManageCampaignMaps(){return !!activeUser()?.admin||centralCampaignRole==='gm'}
+let mapRoleScope='';
 async function loadCampaignMapRole(){
- centralCampaignRole=null;
+ const roleScope=centralCampaignId+'/'+supabaseSession?.user?.id;
+ if(roleScope!==mapRoleScope){mapRoleScope=roleScope;centralCampaignRole=null;}
  if(!centralCampaignId||!supabaseSession?.user?.id)return null;
  try{
   let rows=await dbJson('campaign_members?campaign_id=eq.'+encodeURIComponent(centralCampaignId)+'&user_id=eq.'+encodeURIComponent(supabaseSession.user.id)+'&select=role&limit=1');
-  centralCampaignRole=rows?.[0]?.role||null;
- }catch(e){console.warn('Kunde inte läsa kampanjroll',e)}
+  if(roleScope===mapRoleScope)centralCampaignRole=rows?.[0]?.role||null;
+ }catch(e){if(roleScope===mapRoleScope)centralCampaignRole=null;console.warn('Kunde inte läsa kampanjroll',e)}
  return centralCampaignRole;
 }
 async function loadCampaignDayState(){
@@ -3457,7 +3459,7 @@ async function loadCampaignMaps(loadViewed=true){
  if(loadViewed&&version===adventureReadVersion){
   let keep=activeCampaignMap&&viewable.some(m=>m.id===activeCampaignMap.id)?activeCampaignMap.id:null;
   let current=viewable.some(m=>m.id===campaignActiveMapId)?campaignActiveMapId:null;
-  let target=requestedAdventureMap(viewable)?.id||current||keep||viewable[0]?.id||null;
+  let target=requestedAdventureMap(viewable)?.id||current||(adventureCanManage()?(keep||viewable[0]?.id):null);
   if(target)await viewCampaignMap(target,false);else setCampaignMapData(null,[]);
  }
 }
@@ -3467,16 +3469,18 @@ function renderMapLibraryControls(){
   let viewable=adventureCanManage()?campaignMaps:campaignMaps.filter(m=>m.player_visible);
   picker.innerHTML='<option value="">Ingen karta</option>'+viewable.map(m=>`<option value="${m.id}" ${activeCampaignMap?.id===m.id?'selected':''}>${escAttr(m.name)}${m.id===campaignActiveMapId?' · aktuell':''}</option>`).join('');
   picker.disabled=!viewable.length;
+  picker.classList.toggle('hidden',!adventureCanManage());
  }
  let viewingActive=!!activeCampaignMap&&activeCampaignMap.id===campaignActiveMapId;
- let canActivate=adventureCanManage()&&!!activeCampaignMap&&!viewingActive;
+ let canActivate=adventureCanManage()&&!!activeCampaignMap&&(!viewingActive||!activeCampaignMap.player_visible);
  currentBtn?.classList.toggle('hidden',!campaignMaps.some(m=>m.id===campaignActiveMapId&&(adventureCanManage()||m.player_visible))||viewingActive);
  setCurrentBtn?.classList.toggle('hidden',!canActivate);
  if(setCurrentBtn){
   setCurrentBtn.disabled=activatingCampaignMap;
+  setCurrentBtn.textContent=activeCampaignMap?.player_visible?'📍 Gör aktuell':'Dela och gör aktuell';
   setCurrentBtn.title=activeCampaignMap?.player_visible?
    'Gör den visade kartan aktuell för kampanjen':
-   'Gör den visade kartan aktuell (kartan är fortfarande dold för spelarna)';
+   'Dela kartans utforskade områden och gör kartan aktuell för spelarna';
  }
  badge?.classList.toggle('hidden',!viewingActive);
  if(visibilityToggle){
@@ -3491,6 +3495,17 @@ function renderMapLibraryControls(){
   visibilityToggle.textContent=visible?'👁 Synlig för spelare':'🙈 Dold för spelare';
   visibilityToggle.title=visible?'Dölj den här kartan för spelarna':'Gör den här kartan synlig för spelarna';
  }
+ const gatherButton=$('mapGatherBtn');
+ gatherButton?.classList.toggle('hidden',!adventureCanManage());
+ const archive=$('sharedMapArchive'),list=$('sharedMapList');
+ if(archive&&list){
+  archive.hidden=adventureCanManage();
+  if(!archive.hidden){
+   const shared=campaignMaps.filter(m=>m.player_visible).sort((a,b)=>Number(b.id===campaignActiveMapId)-Number(a.id===campaignActiveMapId));
+   list.innerHTML=shared.map(m=>'<button type="button" class="btn" data-shared-map="'+escAttr(m.id)+'" aria-pressed="'+(m.id===activeCampaignMap?.id)+'">'+escAttr(m.name)+(m.id===campaignActiveMapId?' · Aktuell':'')+'</button>').join('')||'Inga delade kartor ännu.';
+  }
+ }
+ if(typeof window!=='undefined')window.aleaGather?.render();
  let revealBtn=$('mapRevealAllBtn');
  revealBtn?.classList.toggle('hidden',!adventureCanManage()||!activeCampaignMap);
 }
@@ -3699,7 +3714,7 @@ async function loadCampaignMapAreas(mapId,forEditor=false){
  return rows.map(a=>{let valid=isUuid(a.location_id);return {...a,location_id:valid?a.location_id:null,_invalid_location_ref:(!valid&&a.location_id)?String(a.location_id):'',status:valid?(stateMap.get(a.location_id)||'unknown'):'unknown',name:valid?(nameMap.get(a.location_id)||'Okänd plats'):'Ej kopplad'}});
 }
 async function selectAdventureMap(id){
- adventureRequestedMap={campaign:centralCampaignId,id};
+ adventureRequestedMap=!adventureCanManage()&&id===campaignActiveMapId?null:{campaign:centralCampaignId,id};
  return viewCampaignMap(id);
 }
 function requestedAdventureMap(maps){
@@ -3848,34 +3863,21 @@ async function activateCampaignMapById(id){
  let targetCampaign=centralCampaignId;
  activatingCampaignMap=true;renderMapLibraryControls();
  try{
-  // This save is authoritative. Verify the returned row instead of showing a
-  // success message when an RLS-filtered upsert changed nothing.
-  let saved=await dbJson('campaign_map_settings?on_conflict=campaign_id&select=campaign_id,active_map_id',{
-   method:'POST',headers:{'Prefer':'resolution=merge-duplicates,return=representation'},
-   body:JSON.stringify({campaign_id:targetCampaign,active_map_id:id,updated_by:supabaseSession.user.id})
+  const saved=await dbJson('rpc/set_shared_current_map',{
+   method:'POST',body:JSON.stringify({p_campaign_id:targetCampaign,p_map_id:id})
   });
   if(!Array.isArray(saved)||!saved.some(row=>row.campaign_id===targetCampaign&&row.active_map_id===id))
    throw new Error('Databasen bekräftade inte kartbytet. Kontrollera SL-behörigheten.');
   if(targetCampaign!==centralCampaignId)return false;
   campaignActiveMapId=id;
-  // Activation timestamps are supplementary metadata, not part of the
-  // successful active-map change. Their failure must not undo the UI state.
-  try{
-   let now=new Date().toISOString(),patch={last_activated_at:now};
-   if(!m.first_activated_at)patch.first_activated_at=now;
-   await dbJson('campaign_maps?id=eq.'+encodeURIComponent(id)+
-    '&campaign_id=eq.'+encodeURIComponent(targetCampaign),{
-    method:'PATCH',body:JSON.stringify(patch)
-   });
-  }catch(metadataError){console.warn('Kartan byttes men aktiveringstiden kunde inte sparas',metadataError)}
+  m.player_visible=true;
   try{await loadCampaignMaps(false)}
   catch(refreshError){console.warn('Kartan byttes men kartlistan kunde inte uppdateras',refreshError)}
   if(targetCampaign!==centralCampaignId)return false;
   campaignActiveMapId=id;
   if(!$('mapPage').classList.contains('hidden'))await viewCampaignMap(id,false);
   renderAdminMaps();renderMapLibraryControls();
-  showBackupToast('✓ Aktuell karta: '+m.name+
-   (m.player_visible?'':' · Dold för spelarna (aktivera 👁 för att visa)'));
+  showBackupToast('✓ Aktuell karta för spelarna: '+m.name);
   return true;
  }catch(e){alert('Kunde inte göra kartan aktuell: '+e.message);return false}
  finally{activatingCampaignMap=false;renderMapLibraryControls()}

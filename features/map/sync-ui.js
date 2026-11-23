@@ -3,7 +3,7 @@
  */
 import {createMapRealtime} from './realtime.js?v=0.34.95';
 
-let syncing=null,queued=false,seenCampaign='',seenActiveMap=undefined;
+let syncing=null,queued=false;
 
 function mapPanelOpen(){
  return !!document.getElementById('mapPage')&&
@@ -17,16 +17,12 @@ async function refreshMapOnce(){
  const priorMap=activeCampaignMap?.id||null;
  await loadCampaignMaps(false);
  if(version!==adventureReadVersion||campaign!==String(centralCampaignId||'')||!mapPanelOpen())return;
- const currentChanged=seenCampaign===campaign&&
-  seenActiveMap!==undefined&&seenActiveMap!==campaignActiveMapId;
- seenCampaign=campaign;seenActiveMap=campaignActiveMapId;
  const isGM=adventureCanManage();
  const available=campaignMaps.filter(m=>isGM||m.player_visible);
  const current=available.find(m=>m.id===campaignActiveMapId);
- const previous=requestedAdventureMap(available)||available.find(m=>m.id===priorMap);
- const desired=(!isGM&&currentChanged&&current?current:previous||current||available[0])||null;
+ const previous=available.find(m=>m.id===priorMap);
+ const desired=requestedAdventureMap(available)||(!isGM?current:previous||current||available[0])||null;
  if(adventurePlayerPreview&&!priorMap)return;
- if(!isGM&&currentChanged&&current)adventureRequestedMap=null;
  if(desired?.id!==priorMap){
   if(desired)await viewCampaignMap(desired.id,false);
   else{
@@ -79,7 +75,7 @@ const mapSync=createMapRealtime({
  isAuthenticated:()=>Boolean(activeUser()&&supabaseSession?.access_token),
  supabaseUrl:SUPABASE_URL,
  publishableKey:SUPABASE_KEY,
- onRefresh:reconcileCampaignMap,
+ onRefresh:()=>{void window.aleaGather?.refresh();return reconcileCampaignMap();},
  onStatus:(label,connected)=>{
   const page=document.getElementById('mapPage');
   const status=document.getElementById('mapStatusText');

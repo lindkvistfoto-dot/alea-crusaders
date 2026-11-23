@@ -174,6 +174,15 @@ describe('v0.34.95 – map screen reconciliation',()=>{
   h.setCurrent('next');await h.refresh();
   expect(h.actions).toContain('switch:next');
  });
+ it('leaves a player in the shared archive until they return to the current map',async()=>{
+  const h=uiHarness();await h.refresh();
+  h.context.adventureRequestedMap={id:'old'};
+  h.setMaps([{id:'old',player_visible:true},{id:'next',player_visible:true}]);
+  h.setCurrent('next');await h.refresh();
+  expect(h.context.activeCampaignMap.id).toBe('old');
+  h.context.adventureRequestedMap=null;await h.refresh();
+  expect(h.context.activeCampaignMap.id).toBe('next');
+ });
  it('immediately clears a map that has been hidden from a player',async()=>{
   const h=uiHarness();await h.refresh();
   h.setMaps([{id:'old',player_visible:false}]);await h.refresh();

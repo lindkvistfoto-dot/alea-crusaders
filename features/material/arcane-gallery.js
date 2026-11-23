@@ -98,11 +98,12 @@ export function createArcaneGallery({legolas,request,getCampaign,isLoggedIn,isGM
   if(seq!==state.media||c!==scope()||state.selected!==id||!allowed())return;
   // Only after the inaugural 4:3 opening may the telescopic frame morph.
   sizeArcaneFrame(root,img,win().innerHeight);
+  state.visible=id;
   $('arcaneGalleryEmpty')?.classList.add('hidden');
  }
  function releaseMain(){
   resetPictureZoom();
-  state.media++;
+  state.media++;state.visible='';
   if(state.original)win().URL.revokeObjectURL(state.original);
   state.original='';
   const img=$('arcaneGalleryImage');
@@ -178,7 +179,7 @@ export function createArcaneGallery({legolas,request,getCampaign,isLoggedIn,isGM
  }
  async function select(id){
   if(!allowed())return;const row=state.rows.find(r=>r.id===id&&r.campaign_id===scope());if(!row)return;
-  state.selected=id;render();const img=$('arcaneGalleryImage'),c=state.campaign;
+  state.selected=id;win().aleaGather?.render();render();const img=$('arcaneGalleryImage'),c=state.campaign;
   releaseMain();const n=state.media;
   ensureShutter();
   $('arcaneGalleryEmpty').textContent='Framkallar bilden…';
@@ -363,5 +364,5 @@ export function createArcaneGallery({legolas,request,getCampaign,isLoggedIn,isGM
   });
   return root;
  }
- return {mount,sync,refresh,clear,step,testShutter,testCarouselHatch,state,root};
+ return {mount,sync,refresh,select,clear,step,testShutter,testCarouselHatch,state,root};
 }

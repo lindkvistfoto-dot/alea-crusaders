@@ -66,3 +66,9 @@ body:has(#mapPage:not(.hidden)) main:has(#mapPage) {
   }
   body:has(.arcane-character-rail:not([hidden])) #mapPage #mapLocationPanel {padding-inline-end:4.25rem}
 }
+
+#sharedMapArchive {margin-top:.65rem;border-top:1px solid #685137;padding-top:.5rem}
+#sharedMapArchive summary {cursor:pointer;font-weight:600}
+#sharedMapList {display:grid;gap:.35rem;padding:.5rem 0}
+#sharedMapList .btn {text-align:left;white-space:normal}
+#sharedMapList [aria-pressed=true] {border-color:#c8a36b}

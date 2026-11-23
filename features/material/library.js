@@ -31,6 +31,7 @@ const frodoUi=mountFrodo({
  request:(path,options)=>dbJson(path,options),
  isRealtimeConnected:()=>Boolean(window.galadrielMaterialApi?.connected())
 });
+window.aleaGatherGallery=frodoUi.gatherGallery;
 frodoUi.mount();
 const samUi=mountSam({
  legolas,

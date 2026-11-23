@@ -36,29 +36,25 @@ function mapControlsContext({gm=true,viewing=next,current=old}={}){
  vm.runInNewContext(sourceBetween('function renderMapLibraryControls(){','let combatIconImageCache'),context);
  return {context,nodes};
 }
-function activateContext({failUpsert=false,failMetadata=false,viewerOpen=true}={}){
+function activateContext({failUpsert=false,failRefresh=false,viewerOpen=true}={}){
  const calls=[],toasts=[],alerts=[],viewed=[];
  const ctx={
-  campaignMaps:maps,centralCampaignId:campaign,campaignActiveMapId:old,
+  campaignMaps:maps.map(m=>({...m})),centralCampaignId:campaign,campaignActiveMapId:old,
   activatingCampaignMap:false,
   supabaseSession:{user:{id:'6ec7a85d-7976-40a8-bca1-df16a2ec902e'}},
   requestedAdventureMap:()=>null,adventureReadVersion:0,adventureCanManage:()=>true,canManageCampaignMaps:()=>true,
   renderMapLibraryControls:()=>{},
   renderAdminMaps:()=>{},
   viewCampaignMap:async id=>viewed.push(id),
-  loadCampaignMaps:async()=>calls.push('refresh'),
+  loadCampaignMaps:async()=>{calls.push('refresh');if(failRefresh)throw Error('Refresh failed')},
   showBackupToast:x=>toasts.push(x),
   alert:x=>alerts.push(x),
   encodeURIComponent,Date,console,
   $:()=>({classList:{contains:()=>!viewerOpen}}),
   dbJson:async (path,opts)=>{
    calls.push({path,opts});
-   if(path.startsWith('campaign_map_settings?')){
+   if(path==='rpc/set_shared_current_map'){
     return failUpsert?[]:[{campaign_id:campaign,active_map_id:next}];
-   }
-   if(path.startsWith('campaign_maps?')){
-    if(failMetadata)throw Error('Metadata temporarily unavailable');
-    return [];
    }
    return [];
   }
@@ -107,15 +103,14 @@ describe('Kampanjkarta – välj en annan aktuell karta (v0.34.89)',()=>{
  it('persists setting, verifies actual saved row, and displays the new current map',async()=>{
   const h=activateContext();
   expect(await h.ctx.activateCampaignMapById(next)).toBe(true);
-  const write=h.calls.find(x=>typeof x==='object'&&x.path.startsWith('campaign_map_settings?'));
+  const write=h.calls.find(x=>typeof x==='object'&&x.path==='rpc/set_shared_current_map');
   expect(write.opts.method).toBe('POST');
-  expect(JSON.parse(write.opts.body).active_map_id).toBe(next);
-  expect(write.path).toContain('select=campaign_id,active_map_id');
+  expect(JSON.parse(write.opts.body).p_map_id).toBe(next);
+  expect(JSON.parse(write.opts.body).p_campaign_id).toBe(campaign);
   expect(h.ctx.campaignActiveMapId).toBe(next);
   expect(h.viewed).toEqual([next]);
-  expect(h.toasts[0]).toContain('Aktuell karta: Skelettbyn');
-  expect(h.toasts[0]).toContain('Dold för spelarna');
-  expect(maps[1].player_visible).toBe(false);
+  expect(h.toasts[0]).toContain('Aktuell karta för spelarna: Skelettbyn');
+  expect(h.ctx.campaignMaps[1].player_visible).toBe(true);
  });
  it('does not report success when Supabase confirms no changed row',async()=>{
   const h=activateContext({failUpsert:true});
@@ -124,8 +119,8 @@ describe('Kampanjkarta – välj en annan aktuell karta (v0.34.89)',()=>{
   expect(h.toasts).toHaveLength(0);
   expect(h.alerts[0]).toContain('Databasen bekräftade inte kartbytet');
  });
- it('a timestamp failure does not undo a successfully saved active map',async()=>{
-  const h=activateContext({failMetadata:true,viewerOpen:false});
+ it('a list refresh failure does not undo a successfully saved active map',async()=>{
+  const h=activateContext({failRefresh:true,viewerOpen:false});
   expect(await h.ctx.activateCampaignMapById(next)).toBe(true);
   expect(h.ctx.campaignActiveMapId).toBe(next);
   expect(h.toasts).toHaveLength(1);

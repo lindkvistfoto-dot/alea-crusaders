@@ -416,3 +416,8 @@ const header=document.querySelector('.alea-app-header');
 if(header)new ResizeObserver(()=>page.style.setProperty('--adventure-header',header.offsetHeight+'px')).observe(header);
 
 new ResizeObserver(()=>{if(view&&mapView.fitted)resetMapView();}).observe(viewport);
+
+document.getElementById('sharedMapList').addEventListener('click',event=>{
+  const id=event.target.closest('[data-shared-map]')?.dataset.sharedMap;
+  if(id&&campaignMaps.some(m=>m.id===id&&m.player_visible))void selectAdventureMap(id);
+});
