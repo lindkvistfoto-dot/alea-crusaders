@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Stort stenblock",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "ff3db14c-decc-51d9-b5b8-e9c9e77ff2e4"
+  },
+  "object_template": {
+    "category": "Natur och terräng",
+    "campaign_id": null,
+    "length_m": 1.65,
+    "width_m": 1.04,
+    "height_m": 1.1
+  },
+  "drive_file_id": "1elyXKXxx4JF8RlB3fSmABwtojxKX3gZr",
+  "archive_file_id": "1ItPknA7dpLFScw-aEBuxDGKuj5PdvYnp",
+  "source_sha256": "86dbea2e1a09291812a46ba7459c835956b9f5eb4c37fb9354795316a7ae74a0"
+}

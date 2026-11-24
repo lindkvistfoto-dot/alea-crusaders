@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Buske",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "badf3f39-bf1a-5ffd-9b69-f7ea84069a63"
+  },
+  "object_template": {
+    "category": "Natur och terräng",
+    "campaign_id": null,
+    "length_m": 1.3,
+    "width_m": 1.15,
+    "height_m": 0.93
+  },
+  "drive_file_id": "11RJ_YKcDA1qqCq8jvXbQWi2lYGPN-Bkl",
+  "archive_file_id": "1NC8SfQ6U_UwhoR2im5CD5AjCl06rBprp",
+  "source_sha256": "4139024a69307a9d1c5ca2f8a12e1899eb75a7a906db45bdbad22516742ae89a"
+}

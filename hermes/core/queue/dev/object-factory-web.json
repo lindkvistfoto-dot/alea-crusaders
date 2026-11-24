@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Spindelväv",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "0ba5769e-507d-5f60-9298-8bf5de3d45b5"
+  },
+  "object_template": {
+    "category": "Övrigt",
+    "campaign_id": null,
+    "length_m": 1.05,
+    "width_m": 0.93,
+    "height_m": 0.01
+  },
+  "drive_file_id": "1xoI555LDJ6evOAfQQY3rWLnah2wqgTnQ",
+  "archive_file_id": "1fRM1Nv7zHJjL3U7iUeHCqtbLvSNkTDMA",
+  "source_sha256": "55131e6755c78b9be460d685ff2b3712aa23e4661eb020f2911e48dbf6d02fd9"
+}

@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Trädstubbe",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "cd1208ac-9861-577c-9d6a-51898f65977a"
+  },
+  "object_template": {
+    "category": "Natur och terräng",
+    "campaign_id": null,
+    "length_m": 0.74,
+    "width_m": 0.68,
+    "height_m": 0.45
+  },
+  "drive_file_id": "17TZ38YiJm_vs2o9BU4NXNz4x810H_Vj0",
+  "archive_file_id": "1kaDkwJiWZ5L9hzNhlcuVbELy-TChMP6t",
+  "source_sha256": "f322790e2449ebc236ba05cf9bd4f9e37b6c1abc1b6a91f790ae82fedaffddf0"
+}

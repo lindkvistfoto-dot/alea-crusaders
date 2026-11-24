@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Häst",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "328a159b-584a-5f63-a09b-affe1fd71f4b"
+  },
+  "object_template": {
+    "category": "Djur",
+    "campaign_id": null,
+    "length_m": 2.55,
+    "width_m": 0.64,
+    "height_m": 1.55
+  },
+  "drive_file_id": "14r6y5LiCCkHqlIWwnaAv2oaYWvn1GWjI",
+  "archive_file_id": "19K8naxkBxw2mFhJqDZQUbLKyChdz8LaO",
+  "source_sha256": "770b672ddba3cba002a8a247f246c8dadb8938a9029f9167f24bf1b98d26d49a"
+}

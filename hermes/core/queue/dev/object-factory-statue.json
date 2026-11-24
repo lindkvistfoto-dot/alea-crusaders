@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Stenstaty",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "a6041251-7d7b-5f6f-9d4d-cce4787cd068"
+  },
+  "object_template": {
+    "category": "Monument och ritualföremål",
+    "campaign_id": null,
+    "length_m": 0.78,
+    "width_m": 0.8,
+    "height_m": 1.85
+  },
+  "drive_file_id": "1CeDCDj2s9zkq7J-41lQvc-Dn_mWMD3hn",
+  "archive_file_id": "1um6Ns3MbkPAjrIoyCjRz07DXYeRFEudb",
+  "source_sha256": "d922956f5df01e15c4f70ca55dc6e0bdeadec7ce630fe554d2da7ee183c5cb6c"
+}

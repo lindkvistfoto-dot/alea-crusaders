@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Offerbord",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "f5088b72-abb9-5df0-b466-b583bd0a36bc"
+  },
+  "object_template": {
+    "category": "Monument och ritualföremål",
+    "campaign_id": null,
+    "length_m": 1.3,
+    "width_m": 0.65,
+    "height_m": 0.82
+  },
+  "drive_file_id": "1rjCfIstfqL1k6eOY86MEalmNcIuBfFvu",
+  "archive_file_id": "17e3wb6dTp0rocqnQ3zCxoEikXnA1JXVd",
+  "source_sha256": "6cf7a27cf429a4c5888db6c89e57f006a29004850b92227f08d3a699a3c662e0"
+}

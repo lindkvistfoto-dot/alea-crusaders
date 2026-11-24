@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Enkel gravsten",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "6d95fc6a-f141-5dac-be79-dacb35044f80"
+  },
+  "object_template": {
+    "category": "Monument och ritualföremål",
+    "campaign_id": null,
+    "length_m": 0.73,
+    "width_m": 0.25,
+    "height_m": 0.98
+  },
+  "drive_file_id": "1hJqKozhcBnaCFj8NVUvlr7Cygj40N0vW",
+  "archive_file_id": "1fitmhmSPI4ZYw5ZgvTPmJRiYyD1BL-fv",
+  "source_sha256": "79407c72b06fd9974ddee1df3731cd2032ffd6b3392d22e3a1d18a038070ec4d"
+}

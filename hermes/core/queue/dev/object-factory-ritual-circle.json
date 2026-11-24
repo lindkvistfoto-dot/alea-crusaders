@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Ritualcirkel",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "498b3ef9-9e6d-5b90-b2b6-4cb0232ac1e9"
+  },
+  "object_template": {
+    "category": "Monument och ritualföremål",
+    "campaign_id": null,
+    "length_m": 1.85,
+    "width_m": 1.85,
+    "height_m": 0.04
+  },
+  "drive_file_id": "1G6JnHqoXWuIRqTCAHUphzM8qBg3wgGr5",
+  "archive_file_id": "1pjWcTfho9wUwkgOfdNqTQ5ByufnR1lv8",
+  "source_sha256": "ac3f9e089a0a6b08290c4d5b0b1041071ad20ff62b90309fda9581d3283bc523"
+}

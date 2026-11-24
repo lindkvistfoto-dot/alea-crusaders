@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Benhög",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "2cee6e4c-58b8-5612-befc-78f2e5365059"
+  },
+  "object_template": {
+    "category": "Övrigt",
+    "campaign_id": null,
+    "length_m": 0.65,
+    "width_m": 0.29,
+    "height_m": 0.2
+  },
+  "drive_file_id": "1B1mPgXQRh3pQ0toSx_Ypp0WQ4L-MyDHB",
+  "archive_file_id": "1qao0aXKKC36mqtkL4ypYN8x3A_FXv5m8",
+  "source_sha256": "0edef5a7aaa2a24f863810c47aeb9442ab07cf864b718c199dce7553b311d239"
+}

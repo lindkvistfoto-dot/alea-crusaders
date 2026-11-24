@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Fallen trädstam",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "5816dedd-4e59-5767-bec7-0d172a171cee"
+  },
+  "object_template": {
+    "category": "Natur och terräng",
+    "campaign_id": null,
+    "length_m": 3.2,
+    "width_m": 0.66,
+    "height_m": 0.58
+  },
+  "drive_file_id": "1mybBEELj1fywFOu_KyLlPx7cWRa7zrf8",
+  "archive_file_id": "1Z1ILllxvTO3hZkQKff_EY6VsqUZ9g4qx",
+  "source_sha256": "c39f8c6b50a83c45aa1aa5b8aef685358e206cfbec3634c5111c202a0987ab65"
+}

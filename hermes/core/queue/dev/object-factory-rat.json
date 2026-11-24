@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Råtta",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "2dc6b484-4367-5ca9-87c2-3eeefcd43759"
+  },
+  "object_template": {
+    "category": "Djur",
+    "campaign_id": null,
+    "length_m": 0.34,
+    "width_m": 0.09,
+    "height_m": 0.09
+  },
+  "drive_file_id": "12UyxyLznjOGlHoCQFJIfmqUliIxDB4PT",
+  "archive_file_id": "11M6oxDXBBZu-Gy025An0lOS5YKxz5QKz",
+  "source_sha256": "d029f051fb3991ebbd8e6acd41fb34306b40d78a511cf9bc63991c8dacb4855d"
+}

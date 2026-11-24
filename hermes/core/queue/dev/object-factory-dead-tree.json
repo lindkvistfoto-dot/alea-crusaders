@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Dött träd",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "595efe30-54a2-55a2-8560-8326a909834c"
+  },
+  "object_template": {
+    "category": "Natur och terräng",
+    "campaign_id": null,
+    "length_m": 3.3,
+    "width_m": 2.91,
+    "height_m": 4.2
+  },
+  "drive_file_id": "1xW9SfmwA42iUiYBweH72KgGmd-Ot5AwJ",
+  "archive_file_id": "1J9ZVUGQntDFxiO_ZbaHbrxjciIwLgDJP",
+  "source_sha256": "a9fa3b5545d7e6524a87745450349af67e8398d1c974f113ac74af8e6c7af806"
+}

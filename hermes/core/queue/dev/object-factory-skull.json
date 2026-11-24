@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Döskalle",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "1d9047da-9731-581e-8876-1b2bbf7f6cd2"
+  },
+  "object_template": {
+    "category": "Övrigt",
+    "campaign_id": null,
+    "length_m": 0.23,
+    "width_m": 0.17,
+    "height_m": 0.17
+  },
+  "drive_file_id": "1dMBjR2zAzGE5nizSxxOH5ghnazaXW8Q-",
+  "archive_file_id": "1n5hUdLCjCZ4_rQ7IBw4al3sM-5Ma-wW_",
+  "source_sha256": "4397b5d014c8176b07e2632767d61cc8778f324bf229ebda3d6c43672fd661a6"
+}

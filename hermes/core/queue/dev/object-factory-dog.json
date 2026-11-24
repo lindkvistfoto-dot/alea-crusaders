@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Hund",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "d0d9d679-77b0-51e2-9179-61d4a9a9aa48"
+  },
+  "object_template": {
+    "category": "Djur",
+    "campaign_id": null,
+    "length_m": 0.93,
+    "width_m": 0.17,
+    "height_m": 0.55
+  },
+  "drive_file_id": "1LjjC6PcR6cl3F-NAra5fjoz15cAI2OM_",
+  "archive_file_id": "1ahmm6d91aHM9_QdsJWCQC6uPsYM7NM1u",
+  "source_sha256": "034db7b1369bf19cb31bfeb6128b1aa9dd56a2241554fb42462103f518061288"
+}
