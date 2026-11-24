@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Trätunna",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "b8a2f761-4c39-4e5a-9b21-62f0a918d105"
+  },
+  "object_template": {
+    "category": "Förvaring och gods",
+    "campaign_id": null,
+    "length_m": 0.7,
+    "width_m": 0.7,
+    "height_m": 0.9
+  },
+  "drive_file_id": "1lU-Jt4Y4NQ6s6AKs0_nOcavdqpLIn5JZ",
+  "archive_file_id": "1lKzYIRZl-KG_RVGG1mgp87Oub-rnIm4q",
+  "source_sha256": "5bca34d2039fc5d60e991637510a6a1a726a7bcbd3ac4ca4e4082d86d6128084"
+}
