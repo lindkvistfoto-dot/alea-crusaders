@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Trälåda",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "b8a2f761-4c39-4e5a-9b21-62f0a918d104"
+  },
+  "object_template": {
+    "category": "Förvaring och gods",
+    "campaign_id": null,
+    "length_m": 0.6,
+    "width_m": 0.6,
+    "height_m": 0.6
+  },
+  "drive_file_id": "172SPVdSq4Mi3Vuri3rbF_2lpF2w1_-qS",
+  "archive_file_id": "1p8Hm6SxGNV_JELTF_tC-mDGgx0aiKDhq",
+  "source_sha256": "39f725aba2630b6318dd64dee9c2ca15576c7d08cd31feafe80ca0c90fd71f14"
+}
