@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Barrträd",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "3f897233-0ceb-5f8e-9f12-e6cdf4e84d89"
+  },
+  "object_template": {
+    "category": "Natur och terräng",
+    "campaign_id": null,
+    "length_m": 3.4,
+    "width_m": 3.17,
+    "height_m": 7
+  },
+  "drive_file_id": "1CnUJMy92GDxF9fYc903ogQ5NR-3152IL",
+  "archive_file_id": "1-1YRhy3y2XbN4y4Oyg4fMmvK_to9yvx8",
+  "source_sha256": "98abfc234f87a62f1abe51f51dd348a177ae9f71a78ee959dc90809c36aabb24"
+}

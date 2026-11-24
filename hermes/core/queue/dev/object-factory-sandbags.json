@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Sandsäcksbarrikad",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "0a5ffea4-19c4-525a-b176-babf99715988"
+  },
+  "object_template": {
+    "category": "Hinder och försvar",
+    "campaign_id": null,
+    "length_m": 2,
+    "width_m": 0.4,
+    "height_m": 0.62
+  },
+  "drive_file_id": "1gjGwyv3j6bm_VxufeUnXgC3fjRYhYc7F",
+  "archive_file_id": "1Mgrh1Az-OSc6DIAW7WL2XPBfwXn5l_cA",
+  "source_sha256": "7265f349c88a0d4fd4051f665870da302cc7250b0c8dc340838102f597011c12"
+}

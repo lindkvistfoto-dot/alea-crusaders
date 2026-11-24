@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Eldfat",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "2d0517b0-8771-59e9-9e15-455e221411a4"
+  },
+  "object_template": {
+    "category": "Eld och belysning",
+    "campaign_id": null,
+    "length_m": 0.74,
+    "width_m": 0.63,
+    "height_m": 0.7
+  },
+  "drive_file_id": "1LPyRHenU-KtpifHPGmlLhg7LiwLX6Y_R",
+  "archive_file_id": "1J8UWxE3uuoTEdTYAlNLjZ_y0IGCykEkL",
+  "source_sha256": "c168db50959c9760485182854312bb714705ecacf7f84f4183d0b7bf8d5ffb63"
+}

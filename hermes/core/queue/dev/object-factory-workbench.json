@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Arbetsbänk",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "bb7827dc-cac4-56b4-82ac-e5bd189f91d3"
+  },
+  "object_template": {
+    "category": "Inredning och bruksföremål",
+    "campaign_id": null,
+    "length_m": 1.8,
+    "width_m": 0.68,
+    "height_m": 0.88
+  },
+  "drive_file_id": "1638obF1UTgomb1OMtGf2C-e27CtKpswR",
+  "archive_file_id": "1ITCcbqeJo40XDcrtIfsGKl32H2lESJJZ",
+  "source_sha256": "24109a60acfee5a11b86811ee5affe61f3eabf671bf29042e496f28622cb16b8"
+}

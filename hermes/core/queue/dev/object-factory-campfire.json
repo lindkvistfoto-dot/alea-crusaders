@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Lägereld",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "00c8138d-53df-5e69-ba6e-f571354cf7aa"
+  },
+  "object_template": {
+    "category": "Eld och belysning",
+    "campaign_id": null,
+    "length_m": 0.92,
+    "width_m": 0.84,
+    "height_m": 0.38
+  },
+  "drive_file_id": "1VgLnZGkFSiYCauJodABrj6qmHuvfOsG4",
+  "archive_file_id": "16SJHKqqlOgvwYXkr__FR36aKeXJke3wB",
+  "source_sha256": "102ef9f8b9811221d5a2b9863e6c36e57ca322d45ae0adaa5b2a28532fa3f99d"
+}

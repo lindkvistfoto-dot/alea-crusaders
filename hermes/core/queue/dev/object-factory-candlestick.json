@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Ljusstake",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "56796501-8314-5b8f-bd4a-0b18a0667de9"
+  },
+  "object_template": {
+    "category": "Eld och belysning",
+    "campaign_id": null,
+    "length_m": 0.22,
+    "width_m": 0.17,
+    "height_m": 0.3
+  },
+  "drive_file_id": "1oSLX0od4Oy9Bw8_jWtZScwebuGkpRYEw",
+  "archive_file_id": "1xVdyfplJirqaEjGm4qdhX3SNKyjYt_DO",
+  "source_sha256": "4242069dd3b6fcc7a153b22dbc4f4b9a7cdaf3c9690e5ffe9200fc76617d86d8"
+}

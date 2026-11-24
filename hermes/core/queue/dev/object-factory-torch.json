@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Fackla",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "c3ae50a5-ffee-5e23-b638-8779c3cec46f"
+  },
+  "object_template": {
+    "category": "Eld och belysning",
+    "campaign_id": null,
+    "length_m": 0.68,
+    "width_m": 0.1,
+    "height_m": 0.12
+  },
+  "drive_file_id": "1wKl-U4zCY-T3oACx2pLzP9nYbXheDcSt",
+  "archive_file_id": "1-wGRGBrHWeUWE-VxMEPLJ6-5MvasDceM",
+  "source_sha256": "b454a3afc66dc2acdb40912b3623c1814ccd398ab2558382329b83dac2139bf4"
+}

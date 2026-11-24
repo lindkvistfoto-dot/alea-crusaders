@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Städ",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "1152ce33-ec9c-5926-a4dd-32d1aa7d4e05"
+  },
+  "object_template": {
+    "category": "Inredning och bruksföremål",
+    "campaign_id": null,
+    "length_m": 0.73,
+    "width_m": 0.22,
+    "height_m": 0.42
+  },
+  "drive_file_id": "1S-pqXXzeEZdTnSH2JJHTFpKmb1cy2QMN",
+  "archive_file_id": "13jDo1X5Nl6NTtFxGY8eFPLicsmdRut1-",
+  "source_sha256": "09fb2c0f53d52102cedc2dc48d754808d7a12065d79ff4baa8d67810c3b6d82a"
+}

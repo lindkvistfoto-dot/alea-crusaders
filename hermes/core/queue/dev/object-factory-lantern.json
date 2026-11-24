@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Lykta",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "f29cab57-cda2-51ef-9306-cb2cba2aba93"
+  },
+  "object_template": {
+    "category": "Eld och belysning",
+    "campaign_id": null,
+    "length_m": 0.26,
+    "width_m": 0.23,
+    "height_m": 0.43
+  },
+  "drive_file_id": "1EeV0E9v111f9JfkZHVTgvbTp3n0dA_8y",
+  "archive_file_id": "1WMiavnGCvKLk8UkSd5FaC9i4m5WlSL1C",
+  "source_sha256": "9c469b8f37647eacb22471588b98d4e3ff9c76e61c1b30a38ab3cda74c420cbe"
+}

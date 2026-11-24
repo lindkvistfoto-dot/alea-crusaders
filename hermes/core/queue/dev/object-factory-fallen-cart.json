@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Omkullvält vagn",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "52123445-a3a5-5962-959e-efca83a1d082"
+  },
+  "object_template": {
+    "category": "Hinder och försvar",
+    "campaign_id": null,
+    "length_m": 2.7,
+    "width_m": 1,
+    "height_m": 1.2
+  },
+  "drive_file_id": "19K3teDwY8r9r3H1B3vGE5xNlMg4ntIZR",
+  "archive_file_id": "1D_p3w1sq4vp9QdXoLhVijbbWKWHO6Muk",
+  "source_sha256": "7eb3cc71682b7867d9afc672d725be88f078130ce19f2396ea10aeca88e362db"
+}

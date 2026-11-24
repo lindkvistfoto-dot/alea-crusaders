@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Eldstad",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "8da0d027-574b-5bb4-828a-7c7fb7060cb7"
+  },
+  "object_template": {
+    "category": "Eld och belysning",
+    "campaign_id": null,
+    "length_m": 1.05,
+    "width_m": 0.58,
+    "height_m": 0.35
+  },
+  "drive_file_id": "1Lg0lnjgh7Qq24bSXJAd9oJEYRBLdeOfE",
+  "archive_file_id": "1LrOg-tlao6IEK9rEI0067qAs_QCMKGod",
+  "source_sha256": "62ab0cb01bf1e63ad45e57996c804e107f77d671b69988862cce6ebc44da1bc1"
+}

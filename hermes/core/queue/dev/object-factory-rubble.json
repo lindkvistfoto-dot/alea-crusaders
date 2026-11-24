@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Rasmassor",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "ec28c388-30d4-5023-875c-5eb17ee3a74a"
+  },
+  "object_template": {
+    "category": "Hinder och försvar",
+    "campaign_id": null,
+    "length_m": 1.8,
+    "width_m": 1.04,
+    "height_m": 0.45
+  },
+  "drive_file_id": "1FuSl1_2vsSZD3X0iOfPbrElUlV6wqpcK",
+  "archive_file_id": "1kR5G1hND2Do3iMswLR11vHdTLtvJToj8",
+  "source_sha256": "94bfa1c311fc75170abb2eaf60ac34138a3267dc61904a24de87345a03dc18f7"
+}

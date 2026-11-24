@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Keramikkärl",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "1601d7d9-b0f7-5506-9df3-d712e2d49d9a"
+  },
+  "object_template": {
+    "category": "Inredning och bruksföremål",
+    "campaign_id": null,
+    "length_m": 0.36,
+    "width_m": 0.36,
+    "height_m": 0.15
+  },
+  "drive_file_id": "1gMHe16NF_hkT_bD1Sv47Vz9CvOx_TL93",
+  "archive_file_id": "1bzJ9Ij0SVTb6o22JkT6Hf5IM8Bt8Drwr",
+  "source_sha256": "bb241ba6171d77c0a4a7c913e4e7133b641a118a916817e32b78ae116b537f72"
+}

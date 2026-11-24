@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Lövträd",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "37f55e27-1a69-58ac-a146-b530566d58d5"
+  },
+  "object_template": {
+    "category": "Natur och terräng",
+    "campaign_id": null,
+    "length_m": 4.5,
+    "width_m": 3.57,
+    "height_m": 6.6
+  },
+  "drive_file_id": "1tTgC1LPFFMCetkBLBv-rQnzZshC6zsXG",
+  "archive_file_id": "1GJAEuk9I2l416X9FpM4fWP27B1RN3BUi",
+  "source_sha256": "978bf86fa0b3a9a6508d508ddf737cd5802e4b89d93d19b2f99486415c99a5e6"
+}

@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Spetsad pålsektion",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "679c1462-6476-5b10-b946-b63bebeb3eb9"
+  },
+  "object_template": {
+    "category": "Hinder och försvar",
+    "campaign_id": null,
+    "length_m": 2.1,
+    "width_m": 0.6,
+    "height_m": 0.75
+  },
+  "drive_file_id": "1WyBb9wagrBPiSvD8naXBOrsQUe_Gh1il",
+  "archive_file_id": "1TpYRTXGj9XS_TjWNCfT6l3HcNMR6lNRQ",
+  "source_sha256": "65c8a707c6257655f6f92dd1ed22ec2ea37822fdb0ea62de7149cb49c0c2f76a"
+}
