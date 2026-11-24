@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Stenbrunn",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "de9b413b-dd43-5aa9-a9db-fd607d643529"
+  },
+  "object_template": {
+    "category": "Byggnadsdelar",
+    "campaign_id": null,
+    "length_m": 1.45,
+    "width_m": 1.47,
+    "height_m": 0.85
+  },
+  "drive_file_id": "1R53L0r3r3KdY4Xt3pHDHHUUvlrcxOm_b",
+  "archive_file_id": "1Cw9Zo-0u0Gy0lhoevdyIkyU3xjTF2HwF",
+  "source_sha256": "35de8ab212d85068cf0920cd2a84119026a6a0d0e3ad18c065289c433502cc97"
+}

@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Enkel trädörr",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "17115fd4-46ab-59f6-959d-9cd82459407f"
+  },
+  "object_template": {
+    "category": "Byggnadsdelar",
+    "campaign_id": null,
+    "length_m": 1,
+    "width_m": 0.08,
+    "height_m": 2.05
+  },
+  "drive_file_id": "1I8o2aDiM3QBXplRUK2pCpGU1ZYlMD3gn",
+  "archive_file_id": "1jqkgDt_LTu2FYTZoY1b85LEqMFMaro2F",
+  "source_sha256": "b3ab9e6ae2800a5c05a74b337fd537615c3f03ad55eb28e6f7b3e3328cef212f"
+}

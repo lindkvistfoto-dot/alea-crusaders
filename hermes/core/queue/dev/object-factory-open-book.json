@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Öppen bok",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "c24961ad-0205-506a-b16a-1bf1c7fb38aa"
+  },
+  "object_template": {
+    "category": "Inredning och bruksföremål",
+    "campaign_id": null,
+    "length_m": 0.44,
+    "width_m": 0.29,
+    "height_m": 0.07
+  },
+  "drive_file_id": "13uJ4u-2MvapJqxREokqmfdFrJkzA-Bty",
+  "archive_file_id": "1w-4jGSknjrEetg9Sxzrv6Kq6N15wrJdb",
+  "source_sha256": "5b6507ede7cfb3de99cb044a2384348c7f1d3515fb82270cac559d6490cec319"
+}

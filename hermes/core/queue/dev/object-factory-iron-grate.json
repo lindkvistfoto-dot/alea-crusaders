@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Järngaller",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "6e9fa713-602e-52bc-8448-fe8ffc1f266e"
+  },
+  "object_template": {
+    "category": "Byggnadsdelar",
+    "campaign_id": null,
+    "length_m": 1.4,
+    "width_m": 0.12,
+    "height_m": 2.1
+  },
+  "drive_file_id": "14eZHzUqm2J9cDlhtosC3UmCUhAitEe31",
+  "archive_file_id": "1UdnE1nz6uYUdVAp3dx--O7w1HWz_fpsG",
+  "source_sha256": "8eeb0b800db4e673ab38d359bd33e5e29a65be8c3b17fa55643fa6feed2ffc98"
+}

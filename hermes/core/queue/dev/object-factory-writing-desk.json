@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Skrivbord",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "55594ffe-2fa5-5998-a7f2-b257e2ae2ac8"
+  },
+  "object_template": {
+    "category": "Möbler",
+    "campaign_id": null,
+    "length_m": 1.35,
+    "width_m": 0.62,
+    "height_m": 0.76
+  },
+  "drive_file_id": "1MWnMR3VcxcYoEM-7-3Sy4IbeprnDFvaz",
+  "archive_file_id": "1QrFgyHIUD2mSZa53KI91-SmsvFvZFqwQ",
+  "source_sha256": "0ef436c6baa2e8054dcd4532c5e784be24a0f75f517f57c1d4bb61ba02a762c2"
+}

@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Skrivpulpet",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "df64cd64-5a73-589a-bb09-c27c556a8731"
+  },
+  "object_template": {
+    "category": "Inredning och bruksföremål",
+    "campaign_id": null,
+    "length_m": 0.75,
+    "width_m": 0.46,
+    "height_m": 1.15
+  },
+  "drive_file_id": "11bUuPObkNCSY0_HfBd54_eROBDdrIANt",
+  "archive_file_id": "1vSaUQxlyvoJ6U7_IxsYCOAY1Khrw2nI8",
+  "source_sha256": "05007a250cc72e367d26e90daf0399dcbf57264749788c2789d1c67b943da098"
+}

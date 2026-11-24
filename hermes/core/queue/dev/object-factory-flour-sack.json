@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Mjölsäck",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "e88d6aad-07bb-5379-aaef-ece855c7970f"
+  },
+  "object_template": {
+    "category": "Förvaring och gods",
+    "campaign_id": null,
+    "length_m": 0.62,
+    "width_m": 0.42,
+    "height_m": 0.7
+  },
+  "drive_file_id": "1GHCJXeIg2OEMEEpJdDPgBQT2NlMh5hCV",
+  "archive_file_id": "1dqWVJZ2R0u8OLWXHCbe34NYv_tT_Eg0u",
+  "source_sha256": "72030817cef43e9385fd74ca9efa7107f844b67fb45a8e85031dbb7e953cedca"
+}

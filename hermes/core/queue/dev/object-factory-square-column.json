@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Fyrkantig stenpelare",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "0a6159e5-fee9-5429-b029-72638de43b48"
+  },
+  "object_template": {
+    "category": "Byggnadsdelar",
+    "campaign_id": null,
+    "length_m": 0.64,
+    "width_m": 0.64,
+    "height_m": 3
+  },
+  "drive_file_id": "1_xthKtb6xeLhWLERGMv4mdw0mvflyUDC",
+  "archive_file_id": "1EW2ghvKUm12PwLOQ84hrNIqehv8yLi3L",
+  "source_sha256": "d3e453d7014ceb6c89e3e7f2b222060e5bc5f3ed9b0a35c46cf03119e82e9f52"
+}

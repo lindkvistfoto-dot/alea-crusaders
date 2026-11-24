@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Trästege",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "973a6282-3e96-597d-8387-759fdd03b331"
+  },
+  "object_template": {
+    "category": "Byggnadsdelar",
+    "campaign_id": null,
+    "length_m": 2.4,
+    "width_m": 0.47,
+    "height_m": 0.1
+  },
+  "drive_file_id": "132B4G6csVBz90xGIhWcsIzxPg9Lqvy5h",
+  "archive_file_id": "1o5TJyH5Uh1s1EmRf_MduwnDDeeB3HfgP",
+  "source_sha256": "fc321e8bc9a8b4e0c4b83c2a67f0936672e00ffeb49f95d86446b371862a17a9"
+}

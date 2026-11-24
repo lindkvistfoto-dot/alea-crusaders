@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Enkel säng",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "253a1d1f-8856-5b3e-9c57-63e5d052631f"
+  },
+  "object_template": {
+    "category": "Möbler",
+    "campaign_id": null,
+    "length_m": 2,
+    "width_m": 0.88,
+    "height_m": 0.55
+  },
+  "drive_file_id": "11dScp4TdLqROGbdfhWjtfY7XGLaXRfyg",
+  "archive_file_id": "16g9Y3-n7v8pjGIneE9Arvzz5xirkTQmE",
+  "source_sha256": "d6e431fd08478e3e8bf8739851061fefd9f7ccacf1025f2942fa22acb4cc7ff6"
+}

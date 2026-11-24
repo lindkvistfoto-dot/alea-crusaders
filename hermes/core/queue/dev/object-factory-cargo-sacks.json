@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Stapel med varusäckar",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "b412bf86-ed60-5b94-8ea4-f828ce680ee8"
+  },
+  "object_template": {
+    "category": "Förvaring och gods",
+    "campaign_id": null,
+    "length_m": 1.35,
+    "width_m": 0.49,
+    "height_m": 0.8
+  },
+  "drive_file_id": "1dTfEUuNE-D3f1eAJAmGtETGWdduhv8Di",
+  "archive_file_id": "1HTNOuCWUvX6sNq2peraEzmZZLHzZmUGZ",
+  "source_sha256": "9398679ec382a150c3c7bd8b93c76ccbe94e7a7b0f78437ca9cc87458dc2015d"
+}

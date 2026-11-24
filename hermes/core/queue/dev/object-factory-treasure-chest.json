@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Beslagen skattkista",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "b8ea9bf2-8cfd-5868-b6c5-64f26c1b1996"
+  },
+  "object_template": {
+    "category": "Förvaring och gods",
+    "campaign_id": null,
+    "length_m": 1.1,
+    "width_m": 0.52,
+    "height_m": 0.64
+  },
+  "drive_file_id": "1-ehzBudmztDwYcZnco__9M3aVMb3ZjhN",
+  "archive_file_id": "1xM3wRROhPQ77ukqtfk4gHEy8ZXcCeZDy",
+  "source_sha256": "41ed2fe2d387fa63bd04da17497336bb29082e84bccd079a6831f850d8e5604c"
+}

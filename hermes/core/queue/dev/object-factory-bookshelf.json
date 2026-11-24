@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Bokhylla",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "307fcbe3-1d7d-5317-9b9f-0f74e815f90f"
+  },
+  "object_template": {
+    "category": "Möbler",
+    "campaign_id": null,
+    "length_m": 1.5,
+    "width_m": 0.48,
+    "height_m": 1.8
+  },
+  "drive_file_id": "1xzyX5AqzxI_auHTvJb1hPwLB5xX9qz7h",
+  "archive_file_id": "1a_3nND9N8aT0UVSKiW04D7u3_veDygPV",
+  "source_sha256": "95f843e743a04778e4528c5d6188fbec2f5ca9e4b89dde44c866a16627d32886"
+}

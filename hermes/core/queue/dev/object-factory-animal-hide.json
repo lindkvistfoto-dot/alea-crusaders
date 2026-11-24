@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Djurhud",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "722d43b7-1173-5ca6-9091-14c35e2e8d85"
+  },
+  "object_template": {
+    "category": "Inredning och bruksföremål",
+    "campaign_id": null,
+    "length_m": 1.65,
+    "width_m": 0.91,
+    "height_m": 0.015
+  },
+  "drive_file_id": "1JWJPRaO-UFhe_lU26WyB3nIZzJ5oydca",
+  "archive_file_id": "1Wud9_Fy2YMF3zgZfmj13rLzer0mCp47Y",
+  "source_sha256": "5b815d05c0e90213b7d9cc9a0ca73d35bd8cccdd65375f9c2c5032cc980472cb"
+}
