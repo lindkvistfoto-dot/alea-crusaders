@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Runt träbord",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "91d6877c-0735-5962-a4ff-dc0dc4fc9e08"
+  },
+  "object_template": {
+    "category": "Möbler",
+    "campaign_id": null,
+    "length_m": 1.15,
+    "width_m": 1.12,
+    "height_m": 0.76
+  },
+  "drive_file_id": "1DgOpZ_WlR-f5AdwIsB-olfEw-3tvgn7n",
+  "archive_file_id": "15QLXVE48su4fUJRR7rRXH0eAxlpfsz8N",
+  "source_sha256": "9b20885b9d1bc425021b1495c1ddd81a560e9c3c27149703626d312b1225e954"
+}
