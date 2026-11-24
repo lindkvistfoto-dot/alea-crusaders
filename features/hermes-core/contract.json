@@ -432,6 +432,23 @@
         "is_active",
         "archived_at"
       ]
+    },
+    "map-object": {
+      "kind": "app-image",
+      "table": "arcane_object_definitions",
+      "lookup_column": "id",
+      "image_column": "image_asset_key",
+      "bucket": "campaign-materials",
+      "visibility": "private",
+      "key_pattern": "uuid",
+      "path_template": "map-objects/{id}/{sha256}.webp",
+      "required_null_columns": [
+        "battle_object_key"
+      ],
+      "guard_columns": [
+        "campaign_id",
+        "image_revision"
+      ]
     }
   },
   "profiles": {
@@ -1193,6 +1210,27 @@
     },
     "round-background-catalog": {
       "adapter": "round-background-catalog",
+      "source_formats": [
+        "PNG",
+        "JPEG",
+        "WEBP"
+      ],
+      "source_min_edge": 1,
+      "source_max_edge": 8192,
+      "aspect": "any",
+      "alpha": "preserve",
+      "fit": "contain",
+      "output_width": null,
+      "output_height": null,
+      "output_max_edge": 4096,
+      "max_webp_bytes": 12000000,
+      "quality_start": 90,
+      "quality_min": 50,
+      "quality_step": 4,
+      "max_source_bytes": 67108864
+    },
+    "map-object": {
+      "adapter": "map-object",
       "source_formats": [
         "PNG",
         "JPEG",

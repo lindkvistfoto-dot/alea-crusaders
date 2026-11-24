@@ -271,6 +271,26 @@ def main() -> None:
         target_adapter_kind = "app-image" if target["kind"] in APP_IMAGE_KINDS else target["kind"]
         if not profile or CORE_CONTRACT["adapters"][profile["adapter"]]["kind"] != target_adapter_kind:
             raise ValueError("CORE_PROFILE_TARGET_MISMATCH")
+    if "object_template" in request:
+        if request["schema"] != 3 or profile_id != "map-object":
+            raise ValueError("OBJECT_TEMPLATE_REQUIRES_MAP_OBJECT_PROFILE")
+        template = request["object_template"]
+        if not isinstance(template, dict) or not {"category", "campaign_id"} <= template.keys():
+            raise ValueError("OBJECT_TEMPLATE_SCOPE_AND_CATEGORY_REQUIRED")
+        if template["campaign_id"] is not None and not valid_core_target_id("app-image", "map-object", template["campaign_id"]):
+            raise ValueError("INVALID_OBJECT_CAMPAIGN")
+        if not isinstance(template["category"], str) or not template["category"].strip():
+            raise ValueError("INVALID_OBJECT_CATEGORY")
+        if template.keys() - {"category", "campaign_id", "length_m", "width_m", "height_m", "description", "max_bep"}:
+            raise ValueError("UNKNOWN_OBJECT_TEMPLATE_FIELD")
+        for field in ("length_m", "width_m", "height_m"):
+            value = template.get(field)
+            if value is not None and (type(value) not in (int, float) or not 0 < value < 100000):
+                raise ValueError("INVALID_OBJECT_DIMENSIONS")
+        if template.get("max_bep") is not None and (type(template["max_bep"]) is not int or template["max_bep"] < 0):
+            raise ValueError("INVALID_OBJECT_BEP")
+        if template.get("description") is not None and not isinstance(template["description"], str):
+            raise ValueError("INVALID_OBJECT_DESCRIPTION")
     if not isinstance(request["label"], str) or not request["label"].strip():
         raise ValueError("ASSET_LABEL_REQUIRED")
     if any(not isinstance(request[key], str) or not DRIVE_ID.fullmatch(request[key])

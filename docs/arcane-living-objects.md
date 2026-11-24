@@ -2,6 +2,12 @@
 
 Kartakademins flik **Objekt** redigerar kartans förberedda möblering. **Objekt** i SL Control Board öppnar samma verktyg för den aktuella kampanjkartan. Välj en mall och tryck på kartan, eller dra den från biblioteket. Tryck på ett placerat objekt för att flytta det, använda rotations- och skalhandtagen eller ange exakta värden. Om ett föremål är helt täckt kan du välja det i **På kartan** och trycka **Flytta** för att ange en ny position. Grundläget är fri placering. Med **Fäst vid hexcentrum** kan du använda kartans befintliga hexgeometri. Varje ändring sparas direkt.
 
+## Objektverkstaden i Admin
+
+Öppna **Admin → Objektverkstaden → Nytt objekt**. Ange namn, kategori och samling. En kampanjspecifik mall hör till den valda kampanjen. Välj en bild från datorn eller mobilen, ange kända mått i meter och tryck **Spara objekt**. HERMES ALEA kopplar den verifierade bilden till mallen. Om uppladdningen avbryts finns den sparade mallen kvar och samma fil kan väljas igen. Befintliga objekt kan få en ersättningsbild. De behåller sin identitet och sina placeringar. Äldre Battle Library-länkar hämtar fortfarande sin bild och sina spelegenskaper därifrån.
+
+Aktiva mallar med bild och tre fysiska mått kan placeras i **Admin → Platser → Kartakademin → Objekt** och i **SL Control Board → Objekt** på en kalibrerad karta. ChatGPT och Codex kan skapa en mall direkt i samma bibliotek med [HERMES CORE:s kartobjektprofil](../hermes/core/queue/README.md#map-objects-for-kartakademin-and-the-sl-control-board).
+
 ## Samling och kategori
 
 **Alla tillgängliga** visar gemensamma mallar och mallar för den öppna kartans kampanj. Välj **Gemensamma objekt** eller **Kampanjspecifika objekt** för att begränsa samlingen. Samling, kategori och fritext kan kombineras i både Kartakademin och SL Control Board. **På kartan** visar fortfarande samtliga placerade instanser för spelledaren.

@@ -13,7 +13,7 @@ System asset deletion is separate from publication and follows the [HERMES CORE 
 3. Never accept queue-provided Storage buckets, paths, table names, columns, SQL, or arbitrary processing code.
 4. Convert the exact source according to the selected profile, preserve its required alpha, dimensions, framing, metadata and byte budget, and store immutable SHA-addressed WebP output.
 5. Use only the configured public or private bucket. Verify byte-for-byte Storage readback and public or signed URL readback as appropriate.
-6. Activate only the selected existing target through its approved adapter, using compare-and-set protection where available. Preserve prior references and metadata, then read the target back.
+6. Activate the selected target (including explicit map-object creation) through its approved adapter, using compare-and-set protection where available. Preserve prior references and metadata, then read the target back.
 7. The publication flow never deletes Drive originals, previous Storage objects or historical records. Exact system asset removal is a separate, explicitly approved operation defined in [ASSET_CLEANUP.md](./ASSET_CLEANUP.md).
 
 | Profile family | Adapter behavior | Readback |
@@ -30,6 +30,7 @@ System asset deletion is separate from publication and follows the [HERMES CORE 
 | Battle pose | Existing combatant/race pose row and public immutable cutout path | Publication status, activation, base, mounting and any ALEA staging claim are guarded and left unchanged |
 | Campaign NPC/monster portrait | Existing campaign actor row and campaign-scoped private path | Campaign ownership path is read from the row; app signing remains in the existing portrait resolver |
 | Campaign material/gallery/location image | Existing private material, gallery or location-asset row | Fixed bucket per profile; campaign scope, visibility, archive state and existing links are preserved |
+| Map object | A schema-3 `map-object` request creates a categorized template when `object_template` is present, or updates the image of an existing UUID | Private signed readback and template readback. Placement uses the shared map library and player discovery rules. |
 | Round-background catalog | Existing catalog row and `round/{id}.webp` private path | Row ID and active state remain unchanged; no catalog row is created or activated |
 
 Schema-3 app-image identifiers and all write destinations remain repository-owned. UUID-keyed profiles accept only UUID targets, slug-keyed profiles only slugs; campaign path segments are read from the selected existing row. The publisher derives a stable UUIDv8 filename from the output SHA-256 where an existing Storage path contract requires UUID filenames.

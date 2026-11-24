@@ -63,7 +63,7 @@ export function createCoreActionsTargetAdapter({db,prepared,registryKey}) {
    const {data,error}=await db.from(appTarget.table).select(columns.join(",")).eq(appTarget.lookup_column,key).maybeSingle();
    if(error)throw error;
    if(data)assertTargetState(data);
-   return data?{key:data[appTarget.image_column]??null,revision:0,row:data}:null;
+   return data?{key:data[appTarget.image_column]??null,revision:Number(data.image_revision??0),row:data}:null;
   }
   if(targetKind!=="system"){
    const {data,error}=await db.from(honorTable).select(targetKind==="honor-relief"?"id,honor_id,image_asset_id,image_revision,material":"id,image_asset_id,image_revision").eq("id",target.id).maybeSingle();
@@ -78,11 +78,29 @@ export function createCoreActionsTargetAdapter({db,prepared,registryKey}) {
  }
  async function activate(target,expectedRevision,expectedKey,metadata,create){
   if(appTarget){
+   // A template in a map-object request is create-only. A replay may confirm
+   // the same bytes and campaign, but cannot replace an unrelated template.
+   if(prepared.profile_id==="map-object" && prepared.object_template){
+    const spec=prepared.object_template;
+    if(create){
+     const {error}=await db.from(appTarget.table).insert({
+      id:target.id,object_key:"core-"+target.id,object_type:"map-object",name:prepared.label,
+      image_asset_key:metadata.path,image_crop:{},library_category:spec.category,campaign_id:spec.campaign_id,
+      width_m:spec.length_m??null,depth_m:spec.width_m??null,height_m:spec.height_m??null,
+      description:spec.description??null,max_bep:spec.max_bep??null
+     });
+     if(error && error.code!=="23505")throw error;
+    }
+    const saved=await readTarget(target);
+    if(!saved || saved.key!==metadata.path || saved.row.campaign_id!==spec.campaign_id)
+     throw new Error("CORE_OBJECT_TEMPLATE_CONFLICT");
+    return {key:saved.key,revision:saved.revision};
+   }
    if(create)throw new Error("CORE_APP_TARGET_MUST_EXIST");
    if(metadata?.path==null)throw new Error("CORE_APP_IMAGE_REMOVE_UNSUPPORTED");
    if(prepared.profile_id==="spell-cutout"&&expectedKey&&expectedKey!==metadata.path)throw new Error("EXISTING_CUTOUT_PROTECTED");
    const previous=await readTarget(target);
-   if(!previous||previous.key!==expectedKey)throw new Error("CORE_APP_TARGET_CHANGED");
+   if(!previous||previous.key!==expectedKey||(prepared.profile_id==="map-object" && previous.revision!==expectedRevision))throw new Error("CORE_APP_TARGET_CHANGED");
    if(appTarget.preserve_map_extent){
     const {width,height}=previous.row;
     if(!previous.key||!(width>0&&height>0&&metadata.width>0&&metadata.height>0)||

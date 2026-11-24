@@ -1,73 +1,130 @@
-/* Admin workbench for reusable, HERMES-backed Battlefield Library objects. */
-(() => {
- 'use strict';
- const root=globalThis, $=id=>document.getElementById(id), esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- const edges=[0,1,2,3,4,5];
- let records=[],assets=new Map(),selectedKey='',rotation=0,loading=false;
- function canAdmin(){return !!root.activeUser?.()?.admin}
- function status(message,error=false){const node=$('bfwStatus');if(node){node.textContent=message;node.classList.toggle('is-error',error)}}
- function imageUrl(assetKey){const path=assets.get(assetKey),base=typeof SUPABASE_URL==='string'?SUPABASE_URL:root.SUPABASE_URL;if(!path||typeof base!=='string')return '';return base+'/storage/v1/object/public/alea-hermes-public/'+path.split('/').map(encodeURIComponent).join('/')}
- function current(){return records.find(row=>row.object_key===selectedKey)||null}
- function loadForm(row){
-  selectedKey=row?.object_key||'';rotation=0;
-  render();
-  $('bfwName').value=row?.name||'';$('bfwKey').value=row?.object_key||'';$('bfwCategory').value=row?.category||'Murar';
-  $('bfwAssetKey').value=row?.asset_key||'arcane-battlefield-wall-prototype';$('bfwDescription').value=row?.description||'';
-  $('bfwMovement').value=row?.movement_mode||'blocked';$('bfwSight').value=row?.sight_mode||'blocked';
-  $('bfwDamage').checked=row?.max_damage!=null;$('bfwMaxDamage').value=row?.max_damage??10;
-  edges.forEach(edge=>{const box=$('bfwEdge'+edge);if(box)box.checked=(row?.connector_edges||[0,3]).includes(edge)});
-  render();
- }
- function previewMarkup(row){
-  const key=$('bfwAssetKey')?.value.trim()||row?.asset_key||'',url=imageUrl(key),activeEdges=edges.filter(edge=>$('bfwEdge'+edge)?.checked);
-  const cells=[0,1,2].map(index=>{
-   const direction=rotation*Math.PI/3,cx=150+(index-1)*69.3*Math.cos(direction),cy=110+(index-1)*69.3*Math.sin(direction),r=40,pts=edges.map(n=>{const a=(n*60-30)*Math.PI/180;return (cx+Math.cos(a)*r)+','+(cy+Math.sin(a)*r)}).join(' '),clip='bfwhex'+index;
-   const art=url?'<image href="'+esc(url)+'" x="'+(cx-r)+'" y="'+(cy-r)+'" width="'+(2*r)+'" height="'+(2*r)+'" preserveAspectRatio="xMidYMid slice" clip-path="url(#'+clip+')" transform="rotate('+rotation+' '+cx+' '+cy+')"/>':'<polygon points="'+pts+'" fill="#342d22"/>';
-   const marks=activeEdges.map(edge=>{const a=((edge+rotation)*60-30)*Math.PI/180;return '<circle cx="'+(cx+Math.cos(a)*r*.86)+'" cy="'+(cy+Math.sin(a)*r*.86)+'" r="3.5" class="bfw-connector"/>'}).join('');
-   return '<clipPath id="'+clip+'"><polygon points="'+pts+'"/></clipPath>'+art+'<polygon points="'+pts+'" class="bfw-hex-outline"/>'+marks;
-  }).join('');
-  return '<svg viewBox="0 0 300 220" role="img" aria-label="Tre sammanfogade mursegment, ett hex per segment"><defs>'+cells.match(/<clipPath[\s\S]*?<\/clipPath>/g)?.join('')+'</defs>'+cells.replace(/<clipPath[\s\S]*?<\/clipPath>/g,'')+'</svg>';
- }
- function render(){
-  const mount=$('battlefieldObjectWorkshopMount');if(!mount)return;
-  const name=$('bfwName')?.value||'',key=$('bfwKey')?.value||'',assetKey=$('bfwAssetKey')?.value||'',row=current(),url=imageUrl(assetKey);
-  const list=records.map(item=>'<button class="bfw-library-row'+(item.object_key===selectedKey?' selected':'')+'" type="button" data-bfw-select="'+esc(item.object_key)+'"><span><b>'+esc(item.name)+'</b><small>'+esc(item.object_key)+' · '+esc(item.category)+(item.active?'':' · inaktiv')+'</small></span><span>'+((item.footprint||[]).length)+' hex</span></button>').join('');
-  const edgeControls=edges.map(edge=>'<label><input id="bfwEdge'+edge+'" type="checkbox" '+(([0,3].includes(edge)&&!row)||row?.connector_edges?.includes(edge)?'checked':'')+'><span>Sida '+(edge+1)+'</span></label>').join('');
-  mount.innerHTML='<div class="bfw-head"><div><div class="bfw-kicker">ARCANE · BATTLEFIELD</div><h2>Objektverkstad</h2><p>Skapa återanvändbara kartobjekt till Battlefield Library. Ett segment förankras i ett hex; anslutningssidorna anger hur segment kan byggas vidare.</p></div><span class="bfw-status-pill">Adminverktyg</span></div>'+
-   '<div class="bfw-layout"><aside class="bfw-library"><div class="bfw-section-head"><h3>Battlefield Library</h3><button type="button" class="smallbtn" data-bfw-new>+ Nytt objekt</button></div>'+(list||'<p class="bfw-empty">Biblioteket är tomt.</p>')+'</aside>'+
-   '<section class="bfw-editor"><div class="bfw-section-head"><h3>'+(row?'Redigera objekt':'Nytt bibliotekobjekt')+'</h3><span class="bfw-key-preview">'+esc(key||'nytt-objekt')+'</span></div>'+
-   '<div class="bfw-object-preview"><div class="bfw-source-art">'+(url?'<img src="'+esc(url)+'" alt="Prototypbild: '+esc(name||'mur')+'">':'<div class="bfw-no-art"><b>Bild saknas i DEV</b><span>Publicera asset_key via HERMES CORE för att visa originalbilden här.</span></div>')+'</div><div class="bfw-assembly-preview"><div id="bfwAssemblyVisual">'+previewMarkup(row)+'</div><b>Förhandsvisning · tre sammanfogade segment</b><small>Varje segment täcker 1 hex. Gyllene markörer visar öppna anslutningssidor.</small></div></div>'+
-   '<div class="bfw-fields"><label>Namn<input id="bfwName" value="'+esc(row?.name||'Mursegment · prototyp')+'" maxlength="80"></label><label>Objektnyckel<input id="bfwKey" value="'+esc(row?.object_key||'wall-segment-prototype')+'" maxlength="80" '+(row?'readonly':'')+'></label><label>Kategori<input id="bfwCategory" value="'+esc(row?.category||'Murar')+'" maxlength="40"></label><label>HERMES CORE asset_key<input id="bfwAssetKey" value="'+esc(row?.asset_key||'arcane-battlefield-wall-prototype')+'" maxlength="100"></label></div>'+
-   '<label class="bfw-description">Beskrivning<textarea id="bfwDescription" rows="2" maxlength="500">'+esc(row?.description||'Ett hexankrat mursegment som kan kopplas sida vid sida med likadana segment.')+'</textarea></label>'+
-   '<div class="bfw-property-grid"><fieldset><legend>Spelavtryck</legend><div class="bfw-footprint-lock"><span class="bfw-one-hex">⬡</span><span><b>1 hex</b><small>Hexen är ankaret för placering och spelregler.</small></span></div></fieldset><fieldset><legend>Anslutningar · 6 sidor</legend><div class="bfw-edge-grid">'+edgeControls+'</div><div class="bfw-rotation"><button type="button" class="smallbtn" data-bfw-rotate="-1">↶ Rotera</button><span>'+rotation*60+'°</span><button type="button" class="smallbtn" data-bfw-rotate="1">Rotera ↷</button></div></fieldset><fieldset><legend>Stridsegenskaper</legend><label>Förflyttning<select id="bfwMovement"><option value="blocked" '+((row?.movement_mode||'blocked')==='blocked'?'selected':'')+'>Blockerad</option><option value="difficult" '+(row?.movement_mode==='difficult'?'selected':'')+'>Svår</option><option value="free" '+(row?.movement_mode==='free'?'selected':'')+'>Fri</option></select></label><label>Sikt<select id="bfwSight"><option value="blocked" '+((row?.sight_mode||'blocked')==='blocked'?'selected':'')+'>Blockerad</option><option value="obscuring" '+(row?.sight_mode==='obscuring'?'selected':'')+'>Skymd</option><option value="clear" '+(row?.sight_mode==='clear'?'selected':'')+'>Fri</option></select></label><label class="bfw-damage"><input id="bfwDamage" type="checkbox" '+(row?.max_damage!=null?'checked':'')+'> Kan ta skada <input id="bfwMaxDamage" type="number" min="1" value="'+esc(row?.max_damage??10)+'" aria-label="Maximal skada"></label></fieldset></div>'+
-   '<div class="bfw-actions"><button type="button" class="btn" data-bfw-toggle '+(row?'':'disabled')+'>'+(row?.active?'Avaktivera i biblioteket':'Aktivera i biblioteket')+'</button><button type="button" class="btn primary" data-bfw-save>'+ (row?'Spara ändringar':'Skapa objekt i Battlefield Library')+'</button><button type="button" class="smallbtn" data-bfw-reset>Återställ</button></div><p id="bfwStatus" class="bfw-status" role="status">'+(url?'Klar att redigera.':'Bildnyckeln inväntar DEV-publicering via HERMES CORE.')+'</p></section></div>';
-  mount.querySelectorAll('[data-bfw-select]').forEach(button=>button.addEventListener('click',()=>loadForm(records.find(item=>item.object_key===button.dataset.bfwSelect))));
-  mount.querySelector('[data-bfw-new]')?.addEventListener('click',()=>loadForm(null));
-  mount.querySelector('[data-bfw-save]')?.addEventListener('click',save);
-  mount.querySelector('[data-bfw-toggle]')?.addEventListener('click',toggleActive);
-  mount.querySelector('[data-bfw-reset]')?.addEventListener('click',()=>loadForm(current()));
-  mount.querySelectorAll('[data-bfw-rotate]').forEach(button=>button.addEventListener('click',()=>{rotation=(rotation+Number(button.dataset.bfwRotate)+6)%6;render()}));
-  mount.querySelectorAll('#bfwAssetKey,#bfwEdge0,#bfwEdge1,#bfwEdge2,#bfwEdge3,#bfwEdge4,#bfwEdge5').forEach(input=>input.addEventListener('input',()=>{const visual=$('bfwAssemblyVisual');if(visual)visual.innerHTML=previewMarkup(current())}));
- }
- async function load(){
-  if(!canAdmin())throw new Error('Endast administratörer kan öppna objektverkstaden.');
-  records=await root.dbJson('arcane_battlefield_library?select=*&order=category.asc,name.asc')||[];
-  const keys=[...new Set(records.map(row=>row.asset_key).filter(Boolean))];
-  if(keys.length){const rows=await root.dbJson('arcane_system_assets?asset_key=in.('+keys.map(encodeURIComponent).join(',')+')&select=asset_key,asset_path');assets=new Map((rows||[]).filter(row=>/^hermes\/system-asset\/arcane-battlefield-[a-z0-9-]+\/[a-f0-9]{64}\.webp$/.test(row.asset_path||'')).map(row=>[row.asset_key,row.asset_path]))}
-  if(!selectedKey||!records.some(row=>row.object_key===selectedKey))selectedKey=records[0]?.object_key||'';
-  loadForm(current());
- }
- async function save(){
-  if(loading)return;const name=$('bfwName').value.trim(),key=$('bfwKey').value.trim(),assetKey=$('bfwAssetKey').value.trim();
-  if(!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(key))return status('Objektnyckeln ska vara en slug med små bokstäver, siffror och bindestreck.',true);
-  if(!/^arcane-battlefield-[a-z0-9]+(?:-[a-z0-9]+)*$/.test(assetKey))return status('Assetnyckeln följer inte HERMES CORE:s systemformat.',true);
-  if(!name)return status('Ange ett namn för objektet.',true);
-  const row={object_key:key,name,category:$('bfwCategory').value.trim()||'Objekt',asset_key:assetKey,description:$('bfwDescription').value.trim(),footprint:[{q:0,r:0}],connector_edges:edges.filter(edge=>$('bfwEdge'+edge).checked),movement_mode:$('bfwMovement').value,sight_mode:$('bfwSight').value,movement_cost:$('bfwMovement').value==='difficult'?2:1,max_damage:$('bfwDamage').checked?Math.max(1,Number($('bfwMaxDamage').value)||10):null,active:true,updated_at:new Date().toISOString()};
-  loading=true;status('Sparar objekt…');
-  try{const result=await root.dbJson('arcane_battlefield_library?on_conflict=object_key',{method:'POST',headers:{Prefer:'resolution=merge-duplicates,return=representation'},body:JSON.stringify(row)});if(!Array.isArray(result)||!result.some(saved=>saved.object_key===key))throw new Error('Objektet kunde inte läsas tillbaka efter sparning.');records=records.filter(item=>item.object_key!==key).concat(result[0]);selectedKey=key;status('Objektet sparades i Battlefield Library.');render();await root.aleaBattlefieldLibraryReload?.()}
-  catch(error){status('Kunde inte spara: '+(error?.message||error),true)}finally{loading=false}
- }
- async function toggleActive(){const row=current();if(!row||loading)return;loading=true;try{const saved=await root.dbJson('arcane_battlefield_library?object_key=eq.'+encodeURIComponent(row.object_key)+'&select=*',{method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify({active:!row.active,updated_at:new Date().toISOString()})});if(!saved?.length)throw new Error('Objektet kunde inte uppdateras.');records=records.map(item=>item.object_key===row.object_key?saved[0]:item);render();status(saved[0].active?'Objektet är aktivt i biblioteket.':'Objektet är avaktiverat; placerade instanser finns kvar.');await root.aleaBattlefieldLibraryReload?.() }catch(error){status(error?.message||'Kunde inte ändra objektstatus.',true)}finally{loading=false}}
- async function mount(){const mountPoint=$('battlefieldObjectWorkshopMount');if(!mountPoint)return;if(!canAdmin()){mountPoint.innerHTML='<p>Endast administratörer har åtkomst.</p>';return}mountPoint.innerHTML='<p class="bfw-status">Läser Battlefield Library…</p>';try{await load()}catch(error){mountPoint.innerHTML='<p class="bfw-status is-error">Verkstaden kunde inte laddas: '+esc(error?.message||error)+'</p>'}}
- root.aleaBattlefieldObjectWorkshop=Object.freeze({mount});
-})();
+import {createHermesAleaClient} from '../hermes-alea/client.js';
+import hermesAlea from '../hermes-alea/asset-resolver.js';
+import {objectCategories} from '../map/object-categories.js';
+import {objectImageUrls} from '../map/object-images.js';
+
+const table = 'arcane_object_definitions';
+const escape = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const upload = createHermesAleaClient({
+  targetPolicies: {'map-object': {}},
+  environment: globalThis.ALEA_SUPABASE_CONFIG?.name === 'live' ? 'LIVE' : 'DEV',
+  rpc: (name,args) => window.dbJson('rpc/' + name,{method:'POST',body:JSON.stringify(args)}),
+  request: (path,options) => window.authFetch(path,{...options,headers:{Authorization:'Bearer session',...options.headers}}),
+});
+const phases = {preparing:'Förbereder bilden…',uploading:'Laddar upp original och visningsbild…',verifying:'Verifierar bilden…',activating:'Kopplar bilden till objektet…'};
+let mounted = 0;
+let dispose = () => {};
+
+async function mount() {
+  const root = document.getElementById('battlefieldObjectWorkshopMount');
+  if (!root) return;
+  const version = ++mounted;
+  dispose();root.inert=false;
+  if (!window.activeUser?.()?.admin) {root.textContent='Endast administratörer kan öppna objektverkstaden.';return;}
+  root.textContent='Läser objektbiblioteket…';
+  try {
+    const [rows,campaigns] = await Promise.all([
+      window.dbJson(table+'?select=*&order=name,id'),
+      window.dbJson('campaigns?select=id,name&order=name,id'),
+    ]);
+    if (version!==mounted) return;
+    let selected, draftId, pending=false, preview='', urls=new Map();
+    dispose=()=>{if(preview)URL.revokeObjectURL(preview);};
+    const campaignNames=new Map(campaigns.map(c=>[c.id,c.name]));
+    const campaignOptions=campaigns.map(c=>'<option value="'+escape(c.id)+'">'+escape(c.name)+'</option>').join('');
+    const categories=objectCategories.map(c=>'<option>'+escape(c)+'</option>').join('');
+    root.innerHTML='<div class="ow-layout"><aside><div class="ow-heading"><h2>Objektbibliotek</h2><button type="button" class="btn" data-new>Nytt objekt</button></div>'+
+      '<label>Sök objekt<input type="search" data-search></label><label>Samling<select data-scope><option value="all">Alla samlingar</option><option value="">Gemensamma objekt</option>'+campaignOptions+'</select></label>'+
+      '<label>Kategori<select data-filter><option value="">Alla kategorier</option>'+categories+'</select></label><div class="ow-list" data-list></div></aside>'+
+      '<form><h2 data-title></h2><div class="ow-preview" data-preview></div><label>Objektbild<input name="picture" type="file" accept="image/png,image/jpeg,image/webp"></label>'+
+      '<label>Namn<input name="title" required></label><div class="ow-fields"><label>Kategori<select name="category">'+categories+'</select></label>'+
+      '<label>Samling<select name="scope"><option value="">Gemensamma objekt</option>'+campaignOptions+'</select></label></div>'+
+      '<div class="ow-fields">'+[['length','Längd'],['width','Bredd'],['height','Höjd']].map(([key,label])=>'<label>'+label+' (m)<input type="number" name="'+key+'" min="0.001" step="0.001"></label>').join('')+
+      '<label>Max BEP<input type="number" name="bep" min="0" step="1"></label></div><label>Beskrivning<textarea name="description" rows="3"></textarea></label>'+
+      '<label class="ow-check"><input type="checkbox" name="enabled"> Aktiv i kartbiblioteket</label><p data-battle hidden>Namn, bild, beskrivning, Max BEP och aktivitet hämtas från Battle Library.</p>'+
+      '<button type="submit" class="btn primary">Spara objekt</button><p role="status" aria-live="polite"></p></form></div>';
+    const find=s=>root.querySelector(s), form=find('form'), field=name=>form.elements.namedItem(name);
+    const status=message=>{if(version===mounted)find('[role=status]').textContent=message;};
+    const collection=row=>row.campaign_id?campaignNames.get(row.campaign_id)||'Kampanjspecifikt':'Gemensamt';
+    function list() {
+      const search=find('[data-search]').value.trim().toLocaleLowerCase('sv');
+      const category=find('[data-filter]').value, scope=find('[data-scope]').value;
+      const matches=rows.filter(d=>(scope==='all'||(d.campaign_id||'')===scope)&&(!category||d.library_category===category)&&
+        [d.name,d.library_category,collection(d)].some(s=>s.toLocaleLowerCase('sv').includes(search)));
+      find('[data-list]').innerHTML=matches.map(d=>'<button type="button" class="ow-row" aria-pressed="'+(d.id===selected?.id)+'" data-id="'+escape(d.id)+'">'+
+        (urls.get(d.image_asset_key)?'<img alt="" src="'+escape(urls.get(d.image_asset_key))+'">':'')+'<span><b>'+escape(d.name)+'</b><small>'+escape(d.library_category)+' · '+escape(collection(d))+(d.active?'':' · Inaktiv')+'</small></span></button>').join('')||'<p>Inga objekt matchar urvalet.</p>';
+    }
+    function showArt() {
+      const src=preview||urls.get(selected?.image_asset_key);
+      find('[data-preview]').innerHTML=src?'<img alt="Objektets bild" src="'+escape(src)+'">':'<span>Ingen bild vald</span>';
+    }
+    function select(row) {
+      selected=row;draftId=row?.id||crypto.randomUUID();
+      if(preview)URL.revokeObjectURL(preview);
+      preview='';form.reset();field('title').value=row?.name||'';
+      field('category').value=row?.library_category||find('[data-filter]').value||'Övrigt';
+      field('scope').value=row?.campaign_id||(row||find('[data-scope]').value==='all'?'':find('[data-scope]').value);
+      field('scope').disabled=!!row;
+      for(const [key,column] of [['length','width_m'],['width','depth_m'],['height','height_m'],['bep','max_bep'],['description','description']])
+        field(key).value=row?.[column]??'';
+      field('enabled').checked=row?.active??true;
+      for(const key of ['title','picture','bep','description','enabled'])field(key).disabled=!!row?.battle_object_key;
+      find('[data-battle]').hidden=!row?.battle_object_key;
+      find('[data-title]').textContent=row?'Redigera objekt':'Nytt objekt';
+      showArt();list();status('');
+    }
+    find('[data-list]').onclick=e=>{const id=e.target.closest('[data-id]')?.dataset.id;if(id)select(rows.find(d=>d.id===id));};
+    find('[data-new]').onclick=()=>{select(null);field('title').focus();};
+    find('[data-search]').oninput=list;find('[data-scope]').onchange=list;find('[data-filter]').onchange=list;
+    field('picture').onchange=()=>{if(preview)URL.revokeObjectURL(preview);preview=field('picture').files[0]?URL.createObjectURL(field('picture').files[0]):'';showArt();};
+    function remember(row) {
+      const i=rows.findIndex(d=>d.id===row.id);
+      if(i<0)rows.push(row);else rows[i]=row;
+      rows.sort((a,b)=>a.name.localeCompare(b.name,'sv'));
+      selected=row;
+    }
+    const number=key=>field(key).value===''?null:field(key).valueAsNumber;
+    const byId=()=>table+'?id=eq.'+draftId;
+    form.onsubmit=async event=>{
+      event.preventDefault();
+      if(pending||!form.reportValidity())return;
+      if(!field('title').value.trim()){status('Ange objektets namn.');field('title').focus();return;}
+      pending=true;root.inert=true;status('Sparar objektet…');
+      const file=field('picture').files[0];
+      let metadataSaved=false;
+      try{
+        const values={library_category:field('category').value,width_m:number('length'),depth_m:number('width'),height_m:number('height')};
+        if(!selected?.battle_object_key)Object.assign(values,{name:field('title').value.trim(),description:field('description').value.trim(),max_bep:number('bep'),active:field('enabled').checked});
+        const isNew=!selected;
+        if(isNew)Object.assign(values,{id:draftId,object_key:'object-'+draftId,object_type:'map-object',campaign_id:field('scope').value||null,image_crop:{}});
+        const path=isNew?table+'?on_conflict=id':byId()+'&updated_at=eq.'+encodeURIComponent(selected.updated_at);
+        const saved=await window.dbJson(path,{method:isNew?'POST':'PATCH',headers:{Prefer:isNew?'resolution=ignore-duplicates,return=representation':'return=representation'},body:JSON.stringify(values)});
+        const row=saved[0]||(isNew?(await window.dbJson(byId()+'&select=*'))[0]:null);
+        if(!row){
+          const [latest]=await window.dbJson(byId()+'&select=*');
+          if(latest && version===mounted){remember(latest);select(latest);}
+          throw Error('Mallen har ändrats. Kontrollera de aktuella värdena innan du sparar igen.');
+        }
+        remember(row);metadataSaved=true;
+        if(file)await upload.upload({targetKind:'map-object',target:{id:row.id,image_asset_id:row.image_asset_key,image_revision:row.image_revision},file,onStatus:p=>{if(phases[p])status(phases[p]);}});
+        const [fresh]=await window.dbJson(byId()+'&select=*');
+        remember(fresh);
+        if(version!==mounted)return;
+        select(fresh);
+        status(file?'Objektet och bilden har sparats.':'Objektet har sparats.');
+        try {
+          if(file)await hermesAlea.load(true);
+          urls=await objectImageUrls(rows);
+          if(version===mounted){list();showArt();}
+        }catch{status('Objektet är sparat. Förhandsbilden kunde inte läsas just nu.');}
+      }catch(error){if(version===mounted)status((metadataSaved?'Objektmallen är sparad. ':'')+error.message);}
+      finally{
+        if(metadataSaved)window.dispatchEvent(new Event('alea-object-library-changed'));
+        pending=false;if(version===mounted){root.inert=false;field('scope').disabled=!!selected;list();}
+      }
+    };
+    select(rows[0]||null);
+    urls=await objectImageUrls(rows);if(version===mounted){list();showArt();}
+  } catch(error){if(version===mounted){const node=root.querySelector('[role=status]')||root;node.textContent='Objektverkstaden kunde inte läsas. '+error.message;}}
+}
+window.aleaBattlefieldObjectWorkshop={mount};

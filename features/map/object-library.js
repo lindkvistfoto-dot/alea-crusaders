@@ -2,7 +2,7 @@ import './object-library.css';
 import {objectCategories, filterObjectLibrary} from './object-categories.js';
 import {adventureCell, adventureGrid} from './adventure-hex.js';
 import {mapPointer} from './polygon-edit-geometry.js';
-import hermesAlea from '../hermes-alea/asset-resolver.js';
+import {objectImageUrls} from './object-images.js';
 
 const svgNS = 'http://www.w3.org/2000/svg';
 const editors = new Set();
@@ -36,17 +36,9 @@ async function imageBounds(url) {
   return cropCache.get(url);
 }
 async function loadArt(definitions) {
-  const keys=[...new Set(definitions.map(d=>d.image_asset_key))];
-  const core=keys.filter(k=>/^arcane-[a-z0-9-]+$/.test(k));
-  const [assets]=await Promise.all([
-    core.length?dbJson('arcane_system_assets?select=asset_key,asset_path,width,height&asset_key=in.('+core.join(',')+')'):[],
-    keys.some(k=>k.startsWith('hermes-alea:'))?hermesAlea.load():null,
-  ]);
-  const registry=new Map(assets.map(a=>[a.asset_key,a]));
+  const urls=await objectImageUrls(definitions);
   return Promise.all(definitions.map(async d=>{
-    const a=registry.get(d.image_asset_key);
-    const url=a && /^hermes\/system-asset\/[\w.-]+\/[a-f0-9]{64}\.webp$/.test(a.asset_path)
-      ?SUPABASE_URL+'/storage/v1/object/public/alea-hermes-public/'+a.asset_path:hermesAlea.url(d.image_asset_key);
+    const url=urls.get(d.image_asset_key)||'';
     const crop=d.image_crop;
     // V1 stored pixel crops on a 1254-square master. Its full-canvas default
     // represented an unmeasured image, so resolve alpha bounds in that case.
@@ -361,6 +353,7 @@ export function createObjectEditor({map,parent,before,live,manager,getScale,area
       return {id,definitionId:d.id,position:{x:+o.x,y:+o.y},width_m:w,depth_m:h,height_m:d.height_m*scale,rotation_degrees:+o.rotation,
         footprint:geometry().footprint(w,h,o.rotation),movement_blocking:o.movement_blocking,light_blocking:o.light_blocking,shadow_casting:o.shadow_casting};
     },destroy(){disposed=true;events.abort();editors.delete(api);layer.remove();inputLayer.remove();panel.remove();}};
+  on(window,'alea-object-library-changed',()=>{if(manager)void refresh(true);});
   editors.add(api);draw();void refresh();return api;
 }
 

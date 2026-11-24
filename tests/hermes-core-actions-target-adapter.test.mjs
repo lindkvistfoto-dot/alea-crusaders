@@ -2,6 +2,7 @@ import {describe,it,expect} from 'vitest';
 import {PGlite} from '@electric-sql/pglite';
 import {readFileSync} from 'node:fs';
 import {createCoreActionsTargetAdapter} from '../features/hermes-core/actions-target-adapter.js';
+import {coreAppImagePath} from '../features/hermes-core/app-image-targets.js';
 import {normalizeCoreQueueTarget} from '../features/hermes-core/queue-target.js';
 
 // Exercise the production adapter against Postgres column grants and CAS queries,
@@ -80,6 +81,30 @@ describe('Actions publisher with restricted production grants',()=>{
    } finally {await f.pg.close();}
   },15000);
  }
+ it('publishes an object into its campaign and treats a replay as the same template',async()=>{
+  const f=await fixture('app-image'), id=crypto.randomUUID(), campaign=crypto.randomUUID();
+  try {
+   await f.pg.exec(`reset role;create table arcane_object_definitions(id uuid primary key,object_key text unique,object_type text,
+    name text,image_asset_key text,image_crop jsonb,library_category text,campaign_id uuid,width_m numeric,depth_m numeric,
+    height_m numeric,description text,max_bep int,battle_object_key text,image_revision bigint default 0);
+    grant select,insert on arcane_object_definitions to service_role;
+    grant update(image_asset_key) on arcane_object_definitions to service_role;set role service_role;`);
+   const target={kind:'app-image',id}, profile_id='map-object',path=coreAppImagePath(profile_id,id,'a'.repeat(64));
+   const prepared={target,profile_id,label:'Riddarens sarkofag',object_template:{category:'Monument och ritualföremål',campaign_id:campaign,length_m:2,width_m:1}};
+   const a=createCoreActionsTargetAdapter({db:f.db,prepared});
+   const image={...f.metadata,path};
+   const saved=await a.activate(target,0,null,image,true);
+   expect(saved.key).toBe(path);
+   expect((await a.readTarget(target)).row.campaign_id).toBe(campaign);
+   expect((await f.pg.query('select library_category,height_m,width_m from arcane_object_definitions')).rows).toEqual([{library_category:'Monument och ritualföremål',height_m:null,width_m:'2'}]);
+   expect(await a.activate(target,0,path,image,false)).toEqual(saved);
+   await expect(a.activate(target,0,path,{...image,path:'other'},false)).rejects.toThrow('CONFLICT');
+   const replacement=createCoreActionsTargetAdapter({db:f.db,prepared:{target,profile_id}});
+   const newPath=coreAppImagePath(profile_id,id,'b'.repeat(64));
+   expect((await replacement.activate(target,0,path,{...image,path:newPath},false)).key).toBe(newPath);
+   await expect(replacement.activate(target,0,path,image,false)).rejects.toThrow('CHANGED');
+  } finally {await f.pg.close();}
+ });
  it('does not widen INSERT grants to metadata or permit honor metadata changes',async()=>{
   const f=await fixture('honor-definition');
   try {
