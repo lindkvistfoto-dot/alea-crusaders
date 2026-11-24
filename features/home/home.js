@@ -17,6 +17,120 @@
   if (!landing || !roster || typeof window.goHome !== 'function') return;
   const previousGoHome = window.goHome;
 
+  // ARCANE CHRONICLE design pilot: static content only, no DB writes.
+  function mountChronicleDraft() {
+    if (el('arcaneChronicleDraft')) return;
+    const block = document.createElement('section');
+    block.id = 'arcaneChronicleDraft';
+    block.className = 'arcane-chronicle-draft';
+    block.setAttribute('aria-label', 'Arcane Chronicle — fyra artiklar');
+    const articles = [
+      {category:'HJÄLTAR',title:'Evalin Hugger',subtitle:'Äventyraren från Caddo',icon:'♟',body:'Evalins ordinarie Battlepose ska monteras som en riktig fysisk spelpjäs på HEXAGONIA LOW ANGLE-bas. Bildkoppling återstår.'},
+      {category:'MAGI & FÄRDIGHETER',title:'Beskyddare',subtitle:'En besvärjelse om skydd och kraft',icon:'✧',body:'Här visas besvärjelsens berättande artikel. I nästa fas hämtas text och ordinarie bild från besvärjelsens databaspost.'},
+      {category:'EREB ALTOR',title:'Tvåhandssvärd',subtitle:'Legenden om Järnväktarens ed',icon:'⚔',body:'Det berättas att Arved av Kardien höll en bergsfästnings port med det stora svärdet Järnväktarens ed tills de sista försvararna nått säkerhet. Nyskriven världsfiktion, inte etablerad kanon.'},
+      {category:'HEDER',title:'Perfektionisten',subtitle:'Det särskilda handlaget',icon:'✹',body:'Utmärkelsens beskrivning och bild ska i nästa fas hämtas från dess befintliga databaspost.'}
+    ];
+    const heading = document.createElement('div');
+    heading.className = 'arcane-chronicle-heading';
+    heading.innerHTML = '<span>BERÄTTELSER UR EREB ALTOR</span><h2>Arcane Chronicle</h2><p>Fyra röster ur en levande värld</p>';
+    block.append(heading);
+    const grid = document.createElement('div');
+    grid.className = 'arcane-chronicle-grid';
+    articles.forEach(article => {
+      const card = document.createElement('button');
+      card.type = 'button';
+      card.className = 'arcane-chronicle-card';
+      const art = document.createElement('span');
+      art.className = 'arcane-chronicle-art';
+      art.textContent = article.icon;
+      art.setAttribute('aria-hidden','true');
+      const copy = document.createElement('span');
+      copy.className = 'arcane-chronicle-copy';
+      for (const [cls,value] of [['category',article.category],['title',article.title],['subtitle',article.subtitle]]) {
+        const item = document.createElement('span');
+        item.className = cls;
+        item.textContent = value;
+        copy.append(item);
+      }
+      card.append(art,copy);
+      card.addEventListener('click', () => {
+        const dialog = el('arcaneChronicleDialog');
+        if (!dialog) return;
+        dialog.querySelector('[data-chronicle-category]').textContent = article.category;
+        dialog.querySelector('[data-chronicle-title]').textContent = article.title;
+        dialog.querySelector('[data-chronicle-body]').textContent = article.body;
+        if (!dialog.open) dialog.showModal();
+      });
+      grid.append(card);
+    });
+    block.append(grid);
+    const note = document.createElement('p');
+    note.className = 'arcane-chronicle-note';
+    note.textContent = 'DESIGNUTKAST — bildsymboler är platshållare. Inga databaser är kopplade.';
+    block.append(note);
+    const cinematic = landing.querySelector('.landing-cinematic');
+    if (cinematic) cinematic.before(block);
+    else landing.prepend(block);
+    const dialog = document.createElement('dialog');
+    dialog.id = 'arcaneChronicleDialog';
+    dialog.className = 'arcane-chronicle-dialog';
+    dialog.innerHTML = '<div data-chronicle-category class="category"></div><h2 data-chronicle-title></h2><p data-chronicle-body></p><button type="button">Stäng</button>';
+    dialog.querySelector('button').addEventListener('click', () => dialog.close());
+    dialog.addEventListener('click', event => { if (event.target === dialog) dialog.close(); });
+    document.body.append(dialog);
+  }
+  mountChronicleDraft();
+
+  // Reuse the existing domain resolvers and the equipment-view figure source.
+  async function hydrateChronicleImages() {
+    const host = el('arcaneChronicleDraft');
+    if (!host || typeof dbJson !== 'function') return;
+    const cards = host.querySelectorAll('.arcane-chronicle-card');
+    if (cards.length !== 4) return;
+    function paint(index, url, alt) {
+      if (!url) return;
+      const stage = cards[index].querySelector('.arcane-chronicle-art');
+      if (!stage) return;
+      const img = document.createElement('img');
+      img.alt = alt;
+      img.loading = 'lazy';
+      img.className = 'arcane-chronicle-real-image';
+      img.addEventListener('load', () => stage.replaceChildren(img), {once:true});
+      img.src = url;
+    }
+    try {
+      const spells = await dbJson('rule_spells?select=name,illustration_path,image_path&name=ilike.BESKYDDARE&limit=1');
+      const spell = spells?.[0];
+      // The illustration bucket is resolved through the app's existing magic-art adapter.
+      const spellPath = spell?.illustration_path || spell?.image_path;
+      const magicResolvers = [window.aleaSpellArt,window.aleaMagicArt,window.aleaSpellIllustrations];
+      for (const resolver of magicResolvers) {
+        const url = resolver?.src?.(spellPath) || resolver?.url?.(spellPath);
+        if (url) { paint(1,url,'Beskyddare'); break; }
+      }
+    } catch (error) { console.warn('Chronicle spell image unavailable',error); }
+    try {
+      const weapons = await dbJson('rule_weapons?select=name,image_path,image_asset_id&name=ilike.Tvåhandssvärd&limit=1');
+      const weapon = weapons?.[0];
+      paint(2,window.aleaEquipmentArt?.src?.(weapon?.image_asset_id || weapon?.image_path),'Tvåhandssvärd');
+    } catch (error) { console.warn('Chronicle weapon image unavailable',error); }
+    try {
+      const evalin = typeof chars !== 'undefined' && Array.isArray(chars)
+        ? chars.find(c => /evalin hugger/i.test(c.name || ''))
+        : null;
+      const image = evalin?.figureImages?.base;
+      if (typeof image === 'string' && /^data:image\\/(png|jpeg|webp);base64,/.test(image)) paint(0,image,'Evalin Hugger — helfigur');
+    } catch (error) { console.warn('Chronicle character image unavailable',error); }
+    // Honor artwork intentionally remains unresolved until its authoritative
+    // published asset is identified; never substitute a fabricated medal.
+  }
+  window.aleaChronicleRefreshImages = hydrateChronicleImages;
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && !landing.classList.contains('hidden')) hydrateChronicleImages();
+  });
+
+
+
   function activeSections() {
     return Array.from(document.querySelectorAll('main > section[id]'));
   }
@@ -88,6 +202,7 @@
     hideOtherPages('landing');
     hideSection(landing, false);
     pickRandomImage();
+    hydrateChronicleImages();
     setNavigation();
     window.scrollTo?.(0, 0);
   }
