@@ -5,10 +5,12 @@ export const DEFAULT_IMAGE_PROFILE=Object.freeze({
   maxOutputBytes:12_000_000,
   requireAlpha:false,allowedMimeTypes:Object.freeze(['image/png','image/jpeg','image/webp'])
 });
-export function resolveImageProfile(profile={}){
-  const value={...DEFAULT_IMAGE_PROFILE,...profile};
+const mapObjectProfile=Object.freeze({...DEFAULT_IMAGE_PROFILE,maxWidth:4096,maxHeight:4096});
+export function resolveImageProfile(profile={},targetKind){
+  const serverLimits=targetKind==='map-object'?mapObjectProfile:DEFAULT_IMAGE_PROFILE;
+  const value={...serverLimits,...profile};
   for(const key of ['maxBytes','maxOutputBytes','maxWidth','maxHeight','maxPixels']){
-    if(!Number.isSafeInteger(value[key])||value[key]<1||value[key]>DEFAULT_IMAGE_PROFILE[key])
+    if(!Number.isSafeInteger(value[key])||value[key]<1||value[key]>serverLimits[key])
       throw Error('Bildprofilen överskrider HERMES ALEA:s servergränser: '+key);
   }
   if(typeof value.requireAlpha!=='boolean')throw Error('Ogiltigt transparenskrav.');

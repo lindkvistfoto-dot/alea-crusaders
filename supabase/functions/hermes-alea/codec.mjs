@@ -1,5 +1,6 @@
-import {ImageMagick,MagickFormat,MagickReadSettings,ResourceLimits} from '@imagemagick/magick-wasm';
-export function decodeImage(bytes){
+import {ImageMagick,MagickFormat,MagickReadSettings,MagickImageInfo,ResourceLimits} from '@imagemagick/magick-wasm';
+import {MAX_PIXELS,maxImageEdge,validDimensions} from './validation.mjs';
+export function decodeImage(bytes,targetKind){
  // Select only allowed decoders; never dispatch SVG, delegates, URLs or arbitrary formats.
  let format;
  if(bytes[0]===137&&String.fromCharCode(...bytes.slice(1,4))==='PNG')format=MagickFormat.Png;
@@ -24,13 +25,19 @@ export function decodeImage(bytes){
    p+=8+size+(size%2);
   }
  }
- ResourceLimits.width=2048n;ResourceLimits.height=2048n;ResourceLimits.area=4194304n;
+ const edge=maxImageEdge(targetKind);
+ ResourceLimits.width=BigInt(edge);ResourceLimits.height=BigInt(edge);ResourceLimits.area=BigInt(MAX_PIXELS);
  ResourceLimits.memory=96n*1024n*1024n;ResourceLimits.disk=0n;ResourceLimits.listLength=2n;
  const settings=new MagickReadSettings();settings.format=format;
+ if(targetKind==='map-object'){
+  // Inspect the header before allocating the larger two-dimensional pixel cache.
+  const info=MagickImageInfo.create(bytes,settings);
+  if(!validDimensions(info.width,info.height,edge))throw Error('INVALID_DIMENSIONS');
+ }
  return ImageMagick.readCollection(bytes,settings,images=>{
   if(images.length!==1)throw Error('ANIMATION_NOT_SUPPORTED');
   const image=images[0];image.autoOrient();
-  if(image.width>2048||image.height>2048)throw Error('INVALID_DIMENSIONS');
+  if(!validDimensions(image.width,image.height,edge))throw Error('INVALID_DIMENSIONS');
   const alpha=new Uint8Array(image.width*image.height);
   if(!image.hasAlpha)alpha.fill(255);
   else image.getPixels(pixels=>{
