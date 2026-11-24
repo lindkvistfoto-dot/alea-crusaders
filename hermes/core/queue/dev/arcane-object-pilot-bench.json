@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Träbänk",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "b8a2f761-4c39-4e5a-9b21-62f0a918d102"
+  },
+  "object_template": {
+    "category": "Möbler",
+    "campaign_id": null,
+    "length_m": 1.8,
+    "width_m": 0.4,
+    "height_m": 0.5
+  },
+  "drive_file_id": "1mdTFfn1vPfMtJNmSszef26rjBWD5A4Lz",
+  "archive_file_id": "1EpI7p4cp0VM_5gut1cKJ4siBfR4qYMyC",
+  "source_sha256": "405ae297a413d1b54e40d7d659e307adb8cbef765c64a54d00d10923ec3c4453"
+}
