@@ -42,3 +42,11 @@ Round-background publication requires an existing, unarchived, inactive catalog 
 If a target is not covered by a safe adapter, stop that target and report the missing integration; do not fall back to an older publisher. Older workflows remain active until their replacement is verified and separately approved. No LIVE workflow or deployment is part of this DEV change.
 
 The normal success evidence is the DEV Actions run matching the request commit, the emitted `HERMES_CORE_ACTIVE` record, the Storage hash/readback, and the selected target readback.
+
+## New campaign map in DEV
+
+1. Resolve the DEV place in `campaign_sites`. When the user names an existing map under the intended place, read its `site_id` and verify the campaign match.
+2. Resolve the exact original bytes. If the source is already on Drive outside the configured Inbox, copy it into Inbox and keep the source in place. Copy Inbox to a separate archive file. The `campaign-map` profile uses `folders.original_archive` when it has no `archive_folder_key`. Verify the two folder memberships and hash the original bytes.
+3. With authorized DEV database access, create just the new map's draft metadata under that site's campaign and site IDs. Use the requested map name, the source dimensions, an empty `image_path`, and `player_visible = false` and `fully_revealed = false`. Leave activation timestamps unset. Check for an existing same-named map under the site before creating a row and keep the new map UUID for retries.
+4. Submit schema 3 with `target: {"kind":"profile","profile_id":"campaign-map","id":"NEW_MAP_ID"}` to `hermes/core/queue/dev/` on `development`. CORE owns the private WebP upload and sets the new row's image pointer and dimensions after verified readback.
+5. Verify the SHA-matched Actions run and confirm that the new map and the previous map are listed under the same place. Open the image in Kartakademin when a signed-in DEV session is available. Keep the new map hidden and preserve the active map, existing locations and geometry.

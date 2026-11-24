@@ -77,6 +77,7 @@
     "required_tools": {
       "drive": [
         "search/list",
+        "fetch exact original bytes for a Drive reference",
         "upload_file",
         "copy_file",
         "get_file_metadata"
@@ -86,12 +87,13 @@
         "create_file",
         "fetch Actions runs/jobs/steps/logs"
       ],
-      "local_file_access": "The exact original bytes must be available as a local file path for SHA-256 and Drive upload."
+      "local_file_access": "A new attachment needs an exact local file reference for Drive upload. For an existing Drive reference, fetch and hash the exact decoded bytes."
     },
     "sequence_contract": "Follow the exact sequence in features/hermes-core/OPERATIONAL_ACCEPTANCE.md; do not invent a parallel publisher.",
     "queue_path": "hermes/core/queue/[a-z0-9][a-z0-9-]{0,99}.json (LIVE) or hermes/core/queue/dev/[request].json (DEV)",
     "queue_trigger": "A matching push starts the environment-specific existing workflow; DEV publishes only from development and LIVE only from main.",
     "workflow": ".github/workflows/hermes-core-publish.yml",
+    "dev_workflow": ".github/workflows/hermes-core-publish-dev.yml",
     "cleanup_workflow": ".github/workflows/hermes-core-publish.yml",
     "workflow_owns": [
       "Drive folder and original SHA-256 verification",
