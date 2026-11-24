@@ -29,7 +29,7 @@ const registryKey = targetKind === "system" ? (prepared.target?.id ?? prepared.a
   : "arcane-" + (prepared.profile_id ?? targetKind) + "-" + prepared.target.id + "-" + prepared.webp_sha256.slice(0,16);
 const reserveAsset = async ({target,metadata,current}: any) => {
   if (appTarget) {
-    if (!current) throw new Error("CORE_APP_TARGET_MUST_EXIST");
+    if (!current && !(prepared.profile_id === "map-object" && prepared.object_template)) throw new Error("CORE_APP_TARGET_MUST_EXIST");
     const path=coreAppImagePath(prepared.profile_id,target.id,metadata.sha256,current?.row??{});
     return {key:path,path,bucket:appTarget.bucket,metadata};
   }

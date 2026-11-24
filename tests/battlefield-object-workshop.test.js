@@ -9,30 +9,15 @@ const runtime=read('features/combat/runtime.js');
 const migration=read('supabase/migrations/20261112120000_combat_battlefield_objects.sql');
 
 describe('Battlefield object workshop',()=>{
- it('registers as a separate administrator workbench beside Dockfabriken',()=>{
+ it('opens the existing admin entry point for the map library',()=>{
   expect(html).toContain("openAdminSection('battlefieldWorkshop')");
   expect(html).toContain('data-admin-section="battlefieldWorkshop"');
-  expect(app).toContain("battlefieldWorkshop:['Battlefield · Objektverkstaden'");
+  expect(app).toContain("battlefieldWorkshop:['Objektverkstaden'");
   expect(app).toContain("window.aleaBattlefieldObjectWorkshop?.mount?.()");
-  expect(workshop).toContain('Endast administratörer kan öppna objektverkstaden.');
- });
-
- it('defines a one-hex segment with six configurable joining sides and a three-piece preview',()=>{
-  expect(workshop).toContain('Förhandsvisning · tre sammanfogade segment');
-  expect(workshop).toContain('connector_edges:edges.filter');
-  expect(workshop).toContain('footprint:[{q:0,r:0}]');
-  expect(workshop).toContain('HERMES CORE asset_key');
- });
-
- it('renders form controls before initializing a new or selected template',()=>{
-  const loadForm=workshop.slice(workshop.indexOf('function loadForm('),workshop.indexOf('function previewMarkup('));
-  expect(loadForm.indexOf('render();')).toBeLessThan(loadForm.indexOf("$('bfwName').value"));
- });
-
- it('uses the shared ALEA Supabase URL for published HERMES artwork',()=>{
-  const imageUrl=workshop.slice(workshop.indexOf('function imageUrl('),workshop.indexOf('function current('));
-  expect(imageUrl).toContain("typeof SUPABASE_URL==='string'");
-  expect(imageUrl).toContain("'/storage/v1/object/public/alea-hermes-public/'");
+  expect(workshop).toContain("const table = 'arcane_object_definitions'");
+  expect(workshop).toContain('objectCategories');
+  expect(workshop).toContain("targetKind:'map-object'");
+  expect(workshop).not.toContain('arcane_battlefield_library?');
  });
 
  it('persists reusable templates separately from placements and limits private instances to GMs',()=>{

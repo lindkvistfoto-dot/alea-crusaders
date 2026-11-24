@@ -1451,7 +1451,7 @@ const ADMIN_SECTION_META={
  specialImages:['Specialbilder','Rundbakgrunder och träffområdesbilder för strid'],
  arcaneSystem:['ARCANE · Systembibliotek','Återanvändbara grafiska systemkomponenter'],
  paperDollWorkshop:['Arcane Paper Doll · Dockfabriken','Montera återanvändbara spelpjäser från befintliga porträtt'],
- battlefieldWorkshop:['Battlefield · Objektverkstaden','Skapa återanvändbara hexobjekt med anslutningar och stridsegenskaper'],
+ battlefieldWorkshop:['Objektverkstaden','Bilder och objektmallar för platser och kartor'],
  professions:['Yrken','Centralt yrkesregister'],
  races:['Raser','Centralt rasregister'],
  stands:['Stånd','Sociala stånd enligt Expert'],

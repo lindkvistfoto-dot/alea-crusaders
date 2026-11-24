@@ -69,7 +69,8 @@
         "id": "existing target key or system asset key"
       },
       "destination": "Resolved only through contract.adapters; queue fields cannot select Storage or database identifiers.",
-      "processing": "Resolved only through the selected repository-owned profile."
+      "processing": "Resolved only through the selected repository-owned profile.",
+      "map_object": "Profile map-object publishes to the shared or campaign-specific map object library. Supply object_template to create a categorized template. See hermes/core/queue/README.md."
     }
   },
   "execution": {
