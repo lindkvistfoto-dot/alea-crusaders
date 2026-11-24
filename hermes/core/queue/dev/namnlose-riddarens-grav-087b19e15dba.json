@@ -1,0 +1,12 @@
+{
+  "schema": 3,
+  "label": "Den namnlöse riddarens grav",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "78767a34-6e22-494e-8d51-d1dcb468cad5"
+  },
+  "drive_file_id": "1rkutT2EYqXmJJEemVRw0MUV6VjASmyT_",
+  "archive_file_id": "12JPQCk-hR7IZE3-yIySXpAD4xd_NnN9J",
+  "source_sha256": "087b19e15dba447919fa2ef8014432e723f02693e491c117928f73816307273a"
+}
