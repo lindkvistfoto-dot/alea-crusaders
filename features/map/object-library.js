@@ -1,7 +1,7 @@
 import './object-library.css';
 import {objectCategories} from './object-categories.js';
 import {createObjectPicker} from './object-picker.js';
-import {roomInstances,renderRoomObjects,containsObjectPoint} from './room-objects.js';
+import {roomInstances,renderRoomObjects,containsObjectPoint,intersectsObjectStep} from './room-objects.js';
 import {adventureCell, adventureGrid} from './adventure-hex.js';
 import {mapPointer} from './polygon-edit-geometry.js';
 import {objectImageUrls} from './object-images.js';
@@ -396,13 +396,13 @@ export function createObjectEditor({map,parent,before,live,manager,getScale,area
     openLibrary(){if(active)void picker?.open();},
     closeLibrary(){picker?.hide();},
     room(host,area){if(live&&manager){roomHost=host;roomArea=area;updateRoom();}},
-    blocks(point){
+    blocks(point,end){
       if(!manager)return false;
       if(!loaded||readError)return true;
       return rows.some(row=>{
         if(!row.movement_blocking)return false;
         const size=geometry().pixelSize(entry(row.object_definition_id),getScale()*Number(row.scale_factor));
-        return containsObjectPoint(row,size,point);
+        return end?intersectsObjectStep(row,size,point,end):containsObjectPoint(row,size,point);
       });
     },
     runtime(id){

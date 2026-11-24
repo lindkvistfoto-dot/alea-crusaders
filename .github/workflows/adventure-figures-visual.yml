@@ -4,6 +4,8 @@ on:
     branches: [development]
     paths:
       - 'features/map/adventure-*'
+      - 'features/map/living-hex.js'
+      - 'supabase/migrations/*adventure_living_hex.sql'
       - 'features/map/kartakademin-renderer.js'
       - 'features/map/kartakademin.css'
       - 'features/map/kartakademin.js'

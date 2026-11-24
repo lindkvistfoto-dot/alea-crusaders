@@ -223,21 +223,31 @@
  function renderAdventureToken(actor,width,collectArt){
   if(actor?.side==='heroes'&&typeof chars!=='undefined'){
    const source=chars.find(c=>c._dbId===actor.source_id);
-   const profile=heroProfiles[source?.id],hero=assets['arcane-hero-class-'+source?.id],base=assets[STANDARD_BASE];
-   if(profile&&hero?.src&&base?.src){
-    if(collectArt)collectArt(base.src,hero.src);
+   const profile=heroProfiles[source?.id],hero=assets['arcane-hero-class-'+source?.id];
+   if(profile&&hero?.src){
     const height=width/Math.sqrt(3)*profile.meters*1.1/(profile.y-profile.crown),w=height*profile.aspect;
     return '<g class="combat-paper-doll-universal" data-hero-class="'+source.id+'" pointer-events="none">'+
-     mapArt(base.src,-width/2,width*.334,width,width*.66,true)+
      '<image href="'+esc(hero.src)+'" x="'+(-w*profile.x)+'" y="'+(-height*profile.y)+'" width="'+w+'" height="'+height+'"/></g>';
    }
   }
-  return render('',actor,{x:0,y:0},null,'',width,collectArt,true);
+  const published=publishedPose(actor);
+  const cutout=published?.image_path;
+  // Only HERMES cutouts carry a standalone figure. A workshop composite can contain a baked base.
+  const src=/^hermes\/(?:race-)?battle-pose-cutout\//.test(cutout||'')?
+   SUPABASE_URL+'/storage/v1/object/public/alea-hermes-public/'+cutout:'';
+  if(src){
+   collectArt?.(src);
+   return '<g class="combat-paper-doll-universal" pointer-events="none">'+mapArt(src,-width*.42,0,width*.84,width*1.06)+'</g>';
+  }
+  const photo=portrait(actor);
+  if(photo)return '<image class="adventure-portrait" href="'+esc(photo)+'" x="'+(-width*.32)+'" y="'+(-width*.78)+'" width="'+(width*.64)+'" height="'+(width*.78)+'" preserveAspectRatio="xMidYMax meet"/>';
+  const initials=String(actor?.name_snapshot||'?').trim().split(/\s+/).slice(0,2).map(term=>term[0]).join('');
+  return '<text class="adventure-initials" text-anchor="middle" y="'+(-width*.08)+'" font-size="'+(width*.42)+'">'+esc(initials)+'</text>';
  }
  function prepareAdventureToken(actor){
-  const images=[];
-  renderAdventureToken(actor,BASE_WIDTH,(base,art)=>images.push(measureMapArt(base),measureMapArt(art)));
-  return Promise.all(images);
+  const pending=[];
+  renderAdventureToken(actor,BASE_WIDTH,src=>pending.push(measureMapArt(src)));
+  return Promise.all(pending);
  }
  root.aleaCombatPaperDollMap=Object.freeze({render,load,renderAdventureToken,prepareAdventureToken,renderMapToken,loadMapTokens,prepareMapToken});
 })(globalThis);

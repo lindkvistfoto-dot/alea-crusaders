@@ -1,6 +1,7 @@
 import {createObjectEditor} from './object-library.js';
 import './adventure-figures.css';
-import { adventureCell, adventureGrid, hexCenter } from './adventure-hex.js';
+import {defaults,hexPanel,livingHexLayer} from './living-hex.js';
+import { adventureCell, adventureGrid, hexCenter, nearestHex, adventureRoute } from './adventure-hex.js';
 import { mapPointer, mapScreenScale } from './polygon-edit-geometry.js';
 
 const table = 'adventure_map_figures';
@@ -14,7 +15,7 @@ const page = document.getElementById('mapPage');
 const art = () => window.aleaCombatPaperDollMap;
 const controls=document.getElementById('adventureControls');
 let boardOpen=false;
-let view, drag, press, ghost, highlight, swallowClick = false;
+let view, drag, press, ghost, swallowClick = false;
 
 function svg(tag, attrs = {}) {
   const el = document.createElementNS(ns, tag);
@@ -44,6 +45,7 @@ function sources(category) {
 function tokenArt(row, width, prefix) { return art()?.renderAdventureToken(actor(row,prefix),width) || ''; }
 function renderPieces(v, landingId) {
   const rows = v.pending ? [...v.rows.filter(r=>r.id!==v.pending.id), v.pending] : v.rows;
+  v.hexLayer.actors(rows,v.selected,v.hex.dispositions);
   if (!v.grid) { v.pieces.replaceChildren();return; }
   const remaining=new Map([...v.pieces.children].map(el=>[el.dataset.pieceKey,el]));
   let previous=null;
@@ -64,7 +66,7 @@ function renderPieces(v, landingId) {
       const face = svg('g',{'data-face':''});
       if (drawing) face.innerHTML = drawing;
       else { const label=svg('text',{'text-anchor':'middle',fill:'ivory','font-size':w*.2}); label.textContent=row.name; face.append(label); }
-      piece.replaceChildren(title,svg('ellipse',{cx:0,cy:-.17*w,rx:w*.48,ry:w*.59,fill:'transparent'}),face);
+      piece.replaceChildren(title,svg('rect',{x:-.47*w,y:-.85*w,width:.94*w,height:w,fill:'transparent'}),face);
       piece.toggleAttribute('data-concealed',!row.player_visible);
       if (!row.player_visible) piece.append(svg('circle',{class:'figure-secret',cx:w*.37,cy:w*.17,r:w*.065}));
     }
@@ -82,7 +84,20 @@ function toolPanel(v) {
   const choices=sources(v.category);
   if (!choices.some(r=>r[sourceField(r)]===v.choice)) v.choice=choices[0]?.[sourceField(choices[0])];
   const select=(value,label,selected)=>'<option value="'+escAttr(value)+'"'+(selected?' selected':'')+'>'+escAttr(label)+'</option>';
-  const list=v.rows.map(r=>'<div class="slcb-visibility-row" data-instance="'+escAttr(r.id)+'"><span><b>'+escAttr(r.name)+'</b><small>Hex '+r.q+', '+r.r+' · '+(r.player_visible?'Synlig':'Dold')+'</small></span><div>'+
+  const allowance=row=>{
+    const b=v.hex.budgets[row.id];
+    if(!v.hex.round||!b)return '';
+    const remaining=Math.max(0,b.max-b.spent);
+    const keeps=combatDestinationKeepsAction({movement_max:b.max,movement_remaining:remaining},0);
+    return ' · Förflyttning '+remaining+' / '+b.max+(keeps?' · Handling kvar':' · Hel förflyttning');
+  };
+  const disposition=row=>{
+    if(row.character_id)return '';
+    const tone=v.hex.dispositions?.[row.id]||(row.monster_id?'ruby':'amber');
+    return '<label>Tillhörighet (SL)<select data-disposition="'+escAttr(row.id)+'">'+
+      [['sapphire','Allierad'],['amber','Neutral'],['ruby','Fientlig'],['unknown','Okänd']].map(([value,label])=>select(value,label,value===tone)).join('')+'</select></label>';
+  };
+  const list=v.rows.map(r=>'<div class="slcb-visibility-row" data-instance="'+escAttr(r.id)+'"><span><b>'+escAttr(r.name)+'</b><small>Hex '+r.q+', '+r.r+allowance(r)+' · '+(r.player_visible?'Synlig':'Dold')+'</small></span>'+disposition(r)+'<div>'+
     '<button type="button" class="btn" data-action="move">Flytta</button> <button type="button" class="btn" data-action="visibility">'+(r.player_visible?'Dölj':'Visa')+'</button> <button type="button" class="btn" data-action="remove">Ta bort från kartan</button></div></div>').join('');
   return '<div class="figure-picker"><label>Typ<select data-field="category">'+[['character','Rollpersoner'],['npc','SLP'],['monster','Fiender']].map(([key,label])=>select(key,label,v.category===key)).join('')+'</select></label>'+
     '<label>Figur<select data-field="choice">'+choices.map(r=>select(r[sourceField(r)],r.name,r[sourceField(r)]===v.choice)).join('')+'</select></label>'+
@@ -93,11 +108,13 @@ function toolPanel(v) {
 function renderBoard(v) {
   const owner=canManageCampaignMaps();
   const context=adventurePlayerPreview?'Spelarvy':v?.map.name||'Karta';
-  const content='<div data-map-controls></div>'+(v?.gm?'<section class="slcb-module"><button class="btn" type="button" data-objects-toggle aria-expanded="'+Boolean(v.objects?.active)+'">'+(v.objects?.active?'Avsluta objektredigering':'Objekt')+'</button><div data-object-panel></div></section><section class="slcb-module"><h3>Figurer</h3>'+toolPanel(v)+'</section>':'');
+  const content='<div data-map-controls></div>'+(v?.gm?'<section class="slcb-module"><button class="btn" type="button" data-objects-toggle aria-expanded="'+Boolean(v.objects?.active)+'">'+(v.objects?.active?'Avsluta objektredigering':'Objekt')+'</button><div data-object-panel></div></section><section class="slcb-module"><h3>Figurer</h3>'+toolPanel(v)+'</section>'+(v.session&&v.hexLoaded?hexPanel(v.hex):''):'');
   const html=owner?slControlBoardHtml({open:boardOpen,panelId:'adventureFigurePanel',toggle:'aleaAdventureFigures.toggle()',context,panel:boardOpen?content:''}):'<div data-map-controls></div>';
   if(board.htmlSignature!==html){
+    const hexExpanded=board.querySelector('.hex-settings details')?.open;
     if(board.contains(controls))board.after(controls);
     board.innerHTML=html;board.htmlSignature=html;
+    if(hexExpanded)board.querySelector('.hex-settings details')?.setAttribute('open','');
     board.querySelector('[data-map-controls]')?.append(controls);
   }
   const objectHost=board.querySelector('[data-object-panel]');
@@ -142,7 +159,7 @@ function zoomTo(mode){
 document.getElementById('adventureZoomPreset').addEventListener('change',e=>{zoomTo(e.target.value);e.target.value='';});
 function close() {
   cancel();
-  view?.objects?.destroy();
+  view?.hexLayer.destroy();view?.objects?.destroy();
   view?.layer.remove(); view=null;
   renderBoard(null); notice();
 }
@@ -154,8 +171,9 @@ function sync(map) {
   const layer=svg('svg',{class:'adventure-figure-layer',width:'100%',height:'100%'});
   const bounds=svg('svg',{width:map.width,height:map.height,overflow:'hidden'});
   const lights=svg('g'),pieces=svg('g');
+  const hexLayer=livingHexLayer(lights,map,gm);
   bounds.append(lights,pieces); layer.append(bounds); viewport.append(layer);
-  view={map,campaign,gm,layer,pieces,lights,session:undefined,rows:[],open:false,ready:false,version:0,category:'character',hidden:true,prepared:new Set()};
+  view={map,campaign,gm,layer,pieces,lights,hexLayer,hex:{prefs:{...defaults},round:0,epoch:0,budgets:{}},session:undefined,rows:[],open:false,ready:false,version:0,category:'character',hidden:true,prepared:new Set()};
   const v=view;
   v.objects=createObjectEditor({map,parent:bounds,before:lights,live:true,manager:gm,areas:()=>campaignMapAreas,
     getScale:()=>Number(v.config?.pixelsPerMeter)||Number(v.map.pixels_per_meter)||0,onEnter:cancel,
@@ -174,11 +192,11 @@ function setGeometry(map,config) {
   if (view?.map.id!==map.id) return;
   if (view.grid && view.config===config && view.scale===map.pixels_per_meter) return;
   view.config=config; view.scale=map.pixels_per_meter; view.grid=adventureGrid(map,config);
-  view.objects.updateScale();renderPieces(view);renderBoard(view);updatePointer();
+  view.hexLayer.update(view);view.objects.updateScale();renderPieces(view);renderBoard(view);updatePointer();
 }
 function geometryError(map) {
   if(view?.map.id!==map.id)return;
-  cancel();view.grid=null;renderPieces(view);renderBoard(view);
+  cancel();view.grid=null;view.hexLayer.update(view);renderPieces(view);renderBoard(view);
   if(view.gm)notice('Kartans placeringsyta kunde inte läsas.');
 }
 async function prepare(v,rows) {
@@ -203,11 +221,17 @@ async function readRows(v) {
   const version=++v.version;
   if(!v.session)return;
   try {
-    const rows=v.gm?await dbJson(table+'?'+scope(v)+'&select='+columns+'&order=r,q'):await dbJson('rpc/read_adventure_player_figures',{method:'POST',body:JSON.stringify({p_map_id:v.map.id,p_session_id:v.session})});
+    const [hex,rows]=await Promise.all([hexRead(v),v.gm?dbJson(table+'?'+scope(v)+'&select='+columns+'&order=r,q'):dbJson('rpc/read_adventure_player_figures',{method:'POST',body:JSON.stringify({p_map_id:v.map.id,p_session_id:v.session})})]);
     if(view!==v||v.version!==version)return;
-    v.rows=rows; v.ready=true;
+    const previous=v.rows;
+    v.rows=rows;setHex(v,hex);v.ready=true;
     v.layer.toggleAttribute('data-gm',v.gm);
     renderPieces(v);renderBoard(v);
+    if(!v.gm)for(const row of rows){
+      const before=previous.find(r=>r.id===row.id),trail=hex?.trails?.[row.id];
+      if(before&&trail?.length>1&&before.q===trail[0][0]&&before.r===trail[0][1]&&(before.q!==row.q||before.r!==row.r))
+        animateMove(v,before,trail.slice(1).map(([q,r])=>({q,r})));
+    }
     await prepare(v,v.gm?[...rows,...sources('character')]:rows);
   } catch(error) {
     if(view!==v||v.version!==version)return;
@@ -218,7 +242,7 @@ async function readRows(v) {
 function sessionChanged(campaign,id) {
   const v=view;
   if (!v||v.campaign!==campaign||v.session===id)return;
-  cancel();notice();v.session=id;v.pending=null;v.busy=false;v.ready=false;v.rows=[];v.layer.removeAttribute('data-gm');
+  cancel();notice();v.hexLoaded=false;v.session=id;setHex(v,null);v.pending=null;v.busy=false;v.ready=false;v.rows=[];v.layer.removeAttribute('data-gm');
   renderPieces(v);renderBoard(v);v.reading=readRows(v);
 }
 async function refresh() {
@@ -239,19 +263,44 @@ function stopPress() {
   if(press?.loading)notice();
   press=null;
 }
-function clearLight() {
-  if(!highlight)return;
-  const el=highlight; highlight=null;el.dataset.fading='';setTimeout(()=>el.remove(),140);
-}
 function cancel() {
-  stopPress(); clearLight(); ghost?.remove();ghost=null;drag=null;
+  stopPress();drag?.v.hexLayer.clear();ghost?.remove();ghost=null;drag=null;
   if(status.querySelector('[data-cancel]'))notice();
+}
+function hexRead(v){
+  return dbJson('rpc/read_adventure_hex',{method:'POST',body:JSON.stringify({p_map:v.map.id,p_session:v.session,p_manager:v.gm})});
+}
+function setHex(v,state){
+  v.hexLoaded=Boolean(state&&Number.isInteger(state.epoch));
+  v.hex={round:0,epoch:0,budgets:{},...state,prefs:{...defaults,...state?.prefs}};
+  v.hexLayer.update(v);
+}
+function hexCommand(v,action,values={}){
+  return dbJson('rpc/command_adventure_hex',{method:'POST',body:JSON.stringify({p_map:v.map.id,p_session:v.session,p_epoch:v.hex.epoch,p_action:action,p_values:values})});
+}
+async function command(v,action,values){
+  if(!ready(v)||!v.hexLoaded)return;
+  const session=v.session;
+  cancel();v.busy=true;
+  try{
+    const state=await hexCommand(v,action,values);
+    if(view!==v||v.session!==session)return;
+    if(action==='begin'||action==='end'){
+      boardOpen=false;renderBoard(v);viewport.scrollIntoView({block:'nearest',behavior:'instant'});
+    }
+    setHex(v,state);
+  }
+  catch(e){if(view===v)notice(e.message);}
+  finally{if(view===v&&v.session===session){v.busy=false;await readRows(v);}}
+}
+function animateMove(v,row,path){
+  v.hexLayer.travel(row,path,v.pieces.querySelector('[data-figure-id="'+CSS.escape(row.id)+'"]'));
 }
 function ready(v) {return v && v.gm && v.ready && v.grid && v.session && !v.busy && !page.classList.contains('hidden');}
 function existing(v,row) {return row.id ? row : row.character_id ? v.rows.find(r=>r.character_id===row.character_id) : null;}
 function begin(v,row,mode,point,pointerId) {
   if(v.objects?.active){v.objects.editing(false);renderBoard(v);}
-  if(!ready(v)||!row)return false;
+  if(!ready(v)||!row||!v.hexLoaded)return false;
   cancel();
   const placed=existing(v,row);
   const drawing=tokenArt(placed||row,100,'lift');
@@ -270,21 +319,47 @@ function updatePointer() {
   const {v,point,row}=drag;
   if(!ready(v)){cancel();return;}
   const over=viewport.contains(document.elementFromPoint(point.clientX,point.clientY));
-  const target=over?adventureCell(v.map,v.grid,mapPointer(point,v.layer),v.rows,row.id):null;
-  const cell=target&&!v.objects.blocks([target.x,target.y])?target:null;
+  const at=over?mapPointer(point,v.layer):null;
   const width=over?v.grid.width*mapScreenScale(v.layer).scaleX:54;
   ghost.style.display=over||drag.mode==='held'?'block':'none';
   ghost.style.width=width*2+'px';ghost.style.height=width*2+'px';
   ghost.style.transform='translate3d('+(point.clientX-width)+'px,'+(point.clientY-width*1.45-4)+'px,0)';
-  if(cell?.q===drag.cell?.q && cell?.r===drag.cell?.r)return;
-  clearLight();drag.cell=cell;
-  if(cell){highlight=svg('polygon',{class:'adventure-hex-light',points:combatHexPoints(cell.x,cell.y,v.grid.size*.97),'data-cell':cell.q+','+cell.r});v.lights.append(highlight);}
+  const axial=nearestHex(v.grid,at),key=axial?axial.q+','+axial.r:null;
+  if(key===drag.targetKey)return;
+  drag.targetKey=key;drag.cell=null;drag.route=null;drag.search=null;
+  v.hexLayer.clear();if(!axial)return;
+  const token=drag,cell=adventureCell(v.map,v.grid,at,v.rows,row.id);
+  const [x,y]=hexCenter(v.grid,axial.q,axial.r);
+  token.rejected={x,y};
+  const invalid=()=>v.hexLayer.route([{...axial,x,y}],false);
+  if(!cell||v.objects.blocks([cell.x,cell.y])){invalid();return;}
+  if(!row.id){drag.cell=cell;drag.route=[cell];v.hexLayer.route([cell]);return;}
+  const budget=v.hex.budgets[row.id];
+  const limit=v.hex.round?Math.max(0,(budget?.max??0)-(budget?.spent??0)):Infinity;
+  const occupied=new Set(v.rows.filter(other=>other.id!==row.id).map(other=>other.q+','+other.r));
+  const search=adventureRoute(v.map,v.grid,row,cell,occupied,v.objects.blocks,limit,combatHexNeighbors,combatAxialDistance);
+  function advance(){
+    if(drag!==token||token.targetKey!==key)return;
+    const end=performance.now()+5;
+    do{
+      const next=search.next();
+      if(next.done){
+        token.search=null;
+        if(next.value?.length){token.cell=cell;token.route=next.value;v.hexLayer.route(next.value);}
+        else invalid();
+        if(token.released)persist();
+        return;
+      }
+    }while(performance.now()<end);
+    token.search=requestAnimationFrame(advance);
+  }
+  advance();
 }
-async function change(v,request,optimistic) {
+async function change(v,request,optimistic,journey) {
   if(!ready(v))return;
   const session=v.session;
   v.busy=true;v.version++;
-  if(optimistic){v.pending=optimistic;renderPieces(v,optimistic.id);}
+  if(optimistic){v.pending=optimistic;renderPieces(v,journey?null:optimistic.id);if(journey)animateMove(v,journey.row,journey.path);}
   try {
     const result=await request();
     if(!result?.length)throw Error('Figurens läge har ändrats.');
@@ -297,18 +372,19 @@ async function change(v,request,optimistic) {
       notice();
     }
   } catch(error) {
+    if(journey)v.hexLayer.stop(journey.row.id);
     if(view===v&&v.session===session)notice(/duplicate key/.test(error.message)?'Hexagonen är upptagen.':'Kunde inte spara. '+error.message);
   } finally {
     if(view===v&&v.session===session){v.pending=null;v.busy=false;renderPieces(v);await readRows(v);}
   }
 }
 function persist() {
-  const {v,row,cell}=drag;
+  const {v,row,cell,route}=drag;
+  if(!cell)v.hexLayer.reject(drag.rejected);
   cancel();if(!cell||!ready(v)||v.objects.blocks([cell.x,cell.y]))return;
   const position={q:cell.q,r:cell.r},headers={Prefer:'return=representation'};
-  const query=table+'?'+scope(v)+'&id=eq.'+row.id+'&select=id';
   const record={player_visible:true,...row,...position,id:row.id||crypto.randomUUID()};
-  if(row.id)void change(v,()=>dbJson(query,{method:'PATCH',headers,body:JSON.stringify(position)}),record);
+  if(row.id)void change(v,()=>hexCommand(v,'move',{id:row.id,from:[row.q,row.r],path:route.map(c=>[c.q,c.r])}),record,{row,path:route});
   else {
     const body={...row,...position,campaign_id:v.campaign,session_id:v.session,map_id:v.map.id};
     // Omit id and visibility on hero upsert. A second GM dragging the
@@ -328,7 +404,9 @@ async function arm(row) {
   viewport.scrollIntoView({block:'nearest',behavior:'instant'});
 }
 board.addEventListener('change',e=>{
-  const v=view,field=e.target.dataset.field;
+  const v=view,field=e.target.dataset.field,key=e.target.dataset.hexSetting;
+  if(v?.gm&&e.target.dataset.disposition){void command(v,'disposition',{id:e.target.dataset.disposition,tone:e.target.value});return;}
+  if(v?.gm&&key){const el=e.target;void command(v,'setting',{key,value:el.type==='checkbox'?el.checked:el.type==='range'?el.valueAsNumber:el.value});return;}
   if(!v?.gm||!field)return;
   v[field]=field==='hidden'?e.target.checked:e.target.value;
   renderBoard(v);
@@ -338,6 +416,8 @@ board.addEventListener('click',e=>{
     view.objects.editing(!view.objects.active);renderBoard(view);return;
   }
   const action=e.target.closest('[data-action]')?.dataset.action,v=view;
+  const mode=e.target.closest('[data-hex-command]')?.dataset.hexCommand;
+  if(mode&&v?.gm){void command(v,mode,{});return;}
   if(!action||!v?.gm)return;
   if(action==='session'){window.openGameSessionPanel();return;}
   if(!ready(v))return;
@@ -381,7 +461,7 @@ document.addEventListener('pointerdown',e=>{
   if(drag?.mode==='armed'&&viewport.contains(e.target)){
     e.stopPropagation();e.preventDefault();drag.point=point;drag.pointerId=e.pointerId;drag.start=point;
     document.documentElement.setPointerCapture?.(e.pointerId);updatePointer();
-    drag.pressedCell=drag.cell;
+    drag.pressedKey=drag.targetKey;
     return;
   }
   const portrait=e.target.closest('.arcane-character-rail [data-character]');
@@ -408,7 +488,7 @@ document.addEventListener('pointermove',e=>{
     press.point=point;
     if(Math.hypot(point.clientX-press.start.clientX,point.clientY-press.start.clientY)>4)lift(press);
   }
-  if(!drag||(drag.pointerId!=null&&drag.pointerId!==e.pointerId))return;
+  if(!drag||drag.released||(drag.pointerId!=null&&drag.pointerId!==e.pointerId))return;
   if(drag.start&&Math.hypot(point.clientX-drag.start.clientX,point.clientY-drag.start.clientY)>10){cancel();return;}
   drag.point=point;updatePointer();
 },true);
@@ -421,7 +501,8 @@ document.addEventListener('pointerup',e=>{
   e.stopPropagation();e.preventDefault();swallowClick=true;
   drag.point={clientX:e.clientX,clientY:e.clientY};updatePointer();
   if(!drag)return;
-  if(drag.mode==='armed'&&(!drag.pressedCell||drag.cell?.q!==drag.pressedCell.q||drag.cell?.r!==drag.pressedCell.r)){cancel();return;}
+  if(drag.mode==='armed'&&(!drag.pressedKey||drag.targetKey!==drag.pressedKey)){cancel();return;}
+  if(drag.search){drag.released=true;drag.pointerId=null;return;}
   persist();
 },true);
 document.addEventListener('click',e=>{if(swallowClick){swallowClick=false;e.preventDefault();e.stopImmediatePropagation();}},true);
