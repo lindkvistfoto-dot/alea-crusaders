@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Stor keramikkruka",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "67561af9-beb9-54fb-a527-f387ea66e481"
+  },
+  "object_template": {
+    "category": "Förvaring och gods",
+    "campaign_id": null,
+    "length_m": 0.54,
+    "width_m": 0.51,
+    "height_m": 0.66
+  },
+  "drive_file_id": "1MUyC-y3pcFmTFZTaaZ4VZYI1k_tai6eB",
+  "archive_file_id": "1m2TvmHoFko256jcTd-13gzAav2ZYEThm",
+  "source_sha256": "ee6ab0978d76fbe8cfcbfda435cb76f7697f91f72b389fa807fb49ff65701180"
+}
