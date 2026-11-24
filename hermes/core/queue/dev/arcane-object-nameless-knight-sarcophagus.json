@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Den namnlöse riddarens grav",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "8a4df293-7e2b-4d9c-a551-31d77f6bce92"
+  },
+  "object_template": {
+    "category": "Monument och ritualföremål",
+    "campaign_id": "846e8089-24da-4825-af34-32903117152a",
+    "length_m": 2.4,
+    "width_m": 0.8,
+    "height_m": 0.9
+  },
+  "drive_file_id": "1rkutT2EYqXmJJEemVRw0MUV6VjASmyT_",
+  "archive_file_id": "1miKfcc3M-AvmIDTuWxbzO4ncnPu9OC3i",
+  "source_sha256": "087b19e15dba447919fa2ef8014432e723f02693e491c117928f73816307273a"
+}
