@@ -34,7 +34,7 @@ async function refreshMapOnce(){
  if(!desired){renderMapLibraryControls();return;}
  if(!isGM){
   await viewCampaignMap(desired.id,false);
-  await window.aleaAdventureFigures?.refresh();
+  await Promise.all([window.aleaAdventureFigures?.refresh(),window.syncArcaneMapObjects?.(desired.id,true)]);
   return;
  }
  const areas=await loadCampaignMapAreas(desired.id);

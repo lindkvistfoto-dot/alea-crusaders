@@ -165,5 +165,5 @@ it('keeps editor tools specific to their active mode', () => {
   expect(toolsForMode('lights').map(tool => tool.value)).toEqual(['light', 'position', 'surface', 'pan']);
   expect(toolsForMode('rooms').map(tool => tool.value)).toEqual(['room', 'pan']);
   expect(toolsForMode('effects')).toEqual([]);
-  expect(toolsForMode('objects')).toEqual([]);
+  expect(toolsForMode('objects').map(tool => tool.value)).toEqual(['object']);
 });

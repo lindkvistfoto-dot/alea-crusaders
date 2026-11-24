@@ -1,3 +1,4 @@
+import {createObjectEditor} from './object-library.js';
 import './adventure-figures.css';
 import { adventureCell, adventureGrid, hexCenter } from './adventure-hex.js';
 import { mapPointer, mapScreenScale } from './polygon-edit-geometry.js';
@@ -92,12 +93,17 @@ function toolPanel(v) {
 function renderBoard(v) {
   const owner=canManageCampaignMaps();
   const context=adventurePlayerPreview?'Spelarvy':v?.map.name||'Karta';
-  const content='<div data-map-controls></div>'+(v?.gm?'<section class="slcb-module"><h3>Figurer</h3>'+toolPanel(v)+'</section>':'');
+  const content='<div data-map-controls></div>'+(v?.gm?'<section class="slcb-module"><button class="btn" type="button" data-objects-toggle aria-expanded="'+Boolean(v.objects?.active)+'">'+(v.objects?.active?'Avsluta objektredigering':'Objekt')+'</button><div data-object-panel></div></section><section class="slcb-module"><h3>Figurer</h3>'+toolPanel(v)+'</section>':'');
   const html=owner?slControlBoardHtml({open:boardOpen,panelId:'adventureFigurePanel',toggle:'aleaAdventureFigures.toggle()',context,panel:boardOpen?content:''}):'<div data-map-controls></div>';
   if(board.htmlSignature!==html){
     if(board.contains(controls))board.after(controls);
     board.innerHTML=html;board.htmlSignature=html;
     board.querySelector('[data-map-controls]')?.append(controls);
+  }
+  const objectHost=board.querySelector('[data-object-panel]');
+  if(objectHost&&v?.objects){
+    objectHost.hidden=!v.objects.active;
+    if(!objectHost.contains(v.objects.panel))objectHost.append(v.objects.panel);
   }
   controls.hidden=owner&&!boardOpen;
   const preview=document.getElementById('adventurePreview');
@@ -136,6 +142,7 @@ function zoomTo(mode){
 document.getElementById('adventureZoomPreset').addEventListener('change',e=>{zoomTo(e.target.value);e.target.value='';});
 function close() {
   cancel();
+  view?.objects?.destroy();
   view?.layer.remove(); view=null;
   renderBoard(null); notice();
 }
@@ -149,6 +156,10 @@ function sync(map) {
   const lights=svg('g'),pieces=svg('g');
   bounds.append(lights,pieces); layer.append(bounds); viewport.append(layer);
   view={map,campaign,gm,layer,pieces,lights,session:undefined,rows:[],open:false,ready:false,version:0,category:'character',hidden:true,prepared:new Set()};
+  const v=view;
+  v.objects=createObjectEditor({map,parent:bounds,before:lights,live:true,manager:gm,areas:()=>campaignMapAreas,
+    getScale:()=>Number(v.config?.pixelsPerMeter)||Number(v.map.pixels_per_meter)||0,onEnter:cancel,
+    onPick:()=>viewport.scrollIntoView({block:'nearest'})});
   syncCamera();renderBoard(view);
   void refresh();
 }
@@ -163,7 +174,7 @@ function setGeometry(map,config) {
   if (view?.map.id!==map.id) return;
   if (view.grid && view.config===config && view.scale===map.pixels_per_meter) return;
   view.config=config; view.scale=map.pixels_per_meter; view.grid=adventureGrid(map,config);
-  renderPieces(view);renderBoard(view);updatePointer();
+  view.objects.updateScale();renderPieces(view);renderBoard(view);updatePointer();
 }
 function geometryError(map) {
   if(view?.map.id!==map.id)return;
@@ -239,6 +250,7 @@ function cancel() {
 function ready(v) {return v && v.gm && v.ready && v.grid && v.session && !v.busy && !page.classList.contains('hidden');}
 function existing(v,row) {return row.id ? row : row.character_id ? v.rows.find(r=>r.character_id===row.character_id) : null;}
 function begin(v,row,mode,point,pointerId) {
+  if(v.objects?.active){v.objects.editing(false);renderBoard(v);}
   if(!ready(v)||!row)return false;
   cancel();
   const placed=existing(v,row);
@@ -321,6 +333,9 @@ board.addEventListener('change',e=>{
   renderBoard(v);
 });
 board.addEventListener('click',e=>{
+  if(e.target.closest('[data-objects-toggle]')&&view?.gm){
+    view.objects.editing(!view.objects.active);renderBoard(view);return;
+  }
   const action=e.target.closest('[data-action]')?.dataset.action,v=view;
   if(!action||!v?.gm)return;
   if(action==='session'){window.openGameSessionPanel();return;}
@@ -354,7 +369,7 @@ document.addEventListener('pointerdown',e=>{
   if(!e.isPrimary){if(drag||press){cancel();swallowClick=true;e.preventDefault();e.stopPropagation();}return;}
   swallowClick=false;
   const v=view;
-  if(!v?.ready)return;
+  if(!v?.ready || (v.objects?.active&&viewport.contains(e.target)))return;
   const point={clientX:e.clientX,clientY:e.clientY};
   if(!v.gm){
     const piece=e.target.closest('[data-figure-id]');

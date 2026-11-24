@@ -48,7 +48,7 @@ const modeTools = {
     { value: 'pan', label: 'Panorera' },
   ],
   effects: [],
-  objects: [],
+  objects: [{ value: 'object', label: 'Redigera objekt' }],
 };
 
 export function toolsForMode(mode) {
