@@ -130,6 +130,7 @@ it('isolates session and campaign state with real SQL constraints and authentica
         values('${map}','${campaign}','{"pixelsPerMeter":10,"geometry":[]}');
     `);
     await db.exec(readFileSync(new URL(readdirSync(dir).find(f=>f.endsWith('_adventure_living_hex.sql')),dir),'utf8'));
+    await db.exec(readFileSync(new URL(readdirSync(dir).find(f=>f.endsWith('_adventure_hex_trail_boundary.sql')),dir),'utf8'));
     await db.exec("set role authenticated;set test.role='gm'");
     const command=(epoch,action,values={})=>db.query('select command_adventure_hex($1,$2,$3,$4,$5) as state',[map,session,epoch,action,values]);
     const move=(id,from,path)=>({id,from,path});
@@ -142,6 +143,8 @@ it('isolates session and campaign state with real SQL constraints and authentica
     await expect(command(1,'move',move(initial,[7,4],[[8,4]]))).rejects.toThrow(/budget/);
     const publicRead=()=>db.query('select read_adventure_hex($1,$2,false) value',[map,session]);
     expect((await publicRead()).rows[0].value.trails[initial]).toEqual([[5,4],[6,4],[7,4]]);
+    await db.exec(`reset role;insert into campaign_map_areas values(gen_random_uuid(),'${campaign}','${map}','${closed}','rect','{"x":128,"y":58,"width":2,"height":4}',2);set role authenticated`);
+    expect((await publicRead()).rows[0].value.trails).toEqual({});
     const hiddenActor=(await db.query("select id from adventure_map_figures where name='Vakt B'")).rows[0].id;
     await command(1,'disposition',{id:hiddenActor,tone:'sapphire'});
     expect((await publicRead()).rows[0].value.dispositions).toEqual({});

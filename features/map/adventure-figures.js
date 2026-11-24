@@ -434,7 +434,8 @@ board.addEventListener('click',e=>{
 });
 async function lift(p) {
   if(press!==p||p.loading)return;
-  if(!tokenArt(p.row,100,'lift')){
+  const field=sourceField(p.row);
+  if(!p.v.prepared.has(field+':'+p.row[field])||!tokenArt(p.row,100,'lift')){
     p.loading=true;
     notice('Laddar '+p.row.name+'…');
     try {await prepare(p.v,[p.row]);}
