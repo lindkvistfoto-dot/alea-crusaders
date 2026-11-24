@@ -1,0 +1,65 @@
+.chronicle-grid {
+  display:grid; grid-template-columns:repeat(3,minmax(0,1fr));
+  grid-auto-rows:clamp(215px,18vw,285px); gap:clamp(10px,1.1vw,18px);
+}
+.chronicle-card, #arcaneChronicleDialog {
+  color:#f4e9d5; border:1px solid #776041;
+  background:radial-gradient(ellipse at 48% 30%,#514432,#29241e 62%,#1a1816);
+}
+.chronicle-card {
+  min-width:0; position:relative; isolation:isolate; overflow:hidden;
+  text-align:left; padding:0; border-radius:5px; cursor:pointer;
+}
+.chronicle-card:first-child {grid-row:span 2}
+.chronicle-card img {
+  position:absolute; inset:0; width:100%; height:70%;
+  object-fit:contain; filter:drop-shadow(0 7px 9px #0005);
+}
+.chronicle-card:first-child img {height:76%}
+.chronicle-card[data-landscape] img {height:100%; object-fit:cover}
+.chronicle-copy {
+  position:absolute; inset:auto 0 0; display:grid; gap:4px; align-content:end;
+  padding:38px clamp(14px,1.6vw,26px) 16px;
+  background:linear-gradient(transparent,#191612eb 32%,#191612);
+}
+.chronicle-card:first-child .chronicle-copy {padding-bottom:26px}
+.chronicle-copy small, .chronicle-reading small {
+  color:#dfbb80; font:700 10px/1.5 system-ui,sans-serif; text-transform:uppercase; letter-spacing:.17em;
+}
+.chronicle-copy strong {font:500 clamp(20px,1.9vw,31px)/1.07 Georgia,serif; text-wrap:balance}
+.chronicle-card:first-child strong {font-size:clamp(32px,3.4vw,56px)}
+.chronicle-copy>span {font:14px/1.35 Georgia,serif; color:#decfba}
+.chronicle-card:hover, .chronicle-card:focus-visible {border-color:#edcd96}
+.chronicle-card:focus-visible {outline:2px solid #edcd96; outline-offset:2px}
+.chronicle-links {display:flex; flex-wrap:wrap; gap:8px; margin:16px 0}
+.chronicle-gallery summary {width:fit-content; cursor:pointer; color:#d8bea0}
+.chronicle-gallery[open] summary {margin-bottom:12px}
+#arcaneChronicleDialog {
+  position:fixed; width:min(660px,92vw); max-height:88dvh; overflow:auto;
+  padding:0; border-radius:6px; box-shadow:0 16px 80px #000a;
+}
+#arcaneChronicleDialog::backdrop {background:#0c0908d9}
+#arcaneChronicleDialog form {position:sticky; top:8px; height:0; text-align:right; margin:0 10px; z-index:1}
+.chronicle-plate {display:block; width:100%; height:clamp(150px,32dvh,340px); object-fit:contain}
+.chronicle-reading {padding:clamp(18px,4vw,40px); background:#201c18}
+.chronicle-reading h2 {margin:6px 0 14px; color:#f9eed8; font:500 clamp(28px,4vw,44px)/1.1 Georgia,serif}
+.chronicle-text {font:17px/1.58 Georgia,serif}
+.chronicle-text p:last-child {margin-bottom:0}
+@media(max-width:900px){
+  .chronicle-grid {grid-template-columns:repeat(2,minmax(0,1fr)); grid-auto-rows:230px}
+  .chronicle-card:first-child {grid-column:1/-1; grid-row:auto; min-height:0}
+  .chronicle-card:first-child img {width:48%; height:100%}
+  .chronicle-card:first-child .chronicle-copy {left:46%; top:0; align-content:center; padding:20px; background:none}
+  .chronicle-card:first-child[data-landscape] img {width:100%}
+  .chronicle-card:first-child[data-landscape] .chronicle-copy {background:linear-gradient(90deg,transparent,#17130fe0 18%)}
+}
+@media(max-width:560px){
+  .chronicle-grid {grid-template-columns:minmax(0,1fr); grid-auto-rows:auto; gap:10px}
+  .chronicle-card {min-height:125px; display:grid; grid-template-columns:35% 1fr; align-items:center}
+  .chronicle-card img, .chronicle-card[data-landscape] img {position:static; width:100%; height:125px}
+  .chronicle-copy {position:static; padding:12px; background:none}
+  .chronicle-card:first-child {display:block; min-height:310px}
+  .chronicle-card:first-child img {position:absolute; width:100%; height:75%}
+  .chronicle-card:first-child[data-landscape] img {height:100%}
+  .chronicle-card:first-child .chronicle-copy {position:absolute; inset:auto 0 0; padding:32px 16px 14px; background:linear-gradient(transparent,#191612f2 35%)}
+}

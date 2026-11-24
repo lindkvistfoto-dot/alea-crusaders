@@ -37,6 +37,7 @@ async function refreshActive(){
  if(campaignId!==centralCampaignId)return null;
  activeGameSession=rows?.[0]||null;window.aleaCurrentGameSessionId=activeGameSession?.status==='active'?activeGameSession.id:null;
  window.aleaAdventureFigures?.sessionChanged(campaignId, window.aleaCurrentGameSessionId);
+ window.aleaRefreshChronicleEdition?.();
  renderButton();return activeGameSession
 }
 window.aleaReadAdventureSession=refreshActive;
