@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Flätad korg",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "d64740b2-46ff-5827-a72a-26aac659e6b5"
+  },
+  "object_template": {
+    "category": "Förvaring och gods",
+    "campaign_id": null,
+    "length_m": 0.48,
+    "width_m": 0.47,
+    "height_m": 0.29
+  },
+  "drive_file_id": "1sq5RnRqptXPw0vwemj-qqEwSITXdZO35",
+  "archive_file_id": "1QwNQy0OHrCrzJsUqLVru0tBEZamc45If",
+  "source_sha256": "df15b7cb0e874c8fd497adcb4e7fedd4d86d366477e05a2980e358b01d64f223"
+}
