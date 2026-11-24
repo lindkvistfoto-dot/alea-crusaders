@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Stenpelare",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "b8a2f761-4c39-4e5a-9b21-62f0a918d103"
+  },
+  "object_template": {
+    "category": "Byggnadsdelar",
+    "campaign_id": null,
+    "length_m": 0.7,
+    "width_m": 0.7,
+    "height_m": 3
+  },
+  "drive_file_id": "1IPH_hUyIUirTHMapZRmWBJlHsLpzVhkL",
+  "archive_file_id": "1BkfbDUTP7-hpmjUXfhRIYtmTlxHywkhU",
+  "source_sha256": "9dca3f49038b69c17368bc8fab030a93e2e6f58c3db5cd57e7cd0d32d9148cdf"
+}
