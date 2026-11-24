@@ -117,7 +117,7 @@ function renderBoard(v) {
     option.label=option.textContent+(missing?' · '+missing:'');
   }
 }
-function toggle() {boardOpen=!boardOpen;renderBoard(view);}
+function toggle() {boardOpen=!boardOpen;if(!boardOpen)view?.objects?.closeLibrary();renderBoard(view);}
 function selectPiece(v,id){v.selected=id;renderPieces(v);renderBoard(v);}
 function zoomTo(mode){
  const v=view;if(!v||!mode)return;
@@ -270,7 +270,8 @@ function updatePointer() {
   const {v,point,row}=drag;
   if(!ready(v)){cancel();return;}
   const over=viewport.contains(document.elementFromPoint(point.clientX,point.clientY));
-  const cell=over?adventureCell(v.map,v.grid,mapPointer(point,v.layer),v.rows,row.id):null;
+  const target=over?adventureCell(v.map,v.grid,mapPointer(point,v.layer),v.rows,row.id):null;
+  const cell=target&&!v.objects.blocks([target.x,target.y])?target:null;
   const width=over?v.grid.width*mapScreenScale(v.layer).scaleX:54;
   ghost.style.display=over||drag.mode==='held'?'block':'none';
   ghost.style.width=width*2+'px';ghost.style.height=width*2+'px';
@@ -303,7 +304,7 @@ async function change(v,request,optimistic) {
 }
 function persist() {
   const {v,row,cell}=drag;
-  cancel();if(!cell||!ready(v))return;
+  cancel();if(!cell||!ready(v)||v.objects.blocks([cell.x,cell.y]))return;
   const position={q:cell.q,r:cell.r},headers={Prefer:'return=representation'};
   const query=table+'?'+scope(v)+'&id=eq.'+row.id+'&select=id';
   const record={player_visible:true,...row,...position,id:row.id||crypto.randomUUID()};
@@ -431,7 +432,12 @@ window.addEventListener('blur',cancel);
 window.addEventListener('scroll',updatePointer,true);
 window.addEventListener('resize',updatePointer);
 new MutationObserver(()=>{if(page.classList.contains('hidden')){adventureRequestedMap=null;close();}}).observe(page,{attributes:true,attributeFilter:['class']});
-window.aleaAdventureFigures=Object.freeze({sync,syncCamera,refresh,sessionChanged,setGeometry,geometryError,close,toggle});
+function mountRoomObjects(panel,area){
+  if(!view?.gm||!adventureCanManage()||view.map.id!==activeCampaignMap?.id)return;
+  const host=document.createElement('section');host.className='map-location-section living-room-objects';
+  panel.append(host);view.objects.room(host,area);
+}
+window.aleaAdventureFigures=Object.freeze({sync,syncCamera,refresh,sessionChanged,setGeometry,geometryError,close,toggle,mountRoomObjects});
 if(typeof activeCampaignMap!=='undefined' && !page.classList.contains('hidden'))renderMapPanel();
 
 const header=document.querySelector('.alea-app-header');

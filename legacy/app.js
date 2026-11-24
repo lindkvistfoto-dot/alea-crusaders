@@ -4412,6 +4412,7 @@ async function openMapLocationInfoByArea(areaId,keepToken){
  if(!a.location_id){
   if(gallery)gallery.innerHTML='<div class="map-location-empty">Området saknar kopplad plats och har därför inget bildgalleri.</div>';
   p.innerHTML='<div class="map-location-head"><div><h3>'+escAttr(a.name||'Område')+'</h3><div class="map-location-meta">Ingen plats är kopplad till polygonen.</div></div><button class="map-location-close" onclick="closeMapLocationInfo()">×</button></div>';
+  window.aleaAdventureFigures?.mountRoomObjects?.(p,a);
   return;
  }
  p.innerHTML='<div class="map-location-head"><div><h3>'+escAttr(a.name||'Plats')+'</h3><div class="map-location-meta">'+statusLabel(a.status)+'</div></div><button class="map-location-close" onclick="closeMapLocationInfo()">×</button></div><div class="map-location-loading">Laddar platsinformation…</div>';
@@ -4426,10 +4427,12 @@ async function openMapLocationInfoByArea(areaId,keepToken){
   let playerText=pt[0]&&pt[0].player_description||'',gmText=gm[0]&&gm[0].gm_description||'',hiddenText=gm[0]&&gm[0].hidden_discoveries||'';
   let editBtn=adventureCanManage()?'<button class="btn" type="button" onclick="editLocationContent(\''+a.location_id+'\')">✎ Redigera innehåll</button>':'';
   p.innerHTML='<div class="map-location-head"><div><h3>'+escAttr(a.name||'Plats')+'</h3><div class="map-location-meta">'+statusLabel(a.status)+(adventureCanManage()?' · SL-vy':'')+'</div></div><button class="map-location-close" onclick="closeMapLocationInfo()">×</button></div>'+editBtn+mapLocationStatusButtons(a)+'<div class="map-location-section"><h4>'+(adventureCanManage()&&pt[0]?.player_visible===false?'Beskrivning · endast SL':'Beskrivning')+'</h4>'+mapLocationTextHtml(playerText)+'</div>'+mapLocationEventsHtml(a.location_id)+(adventureCanManage()?'<div class="map-location-section map-location-gm"><h4>SL-noteringar</h4>'+mapLocationTextHtml(gmText)+'</div><div class="map-location-section map-location-hidden"><h4>Finna dolda ting</h4>'+mapLocationTextHtml(hiddenText)+'</div>':'');
+  window.aleaAdventureFigures?.mountRoomObjects?.(p,a);
   await renderMapLocationPhotos(assets);
  }catch(e){
   if(token!==mapLocationInfoToken)return;
   p.innerHTML='<div class="map-location-head"><div><h3>'+escAttr(a.name||'Plats')+'</h3></div><button class="map-location-close" onclick="closeMapLocationInfo()">×</button></div><div class="map-location-empty">Kunde inte läsa platsinformationen: '+escAttr(e.message||'okänt fel')+'</div>';
+  window.aleaAdventureFigures?.mountRoomObjects?.(p,a);
  }
 }
 const DICE_SIDES=[3,4,6,8,10,20,100];let diceSelection={3:0,4:0,6:0,8:0,10:0,20:0,100:0},diceReturn='home',diceRolling=false,diceRollContext=null;
