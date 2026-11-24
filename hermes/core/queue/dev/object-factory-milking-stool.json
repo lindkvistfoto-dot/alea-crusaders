@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Träpall",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "1fa70639-8b27-566d-b7b9-7589f222fbe5"
+  },
+  "object_template": {
+    "category": "Möbler",
+    "campaign_id": null,
+    "length_m": 0.44,
+    "width_m": 0.4,
+    "height_m": 0.42
+  },
+  "drive_file_id": "1S_nMzP7D8naLvNzaNTjx1S7pGiHjDPZy",
+  "archive_file_id": "1Ja0B1cO4KUgIzoVwgyLNwNq1PUvCZV6F",
+  "source_sha256": "fd5f471917005e24a401c74970b64ffdcc49bce898dbb9b7fcd5290baf54e304"
+}
