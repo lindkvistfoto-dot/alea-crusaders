@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Sarkofag",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "b8a2f761-4c39-4e5a-9b21-62f0a918d101"
+  },
+  "object_template": {
+    "category": "Monument och ritualföremål",
+    "campaign_id": null,
+    "length_m": 2.4,
+    "width_m": 0.9,
+    "height_m": 0.9
+  },
+  "drive_file_id": "12v1NC8RO333wLucDK8O3iLPZefldl4YV",
+  "archive_file_id": "1C2ieTyp3r8LT9KCN8WudUWMyu88UydDc",
+  "source_sha256": "01c38e36f877b7280fbfd93f95ae34f5627dd2e671761d2c866972014f574a24"
+}
