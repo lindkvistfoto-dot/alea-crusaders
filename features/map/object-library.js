@@ -1,5 +1,7 @@
 import './object-library.css';
-import {objectCategories, filterObjectLibrary} from './object-categories.js';
+import {objectCategories} from './object-categories.js';
+import {createObjectPicker} from './object-picker.js';
+import {roomInstances,renderRoomObjects,containsObjectPoint} from './room-objects.js';
 import {adventureCell, adventureGrid} from './adventure-hex.js';
 import {mapPointer} from './polygon-edit-geometry.js';
 import {objectImageUrls} from './object-images.js';
@@ -17,8 +19,8 @@ function svg(tag,attributes={}) {
   return node;
 }
 
-async function imageBounds(url) {
-  if(!cropCache.has(url)) {
+async function imageBounds(url,key) {
+  if(!cropCache.has(key)) {
     const pending=(async()=>{
       const img=new Image();img.crossOrigin='anonymous';img.src=url;await img.decode();
       const canvas=document.createElement('canvas');
@@ -31,21 +33,17 @@ async function imageBounds(url) {
       }
       return x1<0?null:{x:x0,y:y0,width:x1-x0+1,height:y1-y0+1,canvasWidth:w,canvasHeight:h};
     })();
-    cropCache.set(url,pending);pending.catch(()=>cropCache.delete(url));
+    cropCache.set(key,pending);pending.catch(()=>cropCache.delete(key));
   }
-  return cropCache.get(url);
+  return cropCache.get(key);
 }
-async function loadArt(definitions) {
-  const urls=await objectImageUrls(definitions);
-  return Promise.all(definitions.map(async d=>{
-    const url=urls.get(d.image_asset_key)||'';
-    const crop=d.image_crop;
-    // V1 stored pixel crops on a 1254-square master. Its full-canvas default
-    // represented an unmeasured image, so resolve alpha bounds in that case.
-    const measured=crop?.width && crop?.height && (crop.canvasWidth || crop.x || crop.y || crop.width!==1254 || crop.height!==1254);
-    const bounds=measured?{canvasWidth:1254,canvasHeight:1254,...crop}:url?await imageBounds(url).catch(()=>null):null;
-    return {...d,url,bounds};
-  }));
+async function loadArt(d,url) {
+  const crop=d.image_crop;
+  // V1 stored pixel crops on a 1254-square master. Its full-canvas default
+  // represented an unmeasured image, so resolve alpha bounds in that case.
+  const measured=crop?.width && crop?.height && (crop.canvasWidth || crop.x || crop.y || crop.width!==1254 || crop.height!==1254);
+  const bounds=measured?{canvasWidth:1254,canvasHeight:1254,...crop}:url?await imageBounds(url,url.split('?')[0]+'|'+(d.image_revision??'')).catch(()=>null):null;
+  return {...d,url,bounds,artTime:Date.now()};
 }
 function objectArt(d,row,ppm) {
   const size=geometry().pixelSize(d,ppm*Number(row.scale_factor ?? 1));
@@ -59,7 +57,7 @@ function objectArt(d,row,ppm) {
   return {group,w,h};
 }
 
-export function createObjectEditor({map,parent,before,live,manager,getScale,areas=()=>[],onEnter=()=>{},onPick=()=>{}}) {
+export function createObjectEditor({map,parent,before,live,manager,getScale,areas=()=>[],onEnter=()=>{},onPick=()=>parent.closest('#mapViewport,#mapAreaCanvas')?.scrollIntoView({block:'nearest'})}) {
   const layer=svg('g',{'data-map-objects':'','pointer-events':'none'});
   parent.insertBefore(layer,before);
   const surface=svg('rect',{width:map.width,height:map.height,fill:'transparent','pointer-events':'all'});
@@ -73,14 +71,11 @@ export function createObjectEditor({map,parent,before,live,manager,getScale,area
   parent.append(inputLayer);
   const panel=document.createElement('section');panel.className='living-objects';
   const categoryOptions=objectCategories.map(name=>'<option>'+name+'</option>').join('');
-  panel.innerHTML='<div class="living-library-filters"><label>Samling<select data-collection><option value="all">Alla tillgängliga</option><option value="shared">Gemensamma objekt</option><option value="campaign">Kampanjspecifika objekt</option></select></label>'+
-    '<label>Kategori<select data-category><option value="">Alla kategorier</option>'+categoryOptions+'</select></label></div><label>Sök objekt<input type="search" placeholder="Namn eller kategori" data-search></label><div class="living-catalog" data-catalog></div><label class="living-snap"><input type="checkbox" data-snap> Fäst vid hexcentrum</label><label data-instances hidden>På kartan<select data-instance-picker></select></label><div data-inspector></div><p role="status" aria-live="polite"></p>';
-  const catalog=panel.querySelector('[data-catalog]'), inspector=panel.querySelector('[data-inspector]');
-  const collection=panel.querySelector('[data-collection]'), category=panel.querySelector('[data-category]');
-  const instancePicker=panel.querySelector('[data-instance-picker]');
-  const search=panel.querySelector('[data-search]'), status=panel.querySelector('[role=status]');
+  panel.innerHTML='<button type="button" class="btn" data-open-library disabled>Öppna objektbiblioteket</button><label class="living-snap"><input type="checkbox" data-snap> Fäst vid hexcentrum</label><label data-instances hidden>På kartan<select data-instance-picker></select></label><div data-inspector></div><p role="status" aria-live="polite"></p>';
+  const inspector=panel.querySelector('[data-inspector]'),instancePicker=panel.querySelector('[data-instance-picker]'),status=panel.querySelector('[role=status]');
   let definitions=new Map(),rows=[],selected=null,armed=null,moving=null,gesture=null,active=false,shown=true;
-  let request=0,pending=false,disposed=false,loaded=false,templateId=null,lastScale;
+  let draggedDefinition=null,request=0,pending=false,disposed=false,loaded=false,templateId=null,lastScale;
+  let roomHost=null,roomArea=null,roomError='',readError='';
   const events=new AbortController();
   const on=(node,type,fn,options={})=>node.addEventListener(type,fn,{...options,signal:events.signal});
   const notify=message=>{status.textContent=message;};
@@ -149,22 +144,17 @@ export function createObjectEditor({map,parent,before,live,manager,getScale,area
   const button=(action,label)=>'<button type="button" class="btn" data-command="'+action+'">'+label+'</button>';
   const input=(key,label,value,options='')=>'<label>'+label+'<input type="number" data-value="'+key+'" value="'+escape(value)+'" '+options+'></label>';
   function list(){
+    picker?.setArmed(armed);
     instancePicker.parentElement.hidden=!rows.length;
     instancePicker.replaceChildren(new Option('Välj placerat objekt',''),...rows.slice().reverse().map(row=>{
       const d=entry(row.object_definition_id);
       return new Option((d?.name||'Objekt')+' · '+format(row.x)+', '+format(row.y)+(row.player_visible?'':' · dold'),row.id);
     }));
     instancePicker.value=selected||'';
-    const matches=filterObjectLibrary([...definitions.values()],map.campaign_id,collection.value,category.value,search.value);
-    if(armed&&!moving&&!matches.some(d=>d.id===armed)){cancel();inspect();notify('');}
-    if(templateId&&!matches.some(d=>d.id===templateId)){templateId=null;inspect();}
-    catalog.innerHTML=matches.map(d=>
-      '<div class="living-card">'+
-      (!live&&activeUser()?.admin?'<button type="button" data-template="'+escape(d.id)+'" aria-label="Redigera mall '+escape(d.name)+'">✎</button>':'')+
-      '<button type="button" data-definition="'+escape(d.id)+'" draggable="'+Boolean(available(d))+'" aria-pressed="'+(armed===d.id)+'" '+(!available(d)?'disabled':'')+'>'+
-      (d.url?'<img src="'+escape(d.url)+'" alt="">':'')+'<span><strong>'+escape(d.name)+'</strong><small>'+escape(d.library_category)+(d.campaign_id?' · Kampanjspecifik':'')+' · '+
-      (!d.width_m||!d.depth_m||!d.height_m?'Mått saknas':!d.url||!d.bounds?'Bild saknas':!(getScale()>0)?'Kalibrera kartan':format(d.width_m)+' × '+format(d.depth_m)+' m')+'</small></span></button></div>').join('');
-    if(!matches.length)catalog.textContent=collection.value==='campaign'&&!search.value&&!category.value?'Inga kampanjspecifika objekt ännu.':'Inga objekt matchar urvalet.';
+  }
+  function updateRoom(){
+    if(roomArea&&roomHost?.isConnected)renderRoomObjects(roomHost,roomInstances(roomArea,rows,areas()),entry,
+      (id,key,value)=>save('edit',id,{[key]:value},true),{loaded,pending,error:roomError||readError});
   }
   function inspect(){
     instancePicker.value=selected||'';
@@ -191,43 +181,102 @@ export function createObjectEditor({map,parent,before,live,manager,getScale,area
        ['visibility',obj.player_visible?'Dölj för spelare':'Visa för spelare'],['remove','Ta bort från kartan']].map(([k,v])=>button(k,v)).join('')+'</div>'+
       '<details><summary>Objektegenskaper</summary>'+[['movement_blocking','Blockerar rörelse'],['light_blocking','Blockerar ljus'],['shadow_casting','Kastar skugga']].map(([k,v])=>'<label><input type="checkbox" data-flag="'+k+'" '+(obj[k]?'checked':'')+'> '+v+'</label>').join('')+'</details></fieldset>';
   }
+  const table='arcane_object_definitions';
+  async function loadCatalog(){
+    const all=[],pageSize=200;
+    const fields='id,name,active,campaign_id,library_category,object_type,image_asset_key,image_revision,image_crop,width_m,depth_m,height_m,default_rotation';
+    for(let offset=0;;offset+=pageSize){
+      const batch=await dbJson(table+'?select='+fields+'&active=eq.true&or=(campaign_id.is.null,campaign_id.eq.'+encodeURIComponent(map.campaign_id)+')&order=name,id&limit='+pageSize+'&offset='+offset);
+      all.push(...batch);
+      if(disposed||batch.length<pageSize)return all;
+    }
+  }
+  function freshArt(d){
+    const old=entry(d.id);
+    return old?.url&&old.bounds&&old.image_asset_key===d.image_asset_key&&old.image_revision===d.image_revision&&
+      JSON.stringify(old.image_crop)===JSON.stringify(d.image_crop)&&Date.now()-old.artTime<1200000;
+  }
+  async function prepare(items,ready,current){
+    const missing=items.filter(d=>!freshArt(d));
+    const urls=missing.length?await objectImageUrls(missing):new Map();
+    // Bound full-resolution alpha scans, particularly on mobile.
+    for(let i=0;i<items.length&&current();i+=3){
+      await Promise.all(items.slice(i,i+3).map(async d=>{
+        const old=entry(d.id);
+        const art=freshArt(d)?{...old,...d}:await loadArt(d,urls.get(d.image_asset_key)||'');
+        if(current()){definitions.set(d.id,art);ready(art);}
+      }));
+    }
+  }
+  async function placedDefinitions(objects,reload){
+    const ids=[...new Set(objects.map(o=>o.object_definition_id))],found=[];
+    const needed=ids.filter(id=>reload||!entry(id));
+    for(let i=0;i<needed.length;i+=60){
+      found.push(...await dbJson(table+'?select=*&id=in.('+needed.slice(i,i+60).map(encodeURIComponent).join(',')+')'));
+    }
+    return [...found,...ids.filter(id=>!needed.includes(id)).map(entry)];
+  }
+  async function editTemplate(d){
+    if(!d||!active||pending)return;
+    cancel();selected=null;templateId=d.id;draw();inspector.replaceChildren();notify('Hämtar mall…');
+    try{
+      const [full]=await dbJson(table+'?select=*&id=eq.'+encodeURIComponent(d.id));
+      if(disposed||!active||templateId!==d.id)return;
+      if(!full)throw Error('Objektmallen saknas.');
+      definitions.set(d.id,{...entry(d.id),...full});inspect();notify('');
+    }catch(error){if(!disposed&&templateId===d.id){templateId=null;inspect();notify(error.message);}}
+  }
+  const picker=manager?createObjectPicker({map,opener:panel.querySelector('[data-open-library]'),canEdit:!live&&activeUser()?.admin,
+    loadCatalog,prepare,available,pick,showMap:onPick,edit:editTemplate,
+    drag(id,transfer){if(!active||pending||!available(entry(id)))return;cancel();draggedDefinition=id;armed=id;templateId=null;selected=null;transfer.setData('application/x-alea-map-object',id);transfer.effectAllowed='copy';draw();},
+    endDrag(){draggedDefinition=null;cancel();draw();list();inspect();}
+  }):null;
   async function refresh(reloadCatalog=false) {
-    const version=++request;
+    const version=++request,current=()=>!disposed&&request===version;
+    if(reloadCatalog)picker?.invalidate();
     try {
-      const args={p_map_id:map.id};
-      const [objects,defs]=await Promise.all([
-        manager?rpc('read_living_map_objects',{...args,p_live:live}):rpc('read_adventure_player_objects',args),
-        manager&&(!loaded||reloadCatalog)?dbJson('arcane_object_definitions?select=*&or=(campaign_id.is.null,campaign_id.eq.'+encodeURIComponent(map.campaign_id)+')&order=name,id'):null,
-      ]);
-      const fresh=manager?defs:[...new Map(objects.map(o=>[o.definition.id,o.definition])).values()];
-      const art=fresh?await loadArt(fresh):null;
-      if(disposed||request!==version)return;
-      if(art)definitions=new Map(art.map(d=>[d.id,d]));
-      rows=objects;loaded=true;
+      const objects=manager?await rpc('read_living_map_objects',{p_map_id:map.id,p_live:live}):await rpc('read_adventure_player_objects',{p_map_id:map.id});
+      if(!current())return;
+      const fresh=manager?await placedDefinitions(objects,reloadCatalog):[...new Map(objects.map(o=>[o.definition.id,o.definition])).values()];
+      if(!current())return;
+      if(!manager){
+        // Remove revoked instances before starting any image work.
+        rows=objects;
+        const permitted=new Set(fresh.map(d=>d.id));
+        for(const id of definitions.keys())if(!permitted.has(id))definitions.delete(id);
+        draw();
+      }
+      await prepare(fresh,()=>{},current);
+      if(!current())return;
+      rows=objects;loaded=true;readError='';
       if(selected&&!rowById(selected))selected=null;
-      draw();if(manager){list();if(!inspector.contains(document.activeElement))inspect();}
+      draw();if(manager){list();updateRoom();if(!inspector.contains(document.activeElement))inspect();}
     }catch(error){
       if(!disposed && version===request){
         if(!manager){rows=[];definitions.clear();draw();}
-        notify('Objekten kunde inte läsas. '+error.message);
+        readError='Objekten kunde inte läsas. '+error.message;notify(readError);updateRoom();
       }
     }
   }
-  async function save(action,id,values={}) {
-    if(!manager||!active||pending)return;
-    pending=true;panel.inert=true;notify('Sparar…');
+  async function save(action,id,values={},fromRoom=false) {
+    if(!manager||pending||disposed)return;
+    if(fromRoom){
+      if(!live||!adventureCanManage()||!roomHost?.isConnected||!roomInstances(roomArea,rows,areas()).some(o=>o.id===id))return;
+    }else if(!active)return;
+    roomError='';pending=true;panel.inert=true;updateRoom();notify('Sparar…');
     try{
       const result=await rpc('edit_living_map_object',{p_map_id:map.id,p_live:live,p_action:action,p_id:id,p_values:values});
       if(disposed)return;
-      selected=action==='remove'?null:result;
+      if(!fromRoom)selected=action==='remove'?null:result;
+      if(action==='place')picker?.remember(values.definition);
       await refresh();
       inspect();notify('Sparat.');
       for(const other of editors)if(other!==api&&other.map.id===map.id)void other.refresh();
-    }catch(error){notify('Kunde inte spara. '+error.message);await refresh();}
-    finally{pending=false;panel.inert=false;}
+    }catch(error){roomError='Kunde inte spara. '+error.message;notify(roomError);await refresh();}
+    finally{pending=false;panel.inert=false;if(!disposed)updateRoom();}
   }
   function pick(id) {
-    if(!active||!available(entry(id)))return;
+    if(!active||pending||!available(entry(id)))return;
     cancel();selected=null;templateId=null;armed=id;list();inspect();draw();
     notify('Placera '+entry(id).name+' på kartan.');onPick();
   }
@@ -238,16 +287,11 @@ export function createObjectEditor({map,parent,before,live,manager,getScale,area
     if(id)void save('edit',id,{x:p[0],y:p[1]});
     else void save('place',crypto.randomUUID(),{definition,x:p[0],y:p[1]});
   }
-  on(search,'input',list);
-  on(collection,'change',list);
-  on(category,'change',list);
   on(instancePicker,'change',()=>{
     cancel();selected=instancePicker.value||null;templateId=null;inspect();list();draw();notify('');
   });
   on(panel,'click',async e=>{
     const el=e.target.closest('button');if(!el||pending)return;
-    if(el.dataset.definition){pick(el.dataset.definition);return;}
-    if(el.dataset.template){cancel();selected=null;templateId=el.dataset.template;inspect();draw();return;}
     const action=el.dataset.command;
     if(!action)return;
     if(action==='cancel'){cancel();inspect();list();notify('');return;}
@@ -273,7 +317,8 @@ export function createObjectEditor({map,parent,before,live,manager,getScale,area
           method:copy?'POST':'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify(values)});
         if(!saved?.length)throw new Error('Objektmallen kunde inte sparas.');
         if(disposed)return;
-        if(copy){collection.value='campaign';category.value='';search.value='';templateId=saved[0].id;}
+        definitions.set(saved[0].id,{...entry(d.id),...saved[0]});
+        if(copy){picker.chooseCampaign();templateId=saved[0].id;}
         await refresh(true);inspect();notify(copy?'Kampanjmallen har skapats.':'Objektmallen har sparats.');
         for(const other of editors)if(other!==api)void other.refresh(true);
       }catch(error){notify(error.message);}finally{pending=false;panel.inert=false;}
@@ -292,15 +337,16 @@ export function createObjectEditor({map,parent,before,live,manager,getScale,area
     else await save(action,selected,action==='duplicate'?{new_id:crypto.randomUUID()}:{});
   });
   on(panel,'change',e=>{if(e.target.dataset.flag)void save('edit',selected,{[e.target.dataset.flag]:e.target.checked});});
-  on(panel,'dragstart',e=>{
-    const id=e.target.closest('[data-definition]')?.dataset.definition;
-    if(!available(entry(id)))return;
-    cancel();armed=id;templateId=null;selected=null;e.dataTransfer.setData('application/x-alea-map-object',id);
-    e.dataTransfer.effectAllowed='copy';draw();
+  function acceptDrag(e){
+    if(!active||!draggedDefinition||!e.dataTransfer.types.includes('application/x-alea-map-object'))return;
+    stop(e);e.dataTransfer.dropEffect='copy';armed=draggedDefinition;ghost(pos(e));
+  }
+  on(inputLayer,'dragenter',acceptDrag);
+  on(inputLayer,'dragover',acceptDrag);
+  on(inputLayer,'drop',e=>{
+    if(!active||!draggedDefinition||e.dataTransfer.getData('application/x-alea-map-object')!==draggedDefinition)return;
+    stop(e);armed=draggedDefinition;place(pos(e));
   });
-  on(panel,'dragend',()=>{cancel();draw();list();inspect();});
-  on(inputLayer,'dragover',e=>{if(active&&armed){stop(e);e.dataTransfer.dropEffect='copy';ghost(pos(e));}});
-  on(inputLayer,'drop',e=>{if(active&&armed){stop(e);place(pos(e));}});
   on(inputLayer,'pointerdown',e=>{
     if(!active||e.button!==0)return;
     if(pending||!e.isPrimary){stop(e);cancel();draw();inspect();return;}
@@ -335,31 +381,44 @@ export function createObjectEditor({map,parent,before,live,manager,getScale,area
       (!('x' in g.patch)||valid([g.patch.x,g.patch.y])))void save('edit',g.id,g.patch);
     draw();
   });
-  on(inputLayer,'pointercancel',()=>{cancel();draw();inspect();list();});
+  on(inputLayer,'pointercancel',e=>{if(gesture?.pointer===e.pointerId){cancel();draw();inspect();list();}});
   on(inputLayer,'lostpointercapture',e=>{if(gesture?.pointer===e.pointerId){gesture=null;draw();}});
   on(inputLayer,'pointerleave',()=>preview.replaceChildren());
   on(inputLayer,'click',e=>{if(active)stop(e);});
-  on(window,'keydown',e=>{if(active&&e.key==='Escape'){cancel();selected=null;inspect();draw();list();notify('');}});
+  on(window,'keydown',e=>{if(active&&e.key==='Escape'){picker?.hide();cancel();selected=null;inspect();draw();list();notify('');}});
   function editing(value){
     value=Boolean(manager&&value);if(active===value)return;
-    active=value;cancel();selected=null;templateId=null;
-    if(active){parent.append(inputLayer);onEnter();}
+    active=value;panel.querySelector('[data-open-library]').disabled=!active;cancel();selected=null;templateId=null;
+    if(active){parent.append(inputLayer);onEnter();}else picker?.hide();
     draw();list();inspect();
   }
-  const api={map,live,panel,refresh,draw,editing,get active(){return active;},updateScale(){const scale=getScale();if(scale===lastScale)return;lastScale=scale;draw();if(manager)list();},show(value){if(value!==shown){shown=value;draw();}},
+  const api={map,live,panel,refresh,draw,editing,get active(){return active;},updateScale(){const scale=getScale();if(scale===lastScale)return;lastScale=scale;draw();if(manager){list();picker?.update();}},show(value){if(value!==shown){shown=value;draw();}},
+    openLibrary(){if(active)void picker?.open();},
+    closeLibrary(){picker?.hide();},
+    room(host,area){if(live&&manager){roomHost=host;roomArea=area;updateRoom();}},
+    blocks(point){
+      if(!manager)return false;
+      if(!loaded||readError)return true;
+      return rows.some(row=>{
+        if(!row.movement_blocking)return false;
+        const size=geometry().pixelSize(entry(row.object_definition_id),getScale()*Number(row.scale_factor));
+        return containsObjectPoint(row,size,point);
+      });
+    },
     runtime(id){
       const o=rowById(id),d=o&&entry(o.object_definition_id);if(!d)return null;
       const scale=Number(o.scale_factor??1),w=d.width_m*scale,h=d.depth_m*scale;
       return {id,definitionId:d.id,position:{x:+o.x,y:+o.y},width_m:w,depth_m:h,height_m:d.height_m*scale,rotation_degrees:+o.rotation,
         footprint:geometry().footprint(w,h,o.rotation),movement_blocking:o.movement_blocking,light_blocking:o.light_blocking,shadow_casting:o.shadow_casting};
-    },destroy(){disposed=true;events.abort();editors.delete(api);layer.remove();inputLayer.remove();panel.remove();}};
+    },destroy(){disposed=true;picker?.destroy();roomHost=null;events.abort();editors.delete(api);layer.remove();inputLayer.remove();panel.remove();}};
   on(window,'alea-object-library-changed',()=>{if(manager)void refresh(true);});
   editors.add(api);draw();void refresh();return api;
 }
 
 window.openArcaneObjectLibrary=async id=>{
-  await openMapAreaEditor(id);document.querySelector('#mapAreaEditor [data-mode-button="objects"]')?.click();
+  await openMapAreaEditor(id);
+  await window.aleaKartakademin?.openObjects(id);
 };
-window.syncArcaneMapObjects=(id,force)=>{if(force)return Promise.all([...editors].filter(e=>e.live&&e.map.id===id).map(e=>e.refresh(true)));};
+window.syncArcaneMapObjects=(id,force)=>{if(force)return Promise.all([...editors].filter(e=>e.live&&e.map.id===id).map(e=>e.refresh()));};
 window.renderArcaneMapObjects=()=>{for(const editor of editors)if(editor.live)editor.draw();};
 window.getArcaneMapObjectRuntimeData=id=>[...editors].map(e=>e.runtime(id)).find(Boolean)??null;

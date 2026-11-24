@@ -1,6 +1,7 @@
 import {readFileSync,readdirSync} from 'node:fs';
 import {PGlite} from '@electric-sql/pglite';
 import {expect,it} from 'vitest';
+import {roomInstances,containsObjectPoint} from '../features/map/room-objects.js';
 import {objectCategories} from '../features/map/object-categories.js';
 
 const migration=name=>readFileSync(new URL('../supabase/migrations/'+name,import.meta.url),'utf8');
@@ -97,6 +98,16 @@ it.each([false,true])('persists independently and protects the player projection
       await command(true,action,duplicate);
       expect((await rows(true))[index].id).toBe(duplicate);
     }
+    // The live room switches change one instance and leave its siblings and preparation intact.
+    const [prepared]=await rows(false);
+    await command(true,'edit',liveId,{movement_blocking:true,player_visible:false});
+    expect(await player()).toEqual([]);
+    await command(true,'edit',liveId,{player_visible:true});
+    expect((await rows(true)).find(o=>o.id===liveId).movement_blocking).toBe(true);
+    expect((await rows(true)).find(o=>o.id===duplicate).player_visible).toBe(false);
+    await command(true,'edit',liveId,{movement_blocking:false});
+    expect((await rows(true)).find(o=>o.id===liveId).player_visible).toBe(true);
+    expect((await rows(false))[0]).toEqual(prepared);
     const expected=await player();
     expect(expected.map(o=>o.id)).toEqual([liveId]);
     expect(expected[0]).not.toHaveProperty('current_bep');
@@ -116,3 +127,26 @@ it.each([false,true])('persists independently and protects the player projection
     expect(await query('select id from arcane_object_definitions where id=$1',[table.id])).toHaveLength(1);
   } finally{await db.close();}
 },20000);
+
+it('lists every instance centered inside the selected room, including hidden objects and boundaries',()=>{
+ const instances=[{id:'A',x:'5',y:'5',player_visible:false},{id:'B',x:10,y:7},{id:'C',x:14,y:8}];
+ const rect={id:'room',shape_type:'rect',shape_data:{x:2,y:3,width:8,height:5}};
+ const polygon={id:'room',shape_type:'polygon',shape_data:{points:[[2,3],[10,3],[10,8],[2,8],[2,3]]}};
+ for(const area of [rect,polygon])expect(roomInstances(area,instances).map(r=>r.id)).toEqual(['A','B']);
+});
+
+it('includes multiple polygons of the same room once and excludes adjoining locations',()=>{
+ const room={id:'west',location_id:'crypt',shape_type:'rect',shape_data:{x:0,y:0,width:10,height:10}};
+ const east={...room,id:'east',shape_data:{x:10,y:0,width:10,height:10}};
+ const next={...room,id:'next',location_id:'chapel',shape_data:{x:20,y:0,width:10,height:10}};
+ const rows=[5,10,15,25].map(x=>({x,y:5}));
+ expect(roomInstances(room,rows,[room,east,next])).toEqual(rows.slice(0,3));
+});
+it('uses the rotated and scaled object footprint for solid hex placement',()=>{
+ const row={x:'50',y:'90',rotation:90},size={width:40,depth:10};
+ expect(containsObjectPoint(row,size,[54,108])).toBe(true);
+ expect(containsObjectPoint(row,size,[65,93])).toBe(false);
+ expect(containsObjectPoint({...row,rotation:0},size,[65,93])).toBe(true);
+ expect(containsObjectPoint(row,{width:80,depth:20},[59,118])).toBe(true);
+ expect(containsObjectPoint(row,null,[50,90])).toBe(false);
+});

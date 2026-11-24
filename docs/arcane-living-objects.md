@@ -39,3 +39,9 @@ Battle Library-objekt länkas med `battle_object_key`. Bibliotekets namn, urspru
 Migrationen `object_library_collections` lägger till `campaign_id` och `library_category` på befintliga objektmallar. Tidigare mallar tillhör den gemensamma samlingen. Den första kategoriseringen använder mallens befintliga typ. Kartkommandot kontrollerar kampanjtillhörighet även när en mall anges med ID.
 
 `tests/living-map-objects.test.js` kör båda installationsvägarna i PostgreSQL via PGlite och provar bland annat synlighet, lagerordning, BEP, låsning, rollback och återöppning av en tom spelkarta.
+
+### Biblioteksfönster och objekt i rummet
+
+**Öppna objektbiblioteket** visar 24 mallar åt gången. Sökning och filtrering omfattar hela den tillgängliga samlingen. De senaste placeringarna sparas för användaren och kampanjen på enheten. På dator kan du dra från fönstret till kartan. På mobil väljer du en mall och trycker på kartan. Biblioteket kommer ihåg sökningen när du öppnar det igen på samma karta.
+
+I Äventyrsvyns högra rumspanel kan SL ändra varje placerad instans, även när kontrollpanelen är hopfälld. Objektets mittpunkt avgör vilka rum det ligger i. **Synlig för spelare** tillåter visning när rummet är utforskat. **Solid** hindrar figurplacering när målhexens mittpunkt ligger på objektets roterade, skalade yta. Båda egenskaperna sparas oberoende i äventyrets aktuella tillstånd.

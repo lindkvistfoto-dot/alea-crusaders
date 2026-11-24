@@ -1311,7 +1311,14 @@ async function openEditor(map, areas, imageUrl, roomData) {
   refreshToolPicker('room');
   for (const button of modeButtons) button.setAttribute('aria-selected', String(button.dataset.modeButton === state.mode));
   refreshList();
-  initialize();
+  const initialized=initialize();
+  state.openObjects=async()=>{
+    await initialized;
+    if(editor!==state||!state.loaded)return;
+    modeButtons.find(button=>button.dataset.modeButton==='objects').click();
+    if(!state.layers.objects)state.setLayer('objects',true);
+    state.objects.openLibrary();
+  };
   maskMode.onchange = () => { resetFlood(); maskPoints.length = 0; refreshList(); draw(); };
   get('[data-find-islands]').onclick = () => {
     const limit = get('[data-island-size]');
@@ -1497,4 +1504,7 @@ async function openEditor(map, areas, imageUrl, roomData) {
   };
 }
 
-window.aleaKartakademin = { openEditor, closeEditor, syncCampaign, clearCampaign, syncCamera: () => current?.view?.renderer?.syncCamera(), getEditMode: () => editor?.mode ?? null, getTool: () => editor?.tool ?? null, isLayerVisible: name => editor?.layers?.[name] ?? true, setLayer: (name, visible) => editor?.setLayer?.(name, visible), updateEditorAreas: areas => editor?.updateAreas?.(areas), hasPendingChanges: () => Boolean(editor?.dirty || editor?.saving || editor?.studio?.pending), isSaving: () => Boolean(editor?.saving || editor?.studio?.busy) };
+function openObjects(mapId){
+  if(editor?.objects?.map.id===mapId)return editor.openObjects?.();
+}
+window.aleaKartakademin = { openEditor, openObjects, closeEditor, syncCampaign, clearCampaign, syncCamera: () => current?.view?.renderer?.syncCamera(), getEditMode: () => editor?.mode ?? null, getTool: () => editor?.tool ?? null, isLayerVisible: name => editor?.layers?.[name] ?? true, setLayer: (name, visible) => editor?.setLayer?.(name, visible), updateEditorAreas: areas => editor?.updateAreas?.(areas), hasPendingChanges: () => Boolean(editor?.dirty || editor?.saving || editor?.studio?.pending), isSaving: () => Boolean(editor?.saving || editor?.studio?.busy) };
