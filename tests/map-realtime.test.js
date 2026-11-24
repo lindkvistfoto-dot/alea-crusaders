@@ -161,6 +161,22 @@ function uiHarness({gm=false,maps=[{id:'old',player_visible:true}],state='explor
  return {context,actions,setMaps:x=>{maps=x},setCurrent:x=>{current=x},refresh:()=>context.window.aleaMapRealtime.refresh()};
 }
 describe('v0.34.95 – map screen reconciliation',()=>{
+ it('recovers the requested shared map when a player preview initially fails to load',async()=>{
+  const h=uiHarness();
+  h.context.activeCampaignMap=null;
+  h.context.adventurePlayerPreview=true;
+  h.context.adventureRequestedMap={id:'old'};
+  await h.refresh();
+  expect(h.actions).toContain('switch:old');
+ });
+ it('keeps the preview empty when the requested map is private',async()=>{
+  const h=uiHarness();
+  h.context.activeCampaignMap=null;
+  h.context.adventurePlayerPreview=true;
+  h.context.adventureRequestedMap={id:'private'};
+  await h.refresh();
+  expect(h.actions).not.toContain('switch:old');
+ });
  it('refreshes the protected player raster without resetting zoom',async()=>{
   const h=uiHarness();await h.refresh();
   expect(h.actions).toContain('switch:old');

@@ -1,5 +1,5 @@
 import { Buffer } from 'node:buffer';
-import { Readable } from 'node:stream';
+import { pipeline } from 'node:stream/promises';
 import { createDeflate } from 'node:zlib';
 import { unzipSync } from 'npm:fflate@0.8.2';
 import Packer from 'npm:pngjs@7.0.0/lib/packer.js';
@@ -36,8 +36,9 @@ export async function projectBands(bytes, plan) {
   const opaqueBlackRow = Buffer.from([0,0,0,255]);
   const packer = new Packer({bitDepth:8,colorType:6});
   const chunks = [Buffer.from([137,80,78,71,13,10,26,10]),packer.packIHDR(width,height)];
-  const encoded = Readable.from(scanlines(),{objectMode:false}).compose(createDeflate({level:2}));
-  for await (const chunk of encoded) chunks.push(packer.packIDAT(Buffer.from(chunk)));
+  await pipeline(scanlines(), createDeflate({level:2}), async encoded => {
+    for await (const chunk of encoded) chunks.push(packer.packIDAT(Buffer.from(chunk)));
+  });
   chunks.push(packer.packIEND());
   return Buffer.concat(chunks);
 }

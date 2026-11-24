@@ -3398,7 +3398,7 @@ async function advanceCampaignDay(withRest){
   showBackupToast('✓ Dag '+campaignDayState.day_number+' startad · '+restHours+' h vila')
  }catch(e){alert('Kunde inte starta ny dag: '+e.message)}
 }
-let adventureRequestedMap=null, adventurePlayerPreview=false, adventurePreviousMap=null, adventurePreviousCamera=null, adventureReadVersion=0, adventureLoading=false, adventureProjectionUrl='', adventureProjectionTag='';
+let adventureRequestedMap=null, adventurePlayerPreview=false, adventurePreviousMap=null, adventurePreviousCamera=null, adventureReadVersion=0, adventureLoading=false, adventureFailedMapId=null, adventureProjectionUrl='', adventureProjectionTag='';
 function adventureCanManage(){return canManageCampaignMaps()&&!adventurePlayerPreview}
 async function toggleAdventurePreview(){
  if(!canManageCampaignMaps())return;
@@ -3415,8 +3415,9 @@ async function toggleAdventurePreview(){
   requestAnimationFrame(()=>{if(version===adventureReadVersion){Object.assign(mapView,adventurePreviousCamera);applyMapTransform();}});
  }
 }
-function clearAdventureMap(){
- ++adventureReadVersion;adventureLoading=false;
+function clearAdventureMap(failedMapId=null){
+ ++adventureReadVersion;adventureLoading=false;adventureFailedMapId=failedMapId;
+ $('mapViewport')?.classList.remove('map-loading');
  activeCampaignMap=null;
  closeMapStatusMenu();closeMapLocationInfo();
  $('mapImage').removeAttribute('src');$('mapOverlay').replaceChildren();
@@ -3730,7 +3731,8 @@ async function viewCampaignMap(id,reset=true){
  if(!map||(!manager&&!map.player_visible)){clearAdventureMap();return}
  const switched=activeCampaignMap?.id!==id;
  if(switched)closeMapLocationInfo();
- adventureLoading=true;
+ adventureLoading=true;adventureFailedMapId=null;
+ if(!activeCampaignMap)renderAdventureMapPlaceholder();
  const viewport=$('mapViewport');viewport?.classList.add('map-loading');
  let url;
  try{
@@ -3748,8 +3750,8 @@ async function viewCampaignMap(id,reset=true){
   renderMapLibraryControls();
  }catch(e){
   if(version!==adventureReadVersion)return;
-  clearAdventureMap();$('mapStatusText').textContent='Kunde inte öppna kartan. '+e.message;
- }finally{if(version===adventureReadVersion||!activeCampaignMap){adventureLoading=false;viewport?.classList.remove('map-loading')}}
+  clearAdventureMap(map.id);$('mapStatusText').textContent='Kunde inte öppna kartan. '+e.message;
+ }finally{if(version===adventureReadVersion){adventureLoading=false;viewport?.classList.remove('map-loading')}}
 }
 function goToActiveCampaignMap(){if(campaignActiveMapId)selectAdventureMap(campaignActiveMapId)}
 async function activateViewedMap(){
@@ -4250,6 +4252,21 @@ function closeMap(){adventureRequestedMap=null;adventureReadVersion++;if(adventu
  else{$('home').classList.remove('hidden');renderCards()}
 }
 function setCampaignMapData(map,areas=[],fit=true){activeCampaignMap=map||null;campaignMapAreas=Array.isArray(areas)?areas:[];renderMapPanel();if(activeCampaignMap&&fit)requestAnimationFrame(()=>{if(activeCampaignMap?.id===map.id)resetMapView()})}
+function renderAdventureMapPlaceholder(){
+ const placeholder=$('mapPlaceholder');
+ const heading=placeholder.querySelector('h3'),message=placeholder.querySelector('p');
+ $('mapRetryBtn').hidden=!adventureFailedMapId;
+ if(adventureLoading){
+  heading.textContent='Hämtar kartan…';
+  message.textContent='';
+ }else if(adventureFailedMapId){
+  heading.textContent=adventureCanManage()?'Kartan kunde inte laddas':'Spelarkartan kunde inte laddas';
+  message.textContent='Försök att hämta kartan igen.';
+ }else{
+  heading.textContent=adventurePlayerPreview?'Ingen spelarsynlig karta vald':'Ingen aktiv karta';
+  message.textContent='Spelledaren behöver välja en aktuell karta för kampanjen.';
+ }
+}
 function renderMapPanel(){
  window.aleaAdventureFigures?.sync(activeCampaignMap);
  void window.aleaKartakademin?.syncCampaign(activeCampaignMap,campaignMapAreas);
@@ -4261,8 +4278,8 @@ function renderMapPanel(){
   viewport?.style.removeProperty('--campaign-map-aspect-ratio-number');
   img.removeAttribute('src');overlay.replaceChildren();
   img.classList.add('hidden');overlay.classList.add('hidden');placeholder.classList.remove('hidden');
-  placeholder.querySelector('h3').textContent=adventurePlayerPreview?'Ingen spelarsynlig karta vald':'Ingen aktiv karta';
-  status.textContent='Ingen karta vald';renderMapLibraryControls();return
+  renderAdventureMapPlaceholder();
+  status.textContent=placeholder.querySelector('h3').textContent;renderMapLibraryControls();return
  }
  placeholder.classList.add('hidden');img.classList.remove('hidden');overlay.classList.remove('hidden');
  img.src=activeCampaignMap.image_url||activeCampaignMap.imageUrl||'';img.alt=activeCampaignMap.name||'Kampanjkarta';
@@ -4324,6 +4341,7 @@ function mapZoomAt(factor,cx,cy){
 function mapZoomBy(delta){mapZoomAt(delta>0?1.22:1/1.22)}
 function mapWheel(e){e.preventDefault();mapZoomAt(e.deltaY<0?1.12:1/1.12,e.clientX,e.clientY)}
 function mapPointerDown(e){
+ if(!activeCampaignMap)return;
  if(e.button!=null&&e.button!==0)return;closeMapStatusMenu();mapDidDrag=false;
  let zone=e.target?.closest?.('.map-zone');mapPointerAreaId=zone?(zone.dataset.areaId||null):null;
  let vp=$('mapViewport');vp.setPointerCapture?.(e.pointerId);mapPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});vp.classList.add('dragging');
