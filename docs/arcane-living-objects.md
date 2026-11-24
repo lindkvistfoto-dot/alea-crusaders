@@ -12,7 +12,7 @@ Aktiva mallar med bild och tre fysiska mått kan placeras i **Admin → Platser 
 
 **Alla tillgängliga** visar gemensamma mallar och mallar för den öppna kartans kampanj. Välj **Gemensamma objekt** eller **Kampanjspecifika objekt** för att begränsa samlingen. Samling, kategori och fritext kan kombineras i både Kartakademin och SL Control Board. **På kartan** visar fortfarande samtliga placerade instanser för spelledaren.
 
-Kategorierna är **Möbler**, **Förvaring och gods**, **Byggnadsdelar**, **Inredning och bruksföremål**, **Eld och belysning**, **Hinder och försvar**, **Natur och terräng**, **Monument och ritualföremål** och **Övrigt**. Övrigt samlar mallar som saknar en lämpligare kategori.
+Kategorierna är **Möbler**, **Förvaring och gods**, **Byggnadsdelar**, **Inredning och bruksföremål**, **Eld och belysning**, **Hinder och försvar**, **Natur och terräng**, **Monument och ritualföremål**, **Djur**, **Vapen och utrustning** och **Övrigt**. Övrigt samlar mallar som saknar en lämpligare kategori.
 
 Som administratör kan du ändra kategori med pennan på en mall i Kartakademin. För att ge en gemensam träkista en egen identitet i äventyret, öppna **Skapa kampanjmall**, ange namnet och välj **Skapa i aktuell kampanj**. Den nya mallen har eget ID och delar originalets HERMES-bild. Båda mallarna kan därefter redigeras och placeras oberoende.
 

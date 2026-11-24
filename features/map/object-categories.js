@@ -1,7 +1,7 @@
 export const objectCategories = [
   'Möbler', 'Förvaring och gods', 'Byggnadsdelar', 'Inredning och bruksföremål',
   'Eld och belysning', 'Hinder och försvar', 'Natur och terräng',
-  'Monument och ritualföremål', 'Övrigt',
+  'Monument och ritualföremål', 'Djur', 'Vapen och utrustning', 'Övrigt',
 ];
 
 export function filterObjectLibrary(definitions, campaignId, collection, category, search) {

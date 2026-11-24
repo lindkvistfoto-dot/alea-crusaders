@@ -31,7 +31,7 @@ A request may select a profile and an existing target key. Any caller-supplied b
 
 ## Map objects for Kartakademin and the SL Control Board
 
-Use schema 3 with profile `map-object`. This adapter stores a private immutable WebP and attaches it to the map library. Both collections use the same nine Swedish category names listed in [the map library guide](../../../docs/arcane-living-objects.md).
+Use schema 3 with profile `map-object`. This adapter stores a private immutable WebP and attaches it to the map library. Both collections use the same Swedish category names listed in [the map library guide](../../../docs/arcane-living-objects.md).
 
 For a new object, choose one UUID for the template and keep it for retries. Put the display name in `label`. Set `object_template.campaign_id` to the resolved campaign UUID or explicitly to `null` for the shared collection. The optional measurements are in metres. Omit unknown measurements. An administrator can complete them in Objektverkstaden before placement.
 
