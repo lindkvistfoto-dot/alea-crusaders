@@ -22,7 +22,8 @@ async function refreshMapOnce(){
  const current=available.find(m=>m.id===campaignActiveMapId);
  const previous=available.find(m=>m.id===priorMap);
  const desired=requestedAdventureMap(available)||(!isGM?current:previous||current||available[0])||null;
- if(adventurePlayerPreview&&!priorMap)return;
+ // A preview of a private map stays empty. An interrupted shared map can recover.
+ if(adventurePlayerPreview&&!priorMap&&!requestedAdventureMap(available))return;
  if(desired?.id!==priorMap){
   if(desired)await viewCampaignMap(desired.id,false);
   else{

@@ -12,6 +12,7 @@ on:
       - 'scripts/adventure-dev-view.mjs'
       - 'supabase/functions/adventure-player-map/**'
       - 'tests/fixtures/adventure-figure-art.json'
+      - 'tests/adventure-bands.deno.mjs'
       - '.github/workflows/adventure-figures-visual.yml'
 permissions:
   contents: read
@@ -24,6 +25,11 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           persist-credentials: false
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.2.3
+      - name: Render protected WebP strips in the Edge-compatible runtime
+        run: deno test --no-config --no-check --node-modules-dir=none --allow-read tests/adventure-bands.deno.mjs
       - uses: actions/setup-node@v4
         with:
           node-version: 24
