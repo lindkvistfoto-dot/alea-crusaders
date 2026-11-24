@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Stenaltare",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "b8a2f761-4c39-4e5a-9b21-62f0a918d100"
+  },
+  "object_template": {
+    "category": "Monument och ritualföremål",
+    "campaign_id": null,
+    "length_m": 1.6,
+    "width_m": 0.8,
+    "height_m": 1
+  },
+  "drive_file_id": "1tzIJ53s2LbAeAVh75dVmMrNpOKEJUe66",
+  "archive_file_id": "1y9-95tHL6Msxlzt0Pg99NhN3dsacSaBl",
+  "source_sha256": "bfb2ac2902daaf5cbcfdb09cf45c2b3c719757101e2512ed63a826c6176747f1"
+}
