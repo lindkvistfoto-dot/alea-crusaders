@@ -14,3 +14,10 @@ it('profiles cannot bypass server-side bounds',()=>{
  }
  expect(()=>resolveImageProfile({allowedMimeTypes:['image/svg+xml']})).toThrow(/bildformat/);
 });
+
+it('allows a longer edge only for map objects within the original byte and pixel budgets',()=>{
+ const profile=resolveImageProfile({},'map-object');
+ expect(profile).toEqual({...DEFAULT_IMAGE_PROFILE,maxWidth:4096,maxHeight:4096});
+ expect(()=>resolveImageProfile({maxHeight:4097},'map-object')).toThrow();
+ expect(()=>resolveImageProfile({maxWidth:4096},'weapon')).toThrow();
+});

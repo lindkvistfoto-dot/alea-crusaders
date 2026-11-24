@@ -4,7 +4,7 @@ Kartakademins flik **Objekt** redigerar kartans förberedda möblering. **Objekt
 
 ## Objektverkstaden i Admin
 
-Öppna **Admin → Objektverkstaden → Nytt objekt**. Ange namn, kategori och samling. En kampanjspecifik mall hör till den valda kampanjen. Välj en bild från datorn eller mobilen, ange kända mått i meter och tryck **Spara objekt**. HERMES ALEA kopplar den verifierade bilden till mallen. Om uppladdningen avbryts finns den sparade mallen kvar och samma fil kan väljas igen. Befintliga objekt kan få en ersättningsbild. De behåller sin identitet och sina placeringar. Äldre Battle Library-länkar hämtar fortfarande sin bild och sina spelegenskaper därifrån.
+Öppna **Admin → Objektverkstaden → Nytt objekt**. Ange namn, kategori och samling. En kampanjspecifik mall hör till den valda kampanjen. Välj en bild från datorn eller mobilen, ange kända mått i meter och tryck **Spara objekt**. HERMES ALEA kopplar den verifierade bilden till mallen. Kartobjekt kan ha upp till 4 096 pixlar på längsta sidan, totalt högst 4 194 304 pixlar och högst 12 MB. Både bredd, höjd och genomskinlighet bevaras i visningsbilden. Om uppladdningen avbryts finns den sparade mallen kvar och samma fil kan väljas igen. Befintliga objekt kan få en ersättningsbild. De behåller sin identitet och sina placeringar. Äldre Battle Library-länkar hämtar fortfarande sin bild och sina spelegenskaper därifrån.
 
 Aktiva mallar med bild och tre fysiska mått kan placeras i **Admin → Platser → Kartakademin → Objekt** och i **SL Control Board → Objekt** på en kalibrerad karta. ChatGPT och Codex kan skapa en mall direkt i samma bibliotek med [HERMES CORE:s kartobjektprofil](../hermes/core/queue/README.md#map-objects-for-kartakademin-and-the-sl-control-board).
 

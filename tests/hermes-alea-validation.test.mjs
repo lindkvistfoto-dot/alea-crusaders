@@ -1,12 +1,13 @@
 import {beforeAll,it,expect} from 'vitest';
 import {readFile} from 'node:fs/promises';
-import {initializeImageMagick,ImageMagick,MagickColors,MagickColor,MagickFormat} from '@imagemagick/magick-wasm';
+import {initializeImageMagick,ImageMagick,MagickColors,MagickColor,MagickFormat,ResourceLimits} from '@imagemagick/magick-wasm';
 import {decodeImage} from '../supabase/functions/hermes-alea/codec.mjs';
 import {validatePair,sha256} from '../supabase/functions/hermes-alea/validation.mjs';
 import {createVerifyHandler} from '../supabase/functions/hermes-alea/handler.mjs';
 beforeAll(async()=>initializeImageMagick(await readFile(new URL(import.meta.resolve('@imagemagick/magick-wasm/magick.wasm')))));
-function pair(color=MagickColors.Transparent){
- const source=ImageMagick.read(typeof color==='string'?new MagickColor(color):color,16,16,image=>image.write(MagickFormat.Png,b=>new Uint8Array(b)));
+function pair(color=MagickColors.Transparent,width=16,height=16){
+ ResourceLimits.width=4096n;ResourceLimits.height=4096n;ResourceLimits.area=16_777_216n;
+ const source=ImageMagick.read(typeof color==='string'?new MagickColor(color):color,width,height,image=>image.write(MagickFormat.Png,b=>new Uint8Array(b)));
  const output=ImageMagick.read(source,image=>image.write(MagickFormat.WebP,b=>new Uint8Array(b)));
  return {source,output};
 }
@@ -56,4 +57,16 @@ it('rejects oversized input before invoking a codec and rejects APNG animation m
  const p=pair();const animated=new Uint8Array(p.source.length+20);animated.set(p.source.slice(0,33));
  new DataView(animated.buffer).setUint32(33,8);animated.set(new TextEncoder().encode('acTL'),37);animated.set(p.source.slice(33),53);
  expect(()=>decodeImage(animated)).toThrow('ANIMATION_NOT_SUPPORTED');
+});
+
+it.each([[2172,724],[724,2172]])('preserves an elongated map object at %i × %i and keeps other targets at 2048',async(width,height)=>{
+ const images=pair('rgba(100,50,20,0.5)',width,height);
+ const job=await jobFor(images,'map-object');
+ const receipt=await validatePair(job,images.source,images.output,decodeImage);
+ expect(receipt).toMatchObject({width,height,alpha_preserved:true});
+ await expect(validatePair({...job,target_kind:'weapon'},images.source,images.output,decodeImage)).rejects.toThrow();
+});
+it('rejects map objects exceeding the original pixel budget',()=>{
+ const images=pair(MagickColors.Transparent,2049,2048);
+ expect(()=>decodeImage(images.source,'map-object')).toThrow('INVALID_DIMENSIONS');
 });

@@ -4,13 +4,16 @@ export const SOURCE_BUCKET='hermes-alea-originals';
 const uuid=/^[a-f0-9-]{36}$/i;
 export const managedKey=value=>/^hermes-alea:[a-f0-9-]{36}$/i.test(String(value||''));
 async function hash(blob){return [...new Uint8Array(await crypto.subtle.digest('SHA-256',await blob.arrayBuffer()))].map(n=>n.toString(16).padStart(2,'0')).join('');}
-export async function convertToWebP(file,{requireAlpha=false,profile={}}={}){
- const limits=resolveImageProfile({...profile,requireAlpha:requireAlpha||profile.requireAlpha===true});
+export async function convertToWebP(file,{requireAlpha=false,profile={},targetKind}={}){
+ const limits=resolveImageProfile({...profile,requireAlpha:requireAlpha||profile.requireAlpha===true},targetKind);
  if(!file||!limits.allowedMimeTypes.includes(file.type))throw Error('Välj en statisk PNG-, JPEG- eller WebP-bild.');
  if(!file.size||file.size>limits.maxBytes)throw Error('Bilden överskrider bildprofilens storleksgräns.');
  const bitmap=await createImageBitmap(file,{imageOrientation:'from-image'});
  try{
-  if(!bitmap.width||!bitmap.height||bitmap.width>limits.maxWidth||bitmap.height>limits.maxHeight||bitmap.width*bitmap.height>limits.maxPixels)throw Error('Bilden överskrider bildprofilens dimensionsgräns.');
+  if(!bitmap.width||!bitmap.height||bitmap.width>limits.maxWidth||bitmap.height>limits.maxHeight||bitmap.width*bitmap.height>limits.maxPixels){
+   const pixels=limits.maxPixels.toLocaleString('sv-SE');
+   throw Error('Bilden är '+bitmap.width+' × '+bitmap.height+' px. Bildprofilen tillåter högst '+limits.maxWidth+' × '+limits.maxHeight+' px och totalt '+pixels+' pixlar.');
+  }
   const canvas=document.createElement('canvas');canvas.width=bitmap.width;canvas.height=bitmap.height;
   const ctx=canvas.getContext('2d',{willReadFrequently:true});if(!ctx)throw Error('Webbläsaren kan inte konvertera bilden.');
   ctx.drawImage(bitmap,0,0);const rgba=ctx.getImageData(0,0,canvas.width,canvas.height).data;
@@ -75,7 +78,7 @@ export function createHermesAleaClient({rpc,request,convert=convertToWebP,storag
  }
  async function upload({targetKind,target,file,profile={},onStatus=()=>{}}){
   if(!uuid.test(target?.id)||!allowedTargets.has(targetKind))throw Error('Spara posten innan du lägger till en bild.');
-  const policy=resolveImageProfile(targetPolicies[targetKind]);
+  const policy=resolveImageProfile(targetPolicies[targetKind],targetKind);
   const limits=resolveImageProfile({...policy,...profile,
     maxBytes:Math.min(policy.maxBytes,profile.maxBytes??policy.maxBytes),
     maxOutputBytes:Math.min(policy.maxOutputBytes,profile.maxOutputBytes??policy.maxOutputBytes),
@@ -84,11 +87,11 @@ export function createHermesAleaClient({rpc,request,convert=convertToWebP,storag
     maxPixels:Math.min(policy.maxPixels,profile.maxPixels??policy.maxPixels),
     requireAlpha:policy.requireAlpha||profile.requireAlpha===true,
     allowedMimeTypes:(profile.allowedMimeTypes??policy.allowedMimeTypes).filter(type=>policy.allowedMimeTypes.includes(type))
-  });
+  },targetKind);
   if(!file||!limits.allowedMimeTypes.includes(file.type)||!file.size||file.size>limits.maxBytes)
     throw Error('Bilden uppfyller inte den valda bildprofilen.');
   onStatus('preparing');
-  const webp=await convert(file,{profile:limits,requireAlpha:limits.requireAlpha});
+  const webp=await convert(file,{targetKind,profile:limits,requireAlpha:limits.requireAlpha});
   if(!webp||webp.type!=='image/webp'||!webp.size||webp.size>limits.maxOutputBytes)
     throw Error('Konverteringen gav ingen giltig WebP inom bildprofilens storleksgräns.');
   const [source_sha256,output_sha256]=await Promise.all([hash(file),hash(webp)]);
