@@ -16,6 +16,8 @@
   const roster = el('home');
   if (!landing || !roster || typeof window.goHome !== 'function') return;
   const previousGoHome = window.goHome;
+  // Load the magazine with its route, independently of the dice renderer.
+  void import('./chronicle.js').catch(error => console.error('Arcane Chronicle kunde inte öppnas', error));
 
   function activeSections() {
     return Array.from(document.querySelectorAll('main > section[id]'));

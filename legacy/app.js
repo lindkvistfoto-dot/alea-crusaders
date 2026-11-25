@@ -83,6 +83,7 @@ async function enterApp(){
   console.error('Central data:',e);
   alert('Kunde inte läsa central data från Supabase: '+e.message)
  }finally{
+  window.aleaRefreshChronicleEdition?.();
   // Roster may have opened before campaign characters were fetched.
   // Refresh content only, without changing the currently visible page.
   renderCards();
