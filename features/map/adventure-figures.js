@@ -1,4 +1,4 @@
-import {currentEncounter,startEncounter,displayEncounter} from './adventure-encounter.js';
+import {currentEncounter,startEncounter,displayEncounter,syncEncounterCamera,transitionMessage} from './adventure-encounter.js';
 import {readPanelTurn,renderAdventurePanels} from './adventure-panels.js';
 import {createObjectEditor} from './object-library.js';
 import './adventure-figures.css';
@@ -15,7 +15,7 @@ const modeSwitch=document.getElementById('adventureModeSwitch');
 const status = document.getElementById('adventureFigureStatus');
 const viewport = document.getElementById('mapViewport');
 const page = document.getElementById('mapPage');
-page.querySelector('.mapworkarea').before(modeSwitch);
+page.querySelector('.adventure-camera-tools').before(modeSwitch);
 const art = () => window.aleaCombatPaperDollMap;
 const controls=document.getElementById('adventureControls');
 let boardOpen=false;
@@ -176,9 +176,10 @@ function zoomTo(mode){
 document.getElementById('adventureZoomPreset').addEventListener('change',e=>{zoomTo(e.target.value);e.target.value='';});
 function close() {
   cancel();
+  clearInterval(view?.encounterTimer);
   view?.hexLayer.destroy();view?.objects?.destroy();
   view?.layer.remove(); view=null;
-  renderBoard(null); notice();
+  transitionMessage();renderBoard(null); notice();
 }
 function sync(map) {
   if (!map?.image_url || !centralCampaignId || page.classList.contains('hidden')) { if(view)close();else renderBoard(null); return; }
@@ -192,6 +193,11 @@ function sync(map) {
   bounds.append(lights,pieces); layer.append(bounds); viewport.append(layer);
   view={map,campaign,gm,layer,pieces,lights,hexLayer,hex:{prefs:{...defaults},round:0,epoch:0,budgets:{}},session:undefined,rows:[],open:false,ready:false,version:0,category:'character',hidden:true,prepared:new Set()};
   const v=view;
+  v.selectFigure=id=>selectPiece(v,id);
+  if(!gm){
+    v.observeEncounter=row=>observePlayerEncounter(v,row);
+    v.encounterTimer=setInterval(()=>void followPlayerEncounter(v),5000);
+  }
   v.objects=createObjectEditor({map,parent:bounds,before:lights,live:true,manager:gm,areas:()=>campaignMapAreas,
     getScale:()=>Number(v.config?.pixelsPerMeter)||Number(v.map.pixels_per_meter)||0,onEnter:cancel,
     onPick:()=>viewport.scrollIntoView({block:'nearest'})});
@@ -203,6 +209,7 @@ function syncCamera() {
   const {width,height,x,y,scale} = adventureCameraFrame();
   if (!width || !height) return;
   view.layer.setAttribute('viewBox', [-x/scale,-y/scale,width/scale,height/scale].join(' '));
+  syncEncounterCamera();
   updatePointer();
 }
 function setGeometry(map,config) {
@@ -234,11 +241,31 @@ async function prepare(v,rows) {
   }
   if(view===v && fresh.length)renderPieces(v);
 }
-async function readRows(v) {
+// Signals reconcile map discovery too. Follow the shared encounter independently
+// when a missed signal or a slow raster refresh would leave the player in the old mode.
+function observePlayerEncounter(v,row){
+  if(view!==v || !v.ready || !v.session)return;
+  v.lastEncounterRead=performance.now();
+  if((row?.id??null)!==(v.encounter||v.pausedEncounter||null) ||
+    (row?.status==='paused')!==Boolean(v.pausedEncounter))return readRows(v,row);
+}
+async function followPlayerEncounter(v){
+  if(view!==v || !v.ready || !v.session || v.checkingEncounter || document.hidden ||
+    performance.now()-(v.lastEncounterRead??0)<8000)return;
+  const session=v.session,version=v.version;
+  v.checkingEncounter=true;
+  try{
+    const row=await currentEncounter(v);
+    if(view!==v || v.session!==session || v.version!==version)return;
+    await observePlayerEncounter(v,row);
+  }catch{/* Normal map reconciliation and the next status read can recover. */}
+  finally{v.checkingEncounter=false;}
+}
+async function readRows(v,knownEncounter) {
   const version=++v.version;
   if(!v.session)return;
   try {
-    const [hex,encounter,rows]=await Promise.all([hexRead(v),currentEncounter(v),v.gm?dbJson(table+'?'+scope(v)+'&select='+columns+'&order=r,q'):dbJson('rpc/read_adventure_player_figures',{method:'POST',body:JSON.stringify({p_map_id:v.map.id,p_session_id:v.session})})]);
+    const [hex,encounter,rows]=await Promise.all([hexRead(v),knownEncounter===undefined?currentEncounter(v):knownEncounter,v.gm?dbJson(table+'?'+scope(v)+'&select='+columns+'&order=r,q'):dbJson('rpc/read_adventure_player_figures',{method:'POST',body:JSON.stringify({p_map_id:v.map.id,p_session_id:v.session})})]);
     if(view!==v||v.version!==version)return;
     if(v.gm && !rows.length && !v.scenes){
       v.scenes=await dbJson('campaign_combat_scenes?campaign_id=eq.'+v.campaign+'&select=id,name&order=name');
@@ -247,6 +274,9 @@ async function readRows(v) {
     // round. Keep their pause/resume path. New map fights enter via the Board.
     const turn=!encounter && rows.length ? await readPanelTurn(v,rows).catch(()=>({unavailable:true})) : null;
     if(view!==v||v.version!==version)return;
+    if(v.ready && (v.encounter||v.pausedEncounter||encounter) &&
+      (v.encounter!==encounter?.id || encounter?.status==='paused'))mapView.fitted=false;
+    v.lastEncounterRead=performance.now();
     v.panelTurn=turn;
     v.pausedEncounter=encounter?.status==='paused'?encounter.id:null;
     v.encounter=v.pausedEncounter?null:encounter?.id;
@@ -430,13 +460,36 @@ async function arm(row) {
   boardOpen=false;renderBoard(v);
   viewport.scrollIntoView({block:'nearest',behavior:'instant'});
 }
-async function changeEncounterPause(v,id,paused){
-  if(view!==v || v.busy || !v.gm || (paused?v.encounter:v.pausedEncounter)!==id)return;
-  v.busy=true;renderBoard(v);
-  try {
-    await dbJson('rpc/set_adventure_encounter_paused',{method:'POST',body:JSON.stringify({p_encounter:id,p_paused:paused})});
-  } catch(error){window.alert(error.message);}
-  finally{if(view===v){v.busy=false;await readRows(v);}}
+async function switchEncounter(v,label,write,retry){
+  if(view!==v||v.busy)return;
+  const session=v.session;
+  v.busy=true;v.transitionLabel=label;transitionMessage(label);renderBoard(v);
+  try{
+    await write();
+    if(view!==v||v.session!==session)return;
+    await readRows(v);
+    if(!v.ready)throw Error('Kartans läge kunde inte läsas.');
+    if(!v.encounter)transitionMessage();
+  }catch(error){
+    if(view===v&&v.session===session){
+      transitionMessage('Kunde inte växla kartläge. '+error.message,async()=>{
+        transitionMessage();await refresh();
+        if(view===v&&v.session===session)retry();
+      });
+    }
+  }finally{
+    if(view===v&&v.session===session){v.busy=false;v.transitionLabel=null;renderBoard(v);}
+  }
+}
+function startMapEncounter(v){
+  if(!v.ready||v.encounter||v.pausedEncounter)return;
+  return switchEncounter(v,'Startar striden …',()=>startEncounter(v),()=>startMapEncounter(v));
+}
+function changeEncounterPause(v,id,paused){
+  if(!v.gm||(paused?v.encounter:v.pausedEncounter)!==id)return;
+  return switchEncounter(v,paused?'Pausar striden …':'Återupptar striden …',
+    ()=>dbJson('rpc/set_adventure_encounter_paused',{method:'POST',body:JSON.stringify({p_encounter:id,p_paused:paused})}),
+    ()=>changeEncounterPause(v,id,paused));
 }
 function chooseExploration(v){
   if(page.querySelector('[data-encounter-choice]'))return;
@@ -498,10 +551,7 @@ board.addEventListener('click',async e=>{
   if(action==='session'){window.openGameSessionPanel();return;}
   if(!ready(v))return;
   if(action==='start-encounter'){
-    v.busy=true;renderBoard(v);
-    try {await startEncounter(v);}
-    catch(error){if(view===v)notice(error.message);}
-    finally {if(view===v){v.busy=false;await readRows(v);}}
+    await startMapEncounter(v);
     return;
   }
   if(action==='place'){
@@ -608,7 +658,7 @@ if(typeof activeCampaignMap!=='undefined' && !page.classList.contains('hidden'))
 const header=document.querySelector('.alea-app-header');
 if(header)new ResizeObserver(()=>page.style.setProperty('--adventure-header',header.offsetHeight+'px')).observe(header);
 
-new ResizeObserver(()=>{if(view&&mapView.fitted)resetMapView();else syncCamera();}).observe(viewport);
+new ResizeObserver(()=>{if(view && !view.encounter && !view.pausedEncounter && mapView.fitted && viewport.clientWidth && viewport.clientHeight)resetMapView();else syncCamera();}).observe(viewport);
 
 document.getElementById('sharedMapList').addEventListener('click',event=>{
   const id=event.target.closest('[data-shared-map]')?.dataset.sharedMap;

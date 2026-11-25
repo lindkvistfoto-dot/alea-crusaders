@@ -67,21 +67,45 @@ function showLogin(){window.aleaRefreshLocation?.reveal?.();document.querySelect
 function refreshAuthUI(){syncAppVersionDisplay();let u=activeUser(),a=$('adminHomeLink');$('sessionUser').classList.toggle('hidden',!u);$('adminNavBtn').classList.toggle('hidden',!u||!u.admin);$('logoutBtn').classList.toggle('hidden',!u||!u.admin);$('playerLogoutBtn').classList.toggle('hidden',!u||u.admin);if(u)$('sessionUser').textContent=u.name||u.email;if(a)a.classList.toggle('hidden',!u||!u.admin);renderCampaignDayHeader()}
 /* Navigation must not be reset by asynchronous startup: the user may already
    have opened a character, map, shop or dice view while central data loads. */
+// A same-origin adventure encounter starts with the authenticated map's rule
+// tables and visible roster. Mutable combat state is always read by encounter ID.
+function adventureEncounterBootstrap(view,userId){
+ if(!centralReady || !userId || userId!==activeUser()?.id || view.campaign!==centralCampaignId || view.gm!==adventureCanManage())return null;
+ const visible=new Set(view.rows.map(row=>row.character_id||row.npc_character_id).filter(Boolean));
+ const roster=view.gm?chars:chars.filter(c=>visible.has(c._dbId));
+ return structuredClone({campaign:centralCampaignId,role:view.gm?'gm':'player',roster,
+  icons:roster.filter(c=>c.combatIconPath&&combatIconCachedUrl(c.combatIconPath)).map(c=>[c.combatIconPath,{url:combatIconCachedUrl(c.combatIconPath)}]),
+  rules:{ruleSkills,ruleSkillsLoaded,ruleMagicSchools,ruleMagicSchoolsLoaded,ruleSpells,ruleSpellsLoaded,
+   ruleEffects,ruleEffectsLoaded,ruleProfessions,ruleProfessionsLoaded,ruleRaces,ruleRacesLoaded,ruleRaceAttributes,ruleRaceAttributesLoaded,
+   ruleArmorTypes,ruleArmorMaterials,ruleArmorLoaded,ruleShields,ruleShieldsLoaded,ruleWeapons,ruleWeaponsLoaded,
+   ruleProjectileTypes,ruleProjectileTypesLoaded,ruleWeaponMaterials,ruleWeaponMaterialsLoaded,ruleCombatFumbles,ruleCombatFumblesLoaded,ruleSocialStands,ruleSocialStandsLoaded}});
+}
+function useAdventureEncounterBootstrap(data){
+ centralCampaignId=data.campaign;centralCampaignRole=data.role;chars=data.roster;centralReady=true;
+ combatIconImageCache=new Map(data.icons);
+ centralCharacterSnapshots=new Map(chars.filter(c=>c._dbId).map(c=>[c._dbId,characterSyncFingerprint(c)]));
+ ({ruleSkills,ruleSkillsLoaded,ruleMagicSchools,ruleMagicSchoolsLoaded,ruleSpells,ruleSpellsLoaded,
+  ruleEffects,ruleEffectsLoaded,ruleProfessions,ruleProfessionsLoaded,ruleRaces,ruleRacesLoaded,ruleRaceAttributes,ruleRaceAttributesLoaded,
+  ruleArmorTypes,ruleArmorMaterials,ruleArmorLoaded,ruleShields,ruleShieldsLoaded,ruleWeapons,ruleWeaponsLoaded,
+  ruleProjectileTypes,ruleProjectileTypesLoaded,ruleWeaponMaterials,ruleWeaponMaterialsLoaded,ruleCombatFumbles,ruleCombatFumblesLoaded,ruleSocialStands,ruleSocialStandsLoaded}=data.rules);
+}
 async function enterApp(){
  $('loginScreen').classList.add('hidden');
  document.querySelector('header').classList.remove('hidden');
  document.querySelector('main').classList.remove('hidden');
- const embeddedMap=window.location?.search==='?view=adventure-encounter' && window.parent!==window
-  ?window.parent.aleaAdventureEncounterContext?.(window)?.map:null;
+ const encounterHost=window.location?.search==='?view=adventure-encounter' && window.parent!==window
+  ?window.parent.aleaAdventureEncounterContext?.(window):null;
+ const embeddedMap=encounterHost?.map;
  if(!embeddedMap)goHome(); // Initial route only. Never force it again after awaits.
  refreshAuthUI();
  // Restore simple routes before waiting for unrelated Supabase catalogs.
  window.aleaRefreshLocation?.restoreEarly?.();
  try{
-  await loadCentralData();
+  const bootstrap=encounterHost?.bootstrap?.(activeUser()?.id);
+  if(bootstrap)useAdventureEncounterBootstrap(bootstrap);else await loadCentralData();
   if(embeddedMap)campaignMaps=[embeddedMap];
   await Promise.all([loadRuleSkills(),loadRuleMagicRegistry(),loadRuleEffects(),loadRuleProfessions(),loadRuleRaces(),loadRuleArmorRegistry(),loadRuleShields(),loadRuleWeapons(),loadRuleProjectileTypes(),loadRuleWeaponMaterials(),loadRuleCombatFumbles(),loadRuleSocialStands(),embeddedMap?null:loadCampaignMaps(false),window.aleaEquipmentCatalog?.load()]);
-  await loadCampaignDayState();
+  if(!embeddedMap)await loadCampaignDayState();
  }catch(e){
   console.error('Central data:',e);
   alert('Kunde inte läsa central data från Supabase: '+e.message)
@@ -4296,16 +4320,18 @@ function renderMapPanel(){
   status.textContent=placeholder.querySelector('h3').textContent;renderMapLibraryControls();return
  }
  placeholder.classList.add('hidden');img.classList.remove('hidden');overlay.classList.remove('hidden');
- img.src=activeCampaignMap.image_url||activeCampaignMap.imageUrl||'';img.alt=activeCampaignMap.name||'Kampanjkarta';
+ const imageUrl=activeCampaignMap.image_url||activeCampaignMap.imageUrl||'';
+ if(img.getAttribute('src')!==imageUrl)img.src=imageUrl;img.alt=activeCampaignMap.name||'Kampanjkarta';
  let w=Number(activeCampaignMap.width)||1600,h=Number(activeCampaignMap.height)||1000;
  viewport?.style.setProperty('--campaign-map-aspect-ratio',w+' / '+h);
  viewport?.style.setProperty('--campaign-map-aspect-ratio-number',String(w/h));
  img.width=w;img.height=h;overlay.setAttribute('viewBox',`0 0 ${w} ${h}`);overlay.setAttribute('width',w);overlay.setAttribute('height',h);
  status.textContent=(activeCampaignMap.name||'Karta')+' · '+campaignMapAreas.length+' områden';
  let maskId='fogMask_'+String(activeCampaignMap.id||'map').replace(/[^a-zA-Z0-9_-]/g,'');
+ const fog=campaignMapAreas.length || !adventureCanManage();
  let maskShapes=campaignMapAreas.map(a=>mapFogMaskShape(a)).join('');
  let hitShapes=campaignMapAreas.map(a=>mapAreaHitSvg(a)).join('');
- overlay.innerHTML=`<defs><mask id="${maskId}" maskUnits="userSpaceOnUse"><rect x="0" y="0" width="${w}" height="${h}" fill="white"/>${maskShapes}</mask></defs><rect class="map-fog" x="0" y="0" width="${w}" height="${h}" mask="url(#${maskId})"/>${hitShapes}`;
+ overlay.innerHTML=`<defs><mask id="${maskId}" maskUnits="userSpaceOnUse"><rect x="0" y="0" width="${w}" height="${h}" fill="white"/>${maskShapes}</mask></defs><rect class="map-fog" visibility="${fog?'visible':'hidden'}" x="0" y="0" width="${w}" height="${h}" mask="url(#${maskId})"/>${hitShapes}`;
  window.renderArcaneMapObjects?.();
  void window.syncArcaneMapObjects?.(activeCampaignMap.id);
  renderMapLibraryControls();applyMapTransform();

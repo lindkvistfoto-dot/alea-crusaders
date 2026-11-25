@@ -125,3 +125,45 @@ body:has(#mapPage:not(.hidden)) main:has(#mapPage) {
 [data-encounter-choice]::backdrop {background:#100b08b8}
 [data-encounter-choice] h2 {margin:0 0 1rem;font-size:1.2rem}
 [data-encounter-choice] button {margin-block:.2rem}
+
+#mapPage .adventure-camera-tools {justify-content:center;align-items:center;margin:.35rem 0 .55rem}
+#mapPage .adventure-camera-tools select {min-width:7rem}
+#mapPage .mapworkarea, #mapPage .mapmain {position:relative}
+#mapPage .mapworkarea.encounter-active {min-height:var(--encounter-height,0)}
+#mapPage .encounter-active > aside,
+#mapPage .encounter-active .mapmain > :not(#mapViewport,.adventure-transition),
+#mapPage .encounter-active .adventure-figure-layer [data-figure-id],
+#mapPage .encounter-active .adventure-figure-layer [data-actor-hex] {visibility:hidden;pointer-events:none}
+#mapPage .encounter-active > aside {display:none}
+#mapPage .adventure-encounter-frame {
+  position:absolute;inset:0 0 auto;z-index:4;width:100%;height:var(--encounter-height,100%);
+  border:0;background:transparent;color-scheme:normal;
+}
+#mapPage .adventure-encounter-frame[hidden] {display:none}
+#mapPage .adventure-transition:not(:empty) {
+  position:absolute;top:.75rem;left:50%;transform:translateX(-50%);z-index:6;
+  border:1px solid #87704f;border-radius:6px;background:#211c16f2;color:#f6e8ca;
+  padding:.4rem .75rem;max-width:95%;width:max-content;font-size:.9rem;
+}
+html.adventure-tactical-overlay,html.adventure-tactical-overlay body,
+.adventure-tactical-overlay #combatPage, .adventure-tactical-overlay .combat-shell-live,
+.adventure-tactical-overlay #combatPage .combat-board-wrap,
+.adventure-tactical-overlay #combatPage .combat-board {background:transparent;box-shadow:none}
+html.adventure-tactical-overlay {overflow:hidden;color-scheme:normal}
+.adventure-tactical-overlay body {min-height:0}
+.adventure-tactical-overlay .combatpage,.adventure-tactical-overlay main {border:0}
+.adventure-tactical-overlay #combatPage .combat-shell-live {
+  display:grid;grid-template-columns:var(--encounter-tracks);gap:var(--encounter-gap);align-items:start;
+}
+.adventure-tactical-overlay #combatPage .combat-board-wrap {border:0;order:0;position:relative;border-radius:16px}
+.adventure-tactical-overlay #combatPage .combat-board {
+  height:var(--encounter-map-height);aspect-ratio:auto!important;border:1px solid transparent;
+  box-sizing:border-box;touch-action:none;
+}
+.adventure-tactical-overlay .combat-map-presets,.adventure-tactical-overlay .combat-board-footer {display:none}
+.adventure-tactical-overlay #combatPage .combat-board-wrap > :not(.combat-board,.combat-board-footer) {position:absolute;bottom:0;z-index:1}
+.adventure-tactical-overlay[data-stacked] #combatPage .combat-shell-live {display:flex;flex-direction:column}
+.adventure-tactical-overlay[data-stacked] #combatPage :is(.combat-left-column,.combat-center-column){display:contents}
+.adventure-tactical-overlay[data-stacked] #combatPage .combat-board-wrap {order:-1;width:100%}
+.adventure-tactical-overlay:not([data-stacked]) #combatPage :is(.combat-left-column,.combat-center-column){display:flex;flex-direction:column}
+.adventure-tactical-overlay .combat-map-svg {touch-action:none}
