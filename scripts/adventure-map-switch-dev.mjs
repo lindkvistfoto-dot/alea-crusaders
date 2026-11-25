@@ -207,8 +207,9 @@ try{
     });
   }
   await open();
-  if(await mode('battle').textContent()==='Återuppta strid')await mode('battle').click();
-  if(await mode('battle').getAttribute('aria-pressed')==='true'||await page.locator('.adventure-encounter-frame').count())await finish();
+  const paused=await mode('battle').textContent()==='Återuppta strid';
+  if(paused)await mode('battle').click();
+  if(paused || await mode('battle').getAttribute('aria-pressed')==='true' || await page.locator('.adventure-encounter-frame').count())await finish();
   await open();
   for(const cycle of [1,2]){
     await measure('start',cycle,await startButton());
