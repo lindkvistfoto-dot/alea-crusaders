@@ -70,6 +70,21 @@ async function scenario(mobile) {
         }
         return [hero,guard];
       }
+      if(key.startsWith('combat_instances?')){
+        const query=new URLSearchParams(key.split('?')[1]);
+        assert.equal(query.get('map_id'),'eq.'+map.id);
+        assert.equal(query.get('session_id'),'eq.'+session.id);
+        assert.equal(query.get('campaign_id'),'eq.'+session.campaign_id);
+        return query.has('active_actor_id') ? [{active_actor_id:hero.id}] : [{id:session.id}];
+      }
+      if(key.startsWith('combatants?')){
+        const query=new URLSearchParams(key.split('?')[1]);
+        assert.equal(query.get('combat_id'),'eq.'+session.id);
+        if(!manager) assert.equal(query.get('visible_to_players'),'eq.true');
+        return [hero,guard].filter(f=>manager||f.player_visible).map(f=>({
+          id:f.id,source_id:f.character_id||f.monster_id,source_type:f.character_id?'character':'monster'
+        }));
+      }
       if(key.startsWith('game_sessions?')) return [session];
       if(key.startsWith('campaign_map_academy?')) return [{configuration:config,revision:1}];
       if(key.includes('read_campaign_map_academy_player')) return config;
@@ -80,30 +95,14 @@ async function scenario(mobile) {
       if(key.startsWith('combatant_battle_poses?')) return art.poses;
       return [];
     });
-    await page.exposeFunction('readFixtureCombat',()=>({
-      combat:{id:session.id,status:'active',round_number:hex.round||hex.paused,phase:'action',active_actor_id:hero.id},
-      actors:[hero,guard].filter(row=>manager||row.player_visible).map(row=>({
-        id:row.id,name_snapshot:row.name,source_type:row.character_id?'character':'monster',
-        source_id:row.character_id||row.monster_id,q:row.q,r:row.r,side:row.character_id?'players':'enemies',
-        state:{movement_max:4,movement_remaining:4-(hex.budgets[row.id]?.spent||0)}
-      }))
-    }));
     async function notifyOthers(){
-      for(const c of clients.filter(c=>c.page!==page)) await c.page.evaluate(async()=>{await window.readPanelCombat();await window.aleaAdventureFigures.refresh();});
+      for(const c of clients.filter(c=>c.page!==page)) await c.page.evaluate(()=>window.aleaAdventureFigures.refresh());
     }
     async function enter(){
       await page.goto(origin,{waitUntil:'domcontentloaded'});
       await page.waitForFunction(()=>window.aleaAdventureFigures);
       await page.evaluate(async ({manager,map,room,hero})=>{
-        window.readPanelCombat=async()=>{
-          const data=await window.readFixtureCombat();activeCombat=data.combat;combatants=data.actors;
-        };
-        await window.readPanelCombat();
-        window.dbJson=async(key,opts)=>{
-          const result=await window.panelFixtureRead(key,opts);
-          if(key==='rpc/read_adventure_hex') await window.readPanelCombat();
-          return result;
-        };
+        window.dbJson=window.panelFixtureRead;
         centralCampaignId=map.campaign_id;centralCampaignRole=manager?'gm':'player';campaignMaps=[map];
         chars=[{id:'astrid',_dbId:hero.character_id,name:hero.name,isNpc:false,identity:{namn:hero.name},live:{}}];
         window.locationAssetStorageFetch=async key=>{
