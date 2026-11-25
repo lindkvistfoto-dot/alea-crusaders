@@ -90,7 +90,16 @@ async function enterApp(){
   // Restore navigation after authenticated app data is loaded.
   if(typeof window!=='undefined')await window.aleaRefreshLocation?.restore?.();
   // Explicit deep links win over saved navigation, after asynchronous restoration.
-  if(typeof window.URLSearchParams==='function'&&new window.URLSearchParams(window.location?.search||'').get('view')==='trophy-room')window.openTrophyRoom?.();
+  if(typeof window.URLSearchParams==='function'){
+   const requestedView=new window.URLSearchParams(window.location?.search||'').get('view');
+   if(requestedView==='trophy-room')window.openTrophyRoom?.();
+   if(requestedView==='adventure'){
+    const mapId=new window.URLSearchParams(window.location.search).get('map');
+    await openMap();
+    if(mapId&&campaignMaps.some(map=>map.id===mapId&&(adventureCanManage()||map.player_visible)))await selectAdventureMap(mapId);
+   }
+   if(requestedView==='combat')await openCombat();
+  }
  }
 }
 /* v0.35.69 — keep the JWT fresh across long sessions, including mid-save expiry. */

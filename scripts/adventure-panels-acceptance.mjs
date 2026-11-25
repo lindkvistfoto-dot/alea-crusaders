@@ -120,6 +120,22 @@ async function scenario(mobile) {
       await page.evaluate(()=>{Object.assign(mapView,{scale:1.2,x:-75,y:-40,fitted:false});applyMapTransform();});
     }
     await enter();
+    if(!mobile){
+      for(const width of [1440,1920]){
+        await page.setViewportSize({width,height:960});
+        const geometry=await page.evaluate(()=>{
+          const bounds=selector=>document.querySelector(selector).getBoundingClientRect();
+          const header=bounds('.alea-app-header > .bar');
+          const board=bounds('#mapPage .mapworkarea');
+          const tracks=getComputedStyle(document.querySelector('#mapPage .mapworkarea')).gridTemplateColumns.split(' ').map(parseFloat);
+          return {left:board.left-header.left,right:board.right-header.right,tracks};
+        });
+        assert.ok(Math.abs(geometry.left)<=1 && Math.abs(geometry.right)<=1,JSON.stringify(geometry));
+        const [left,center,right]=geometry.tracks;
+        assert.ok(Math.abs(left-right)<=1 && Math.abs(center-left*2)<=1,JSON.stringify(geometry));
+      }
+      await page.setViewportSize({width:1440,height:960});
+    }
     const c={page,role,enter};clients.push(c);return c;
   }
   async function snapshot(page){

@@ -18,7 +18,6 @@ body:has(.adventure-figure-layer[data-gm]) .arcane-character-portrait[data-chara
 body:has(.adventure-figure-ghost), body:has(.adventure-figure-ghost) * { cursor:grabbing!important; user-select:none!important }
 #mapPage #adventureControls[hidden] { display:none }
 .adventure-figure-layer [data-figure-id] { pointer-events:all }
-body:has(#mapPage:not(.hidden)) .alea-app-header > .bar { max-width:none }
 body:has(#mapPage:not(.hidden)) main:has(#mapPage) {
   box-sizing:border-box; width:100%; max-width:none; margin:0;
   padding:0 var(--alea-navigation-inline-padding);
@@ -47,19 +46,13 @@ body:has(#mapPage:not(.hidden)) main:has(#mapPage) {
   #mapPage .map-location-images-panel, #mapPage .map-location-panel {max-height:none}
 }
 
-@media(min-width:901px) {
-  body:has(#mapPage:not(.hidden)) .alea-app-header { --adventure-nav-size:clamp(54px,6.3vw,104px); padding-inline:var(--alea-navigation-inline-padding) }
-  body:has(#mapPage:not(.hidden)) .alea-app-header > .bar {width:100%;padding-inline:0}
-  body:has(#mapPage:not(.hidden)) .alea-app-header::before {width:calc(100% - 2 * var(--alea-navigation-inline-padding))}
-  body:has(#mapPage:not(.hidden)) .alea-toolstrip {min-height:var(--adventure-nav-size);padding-left:calc(var(--adventure-nav-size) + 12px)}
-  body:has(#mapPage:not(.hidden)) .alea-banner-home-link,
-  body:has(#mapPage:not(.hidden)) .alea-banner-home-icon {width:var(--adventure-nav-size);height:var(--adventure-nav-size)}
-  body:has(#mapPage:not(.hidden)) .alea-toolstrip > .btn.alea-nav-art {
-    flex-basis:var(--adventure-nav-size)!important;width:var(--adventure-nav-size)!important;
-    min-width:var(--adventure-nav-size)!important;max-width:var(--adventure-nav-size)!important;
-    height:var(--adventure-nav-size)!important;min-height:var(--adventure-nav-size)!important;
+@media(min-width:1024px) {
+  body:has(#mapPage:not(.hidden)) main:has(#mapPage) {
+    width:min(var(--alea-desktop-grid-width),calc(100% - var(--alea-desktop-grid-gutters)));
+    margin-inline:auto;
+    padding-inline:0;
   }
-  body:has(.arcane-character-rail:not([hidden])) #mapPage .map-location-panel {padding-inline-end:4.25rem}
+  #mapPage .mapworkarea {gap:12px}
 }
 
 #sharedMapArchive {margin-top:.65rem;border-top:1px solid #685137;padding-top:.5rem}
