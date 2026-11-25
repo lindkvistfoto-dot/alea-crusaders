@@ -161,6 +161,7 @@ export async function enterEmbeddedEncounter(){
     finally {context.finishing(false);await context.refresh();}
   };
   await loadActiveCombat(context.id);
+  if(context.gm)window.aleaReturnToExploration=()=>window.combatFinishAndRecover();
   combatStartPlayerSync();
 }
 window.aleaEnterEmbeddedEncounter=enterEmbeddedEncounter;

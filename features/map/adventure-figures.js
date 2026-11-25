@@ -15,6 +15,7 @@ const modeSwitch=document.getElementById('adventureModeSwitch');
 const status = document.getElementById('adventureFigureStatus');
 const viewport = document.getElementById('mapViewport');
 const page = document.getElementById('mapPage');
+page.querySelector('.mapworkarea').before(modeSwitch);
 const art = () => window.aleaCombatPaperDollMap;
 const controls=document.getElementById('adventureControls');
 let boardOpen=false;
@@ -111,9 +112,9 @@ function toolPanel(v) {
 function renderBoard(v) {
   displayEncounter(v);
   renderAdventurePanels(v);
-  modeSwitch.hidden=!(v?.gm && v.session && v.hexLoaded && v.grid);
+  modeSwitch.hidden=!(v?.gm && v.session && ((v.hexLoaded && v.grid) || v.encounter));
   for(const button of modeSwitch.querySelectorAll('button')){
-    const selected=(button.dataset.mode==='battle')===Boolean(v?.hex.round);
+    const selected=(button.dataset.mode==='battle')===Boolean(v?.encounter || v?.hex.round);
     button.setAttribute('aria-pressed',String(selected));
     button.disabled=selected || !v?.ready || v.busy;
   }
@@ -431,7 +432,12 @@ async function arm(row) {
 }
 modeSwitch.addEventListener('click',event=>{
   const mode=event.target.closest('button')?.dataset.mode;
-  if(!mode || !ready(view) || !view.hexLoaded)return;
+  if(!mode || !ready(view))return;
+  if(view.encounter){
+    if(mode==='exploration')page.querySelector('.adventure-encounter-frame')?.contentWindow?.aleaReturnToExploration?.();
+    return;
+  }
+  if(!view.hexLoaded)return;
   if(mode==='battle' && !view.hex.round){
     if(view.panelTurn?.participants?.length)void command(view,'begin',{});
     else{

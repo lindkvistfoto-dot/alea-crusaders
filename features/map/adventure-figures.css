@@ -100,3 +100,22 @@ body:has(#mapPage:not(.hidden)) main:has(#mapPage) {
 .adventure-encounter-document .arcane-character-rail {display:none!important}
 .adventure-encounter-document main,
 .adventure-encounter-document #combatPage .combatpage {width:100%;max-width:none;margin:0;padding:0}
+
+/* The embedded viewport can be shorter than the outer game window. */
+.adventure-encounter-document #combatPage .combat-shell-live .combat-turn-actions .combat-row-tool-btn {
+  width:min(100%, 3.4rem);
+  height:auto;
+  min-height:0;
+  aspect-ratio:1;
+  flex:none;
+}
+.adventure-encounter-document #combatPage .combat-turn-actions .combat-turn-action-tool {
+  flex-direction:column;
+  align-items:center;
+}
+.adventure-encounter-document #combatPage .combat-turn-actions .combat-turn-action-tool::after {
+  position:static;
+  transform:none;
+  margin-top:.15rem;
+  line-height:1.2;
+}
