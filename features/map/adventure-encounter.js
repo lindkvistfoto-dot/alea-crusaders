@@ -13,17 +13,22 @@ export async function currentEncounter(v){
 export async function startEncounter(v){
   if(!v.gm)throw Error('Endast SL kan starta striden.');
   let sceneId=v.rows.length?null:v.seedScene;
-  let priorActors=[];
+  let previousId;
   if(v.rows.length){
     const previous=await dbJson('combat_instances?'+scope(v)+'&settings->>origin=eq.adventure&status=eq.completed&select=id,settings&order=updated_at.desc&limit=1',{headers});
     sceneId=previous[0]?.settings?.adventure_scene||null;
-    if(sceneId)priorActors=await dbJson('combatants?combat_id=eq.'+previous[0].id+'&select=source_instance_key,state->scene_actor_id',{headers});
+    previousId=previous[0]?.id;
   }
   if(!v.rows.length&&!sceneId)throw Error('Välj en stridsscen eller placera figurer på kartan.');
-  const runtime=sceneId?await combatLoadSceneRuntimeData({id:sceneId}):null;
+  const [runtime,priorActors,pool,characters]=await Promise.all([
+    sceneId?combatLoadSceneRuntimeData({id:sceneId}):null,
+    sceneId&&previousId?dbJson('combatants?combat_id=eq.'+previousId+'&select=source_instance_key,state->scene_actor_id',{headers}):[],
+    window.aleaRoundGallery?.getActivePool?.()||[],
+    sceneId?[]:dbJson('characters?campaign_id=eq.'+v.campaign+'&select=id,name,owner_id,combat_icon_path,round_background_path,data')
+  ]);
   const sourceMap=rows=>new Map(rows.map(row=>[row.id,row]));
   const sources=runtime?.sources||{
-    characters:sourceMap(await dbJson('characters?campaign_id=eq.'+v.campaign+'&select=id,name,owner_id,combat_icon_path,round_background_path,data')),
+    characters:sourceMap(characters),
     npcs:sourceMap(campaignNpcs),monsters:sourceMap(campaignMonsters)
   };
   const figures=!v.rows.length?runtime.sceneCombatants.filter(row=>row.start_q!=null&&row.start_r!=null).map(row=>({
@@ -33,13 +38,12 @@ export async function startEncounter(v){
     const old=priorActors.find(actor=>actor.source_instance_key===figure.id);
     return {...figure,scene_actor:old&&runtime?.sceneCombatants.find(row=>row.id===old.scene_actor_id)};
   });
-  const pool=await window.aleaRoundGallery?.getActivePool?.()||[];
   const actors=figures.map((figure,index)=>{
     const type=figure.monster_id?'monster':figure.npc_id?'npc':'character';
     const source=figure.monster_id||figure.npc_id||figure.character_id||figure.npc_character_id;
     const identity={source_type:type,source_id:source,state:figure.scene_actor?.state||{}};
     const stats=combatSourceStats(identity,sources);
-    const art=stats.round_background_path?null:pool[Math.floor(Math.random()*pool.length)];
+    const art=stats.round_background_path||!pool?.length?null:pool[Math.floor(Math.random()*pool.length)];
     const sourceState=identity.state;
     return {...identity,id:crypto.randomUUID(),figure_id:figure.id,scene_actor_id:figure.scene_actor?.id,name_snapshot:figure.name,
       q:figure.q,r:figure.r,status:'active',visible_to_players:figure.player_visible,

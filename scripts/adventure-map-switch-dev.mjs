@@ -122,8 +122,17 @@ try{
   }
   async function checkExploredRoom(){
     const village='dca58a7b-217d-46bc-8526-1468fad1dd69';
-    await page.goto(new URL('?view=adventure&map='+village,origin).href);
-    await page.waitForFunction(id=>activeCampaignMap?.id===id && campaignMapAreas.some(a=>a.status==='explored') && campaignMapAreas.some(a=>a.status!=='explored'),village);
+    const picker=page.locator('#mapPicker');
+    if(!await picker.isVisible())await page.locator('#adventureSlBoard .slcb-toggle').click();
+    await picker.selectOption(village);
+    await page.waitForFunction(id=>activeCampaignMap?.id===id && campaignMapAreas.some(a=>a.status==='explored') && campaignMapAreas.some(a=>a.status!=='explored'),village).catch(async error=>{
+      console.log('Rumskartans status',await page.evaluate(()=>({
+        map:activeCampaignMap?.name,requested:adventureRequestedMap?.id,manager:adventureCanManage(),
+        size:document.querySelector('#mapImage').naturalWidth,areas:campaignMapAreas.length,
+        status:document.querySelector('#mapStatusText')?.textContent
+      })));
+      throw error;
+    });
     const expected=await page.evaluate(async()=>{
       const rooms=campaignMapAreas.filter(a=>a.status==='explored');
       await openMapLocationInfoByArea(rooms[0].id);
