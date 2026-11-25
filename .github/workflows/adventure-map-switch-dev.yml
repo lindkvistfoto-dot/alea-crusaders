@@ -1,0 +1,42 @@
+name: Bystrid – kameraväxling på DEV
+on:
+  push:
+    branches: [feat/adventure-shared-map-camera]
+permissions:
+  contents: read
+concurrency: bystrid-map-switch-dev
+jobs:
+  playtest:
+    if: contains(github.event.head_commit.message, '[bystrid-prov]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm install --no-save --package-lock=false playwright@1.56.1
+      - name: Measure the original DEV release
+        env:
+          ALEA_DEV_TEST_EMAIL: ${{ secrets.ALEA_DEV_TEST_EMAIL }}
+          ALEA_DEV_TEST_PASSWORD: ${{ secrets.ALEA_DEV_TEST_PASSWORD }}
+        run: node scripts/adventure-map-switch-dev.mjs https://1c708d9d.alea-crusaders.pages.dev before
+      - name: Measure the branch preview
+        if: contains(github.event.head_commit.message, '[med-preview]')
+        env:
+          ALEA_DEV_TEST_EMAIL: ${{ secrets.ALEA_DEV_TEST_EMAIL }}
+          ALEA_DEV_TEST_PASSWORD: ${{ secrets.ALEA_DEV_TEST_PASSWORD }}
+        run: |
+          for attempt in {1..45}; do
+            preview=$(curl -fsS "https://feat-adventure-shared-map-ca.alea-crusaders.pages.dev/deployment-manifest.json?sha=$GITHUB_SHA&attempt=$attempt" | jq -er --arg sha "$GITHUB_SHA" 'select(.source_sha==$sha) | .deployment_url') && break
+            sleep 5
+          done
+          test -n "$preview"
+          node scripts/adventure-map-switch-dev.mjs "$preview" after
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bystrid-vaxling
+          path: test-results/switch/
