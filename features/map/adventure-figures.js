@@ -9,6 +9,7 @@ const columns = 'id,character_id,npc_character_id,npc_id,monster_id,name,race,ge
 const sourceFields = ['character_id','npc_character_id','npc_id','monster_id'];
 const ns = 'http://www.w3.org/2000/svg';
 const board = document.getElementById('adventureSlBoard');
+const modeSwitch=document.getElementById('adventureModeSwitch');
 const status = document.getElementById('adventureFigureStatus');
 const viewport = document.getElementById('mapViewport');
 const page = document.getElementById('mapPage');
@@ -106,6 +107,12 @@ function toolPanel(v) {
     (list?'<h4>På kartan</h4><div class="slcb-visibility-list">'+list+'</div>':'');
 }
 function renderBoard(v) {
+  modeSwitch.hidden=!(v?.gm && v.session && v.hexLoaded && v.grid);
+  for(const button of modeSwitch.querySelectorAll('button')){
+    const selected=(button.dataset.mode==='battle')===Boolean(v?.hex.round);
+    button.setAttribute('aria-pressed',String(selected));
+    button.disabled=selected || !v?.ready || v.busy;
+  }
   const owner=canManageCampaignMaps();
   const context=adventurePlayerPreview?'Spelarvy':v?.map.name||'Karta';
   const content='<div data-map-controls></div>'+(v?.gm?'<section class="slcb-module"><button class="btn" type="button" data-objects-toggle aria-expanded="'+Boolean(v.objects?.active)+'">'+(v.objects?.active?'Avsluta objektredigering':'Objekt')+'</button><div data-object-panel></div></section><section class="slcb-module"><h3>Figurer</h3>'+toolPanel(v)+'</section>'+(v.session&&v.hexLoaded?hexPanel(v.hex):''):'');
@@ -281,11 +288,11 @@ function hexCommand(v,action,values={}){
 async function command(v,action,values){
   if(!ready(v)||!v.hexLoaded)return;
   const session=v.session;
-  cancel();v.busy=true;
+  cancel();v.busy=true;renderBoard(v);
   try{
     const state=await hexCommand(v,action,values);
     if(view!==v||v.session!==session)return;
-    if(action==='begin'||action==='end'){
+    if(action==='end'){
       boardOpen=false;renderBoard(v);viewport.scrollIntoView({block:'nearest',behavior:'instant'});
     }
     setHex(v,state);
@@ -403,6 +410,12 @@ async function arm(row) {
   boardOpen=false;renderBoard(v);
   viewport.scrollIntoView({block:'nearest',behavior:'instant'});
 }
+modeSwitch.addEventListener('click',event=>{
+  const mode=event.target.closest('button')?.dataset.mode;
+  if(!mode || !ready(view) || !view.hexLoaded)return;
+  if(mode==='battle' && !view.hex.round)void command(view,'begin',{});
+  if(mode==='exploration' && view.hex.round)void command(view,'pause',{});
+});
 board.addEventListener('change',e=>{
   const v=view,field=e.target.dataset.field,key=e.target.dataset.hexSetting;
   if(v?.gm&&e.target.dataset.disposition){void command(v,'disposition',{id:e.target.dataset.disposition,tone:e.target.value});return;}

@@ -4,7 +4,7 @@
 
 Kartakademins kalibrering ger rutnätets spetsiga hexagoner och befintliga axiala koordinater `q, r`. I V1 ritades bara pekarens målhex. Hero Class-bilden kompletterades med bronsbasen i figurresolverns äventyrsgren och en vald figur fick en gul ellips genom CSS. Äventyrsgrenen visar nu fristående Hero Class-masterbilder eller publicerade HERMES-friläggningar. För en aktör som saknar friläggning används tillgängligt porträtt eller initialer. Kartakademins och den äldre Stridsvyns bildval ligger kvar.
 
-Välj **Inled strid** i SL Control Board för att visa det taktiska nätet. **Nästa runda** återställer rörelsebudgeten. **Avsluta strid** återgår till utforskning på samma kartinstans. Under **Hexagonernas utseende** finns rutnätets visningsläge, markeringar, färdväg och intensitet. Inställningarna delas inom kartan och spelmötet.
+Under kartan växlar SL mellan **Utforskning** och **Strid**. Utforskning pausar den taktiska rundan. Strid tar upp den igen med samma återstående rörelse. Första gången börjar runda ett. I SL Control Board återställer **Nästa runda** rörelsebudgeten och **Avsluta strid** avslutar mötets taktiska rundor på kartan. Under **Hexagonernas utseende** finns rutnätets visningsläge, markeringar, färdväg och intensitet. Inställningarna delas inom kartan och spelmötet.
 
 ## Förflyttning
 

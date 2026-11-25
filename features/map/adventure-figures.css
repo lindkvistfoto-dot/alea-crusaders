@@ -90,3 +90,6 @@ body:has(#mapPage:not(.hidden)) main:has(#mapPage) {
 .hex-settings summary {grid-column:1/-1}
 #adventureSlBoard .hex-settings label:has([type=checkbox]) {display:flex;align-items:center}
 .adventure-initials {fill:#f7eaca;stroke:#31251b;stroke-width:.06em;paint-order:stroke;font-family:Georgia,serif}
+
+.adventure-mode-switch:not([hidden]) {display:flex;justify-content:center;gap:.35rem;margin:.4rem 0}
+.adventure-mode-switch button[aria-pressed="true"] {opacity:1;border-color:var(--gold,#aa8956);font-weight:bold;text-decoration:underline;text-underline-offset:.22em}

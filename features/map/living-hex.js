@@ -13,8 +13,7 @@ export function hexPanel(state){
   const checkbox=(key,label)=>'<label><input data-hex-setting="'+key+'" type="checkbox" '+(p[key]?'checked':'')+'> '+label+'</label>';
   const range=(key,label)=>'<label>'+label+'<input data-hex-setting="'+key+'" type="range" min="0" max="100" value="'+p[key]+'"></label>';
   return '<section class="slcb-module hex-settings"><h3>Living Hex</h3><div class="figure-picker">'+
-    '<button type="button" class="btn" data-hex-command="'+(state.round?'end':'begin')+'">'+(state.round?'Avsluta strid':'Inled strid')+'</button>'+
-    (state.round?'<button type="button" class="btn" data-hex-command="round">Nästa runda · '+state.round+'</button>':'')+
+    (state.round?'<button type="button" class="btn" data-hex-command="round">Nästa runda · '+state.round+'</button><button type="button" class="btn" data-hex-command="end">Avsluta strid</button>':'')+
     '</div><details><summary>Hexagonernas utseende</summary><label>Rutnät<select data-hex-setting="grid">'+
     options.map(([value,label])=>'<option value="'+value+'" '+(p.grid===value?'selected':'')+'>'+label+'</option>').join('')+
     '</select></label>'+checkbox('actors','Aktörshexagoner')+checkbox('path','Färdväg')+range('opacity','Rutnätets opacitet')+
