@@ -191,6 +191,13 @@ async function scenario(mobile) {
     if(mobile) await gm.page.touchscreen.tap(...target);
     else await gm.page.mouse.click(...target);
     await gm.page.waitForFunction(()=>!document.querySelector('[data-cancel]'));
+    for(const {page} of clients){
+      await page.waitForFunction(id=>{
+        const piece=document.querySelector('[data-figure-id="'+id+'"]');
+        const matrix=piece?.transform.baseVal.consolidate()?.matrix;
+        return matrix && Math.abs(matrix.e-25*Math.sqrt(3)*7.5)<0.01 && Math.abs(matrix.f-187.5)<0.01;
+      },hero.id);
+    }
     assert.deepEqual([hero.q,hero.r],[5,5]);
     await mode('exploration');await inspect('utforskning-på',false,true);
     await mode('battle');await inspect('återupptagen',true,true);
