@@ -71,13 +71,16 @@ async function enterApp(){
  $('loginScreen').classList.add('hidden');
  document.querySelector('header').classList.remove('hidden');
  document.querySelector('main').classList.remove('hidden');
- goHome(); // Initial route only. Never force it again after awaits.
+ const embeddedMap=window.location?.search==='?view=adventure-encounter' && window.parent!==window
+  ?window.parent.aleaAdventureEncounterContext?.(window)?.map:null;
+ if(!embeddedMap)goHome(); // Initial route only. Never force it again after awaits.
  refreshAuthUI();
  // Restore simple routes before waiting for unrelated Supabase catalogs.
  window.aleaRefreshLocation?.restoreEarly?.();
  try{
   await loadCentralData();
-  await Promise.all([loadRuleSkills(),loadRuleMagicRegistry(),loadRuleEffects(),loadRuleProfessions(),loadRuleRaces(),loadRuleArmorRegistry(),loadRuleShields(),loadRuleWeapons(),loadRuleProjectileTypes(),loadRuleWeaponMaterials(),loadRuleCombatFumbles(),loadRuleSocialStands(),loadCampaignMaps(false),window.aleaEquipmentCatalog?.load()]);
+  if(embeddedMap)campaignMaps=[embeddedMap];
+  await Promise.all([loadRuleSkills(),loadRuleMagicRegistry(),loadRuleEffects(),loadRuleProfessions(),loadRuleRaces(),loadRuleArmorRegistry(),loadRuleShields(),loadRuleWeapons(),loadRuleProjectileTypes(),loadRuleWeaponMaterials(),loadRuleCombatFumbles(),loadRuleSocialStands(),embeddedMap?null:loadCampaignMaps(false),window.aleaEquipmentCatalog?.load()]);
   await loadCampaignDayState();
  }catch(e){
   console.error('Central data:',e);
@@ -85,7 +88,7 @@ async function enterApp(){
  }finally{
   // Roster may have opened before campaign characters were fetched.
   // Refresh content only, without changing the currently visible page.
-  renderCards();
+  if(!embeddedMap)renderCards();
   refreshAuthUI();
   // Restore navigation after authenticated app data is loaded.
   if(typeof window!=='undefined')await window.aleaRefreshLocation?.restore?.();
@@ -95,8 +98,9 @@ async function enterApp(){
    if(params.get('view')==='trophy-room')window.openTrophyRoom?.();
    if(params.get('view')==='adventure'){
     const mapId=params.get('map');
+    if(mapId&&campaignMaps.some(map=>map.id===mapId&&(adventureCanManage()||map.player_visible)))
+     adventureRequestedMap=!adventureCanManage()&&mapId===campaignActiveMapId?null:{campaign:centralCampaignId,id:mapId};
     await openMap();
-    if(mapId&&campaignMaps.some(map=>map.id===mapId&&(adventureCanManage()||map.player_visible)))await selectAdventureMap(mapId);
    }
    if(params.get('view')==='combat')await openCombat();
    if(params.get('view')==='adventure-encounter')await window.aleaEnterEmbeddedEncounter?.();

@@ -238,12 +238,11 @@ async function readRows(v) {
   const version=++v.version;
   if(!v.session)return;
   try {
-    const [hex,rows]=await Promise.all([hexRead(v),v.gm?dbJson(table+'?'+scope(v)+'&select='+columns+'&order=r,q'):dbJson('rpc/read_adventure_player_figures',{method:'POST',body:JSON.stringify({p_map_id:v.map.id,p_session_id:v.session})})]);
+    const [hex,encounter,rows]=await Promise.all([hexRead(v),currentEncounter(v),v.gm?dbJson(table+'?'+scope(v)+'&select='+columns+'&order=r,q'):dbJson('rpc/read_adventure_player_figures',{method:'POST',body:JSON.stringify({p_map_id:v.map.id,p_session_id:v.session})})]);
     if(view!==v||v.version!==version)return;
     if(v.gm && !rows.length && !v.scenes){
       v.scenes=await dbJson('campaign_combat_scenes?campaign_id=eq.'+v.campaign+'&select=id,name&order=name');
     }
-    const encounter=await currentEncounter(v);
     // Older map visits may already have a scoped encounter and saved tactical
     // round. Keep their pause/resume path. New map fights enter via the Board.
     const turn=!encounter && rows.length ? await readPanelTurn(v,rows).catch(()=>({unavailable:true})) : null;
