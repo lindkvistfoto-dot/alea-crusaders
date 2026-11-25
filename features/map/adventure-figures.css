@@ -59,7 +59,7 @@ body:has(#mapPage:not(.hidden)) main:has(#mapPage) {
     min-width:var(--adventure-nav-size)!important;max-width:var(--adventure-nav-size)!important;
     height:var(--adventure-nav-size)!important;min-height:var(--adventure-nav-size)!important;
   }
-  body:has(.arcane-character-rail:not([hidden])) #mapPage #mapLocationPanel {padding-inline-end:4.25rem}
+  body:has(.arcane-character-rail:not([hidden])) #mapPage .map-location-panel {padding-inline-end:4.25rem}
 }
 
 #sharedMapArchive {margin-top:.65rem;border-top:1px solid #685137;padding-top:.5rem}
@@ -93,3 +93,8 @@ body:has(#mapPage:not(.hidden)) main:has(#mapPage) {
 
 .adventure-mode-switch:not([hidden]) {display:flex;justify-content:center;gap:.35rem;margin:.4rem 0}
 .adventure-mode-switch button[aria-pressed="true"] {opacity:1;border-color:var(--gold,#aa8956);font-weight:bold;text-decoration:underline;text-underline-offset:.22em}
+
+#mapPage aside:not(.in-battle) > .battle-content,
+#mapPage aside.in-battle > .exploration-content {display:none}
+#mapPage .battle-content ol {padding-inline-start:1.6rem}
+#mapPage .adventure-participant {padding:.5rem .3rem;border-bottom:1px solid #55432f}

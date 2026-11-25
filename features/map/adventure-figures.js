@@ -1,3 +1,4 @@
+import {readPanelTurn,renderAdventurePanels} from './adventure-panels.js';
 import {createObjectEditor} from './object-library.js';
 import './adventure-figures.css';
 import {defaults,hexPanel,livingHexLayer} from './living-hex.js';
@@ -107,6 +108,7 @@ function toolPanel(v) {
     (list?'<h4>På kartan</h4><div class="slcb-visibility-list">'+list+'</div>':'');
 }
 function renderBoard(v) {
+  renderAdventurePanels(v);
   modeSwitch.hidden=!(v?.gm && v.session && v.hexLoaded && v.grid);
   for(const button of modeSwitch.querySelectorAll('button')){
     const selected=(button.dataset.mode==='battle')===Boolean(v?.hex.round);
@@ -230,6 +232,9 @@ async function readRows(v) {
   try {
     const [hex,rows]=await Promise.all([hexRead(v),v.gm?dbJson(table+'?'+scope(v)+'&select='+columns+'&order=r,q'):dbJson('rpc/read_adventure_player_figures',{method:'POST',body:JSON.stringify({p_map_id:v.map.id,p_session_id:v.session})})]);
     if(view!==v||v.version!==version)return;
+    const turn=hex?.round ? await readPanelTurn(v,rows).catch(()=>({unavailable:true})) : null;
+    if(view!==v||v.version!==version)return;
+    v.panelTurn=turn;
     const previous=v.rows;
     v.rows=rows;setHex(v,hex);v.ready=true;
     v.layer.toggleAttribute('data-gm',v.gm);
