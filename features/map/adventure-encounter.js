@@ -85,10 +85,12 @@ window.aleaAdventureEncounterContext=child=>{
   return {id,get map(){return view.map;},gm:view.gm,scope:scope(view),visibleFigures:()=>view.rows.map(f=>f.id),finishing:value=>{if(mounted?.id===id)mounted.finishing=value;},refresh:()=>window.aleaAdventureFigures.refresh()};
 };
 
+let attachedEncounter;
 export async function enterEmbeddedEncounter(){
   if(window.parent===window)return;
   const context=window.parent.aleaAdventureEncounterContext?.(window);
-  if(!context)return;
+  if(!context||attachedEncounter===context.id)return;
+  attachedEncounter=context.id;
   const original=dbJson;
   // Every reload, including implicit reloads after movement, stays pinned.
   let allowedKey,allowedIds;

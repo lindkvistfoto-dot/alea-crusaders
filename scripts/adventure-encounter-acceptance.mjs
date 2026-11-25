@@ -16,9 +16,9 @@ export async function compareCombatPanels(browser,origin,output){
         if(url.pathname.includes('dice-box.es.min.js'))return route.fulfill({contentType:'text/javascript',body:'export default class DiceBox {}'});
         return url.origin===origin?route.continue():route.abort();
       });
-      const campaign=randomUUID(),session=randomUUID(),map={id:randomUUID(),name:'Skelettbyn · regelprov',width:1254,height:1254,image_url:''};
+      const campaign=randomUUID(),session=randomUUID(),map={id:randomUUID(),name:'Skelettbyn · regelprov',width:embedded?1535:1254,height:embedded?1024:1254,image_url:''};
       const fight={id:randomUUID(),name:map.name,campaign_id:campaign,map_id:map.id,session_id:session,
-        status:'active',phase:'movement',round_number:1,settings:{rows:10,origin:embedded?'adventure':'reference'}};
+        status:'active',phase:'movement',round_number:1,settings:{rows:embedded?30:10,origin:embedded?'adventure':'reference'}};
       const actors=starts.map(([name,q,r,maximum],i)=>({
         id:randomUUID(),combat_id:fight.id,source_id:randomUUID(),source_instance_key:randomUUID(),name_snapshot:name,
         source_type:i<3?'character':'monster',side:i<3?'heroes':'enemies',visible_to_players:true,status:'active',

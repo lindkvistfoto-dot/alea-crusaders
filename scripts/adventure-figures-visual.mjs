@@ -56,6 +56,16 @@ for(const mobile of [false,true]){
   const config={version:1,darkness:0,pixelsPerMeter:25,lights:[],geometry:[],freeSight:null};
   const room={id:crypto.randomUUID(),location_id:crypto.randomUUID(),name:'Kryptan',status:'explored',shape_type:'rect',shape_data:{x:0,y:0,width:800,height:680}};
   window.dbJson=async(path,opts={})=>{
+   // This visual regression resumes a map visit using the older tactical
+   // overlay. The separate encounter suite exercises the native combat board.
+   if(path.startsWith('combat_instances?')){
+    if(path.includes('settings->>origin=eq.adventure'))return [];
+    const active=rows.find(row=>row.character_id);
+    return active?[path.includes('select=active_actor_id')?{active_actor_id:active.id}:{id:session.id}]:[];
+   }
+   if(path.startsWith('combatants?'))return rows.filter(row=>row.character_id).map(row=>({
+    id:row.id,source_id:row.character_id,source_type:'character'
+   }));
    if(path==='rpc/read_adventure_hex')return structuredClone(state);
    if(path==='rpc/command_adventure_hex'){
     if(centralCampaignRole!=='gm')throw Error('Endast SL');
