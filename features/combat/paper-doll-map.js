@@ -224,7 +224,10 @@
   if(actor?.side==='heroes'&&typeof chars!=='undefined'){
    const source=chars.find(c=>c._dbId===actor.source_id);
    const profile=heroProfiles[source?.id],hero=assets['arcane-hero-class-'+source?.id];
-   if(profile&&hero?.src){
+   // The available Hero Class repertoire currently contains only the standard pose.
+   const catalog=root.aleaBattlePoseCatalog;
+   const selected=profile&&hero?.src&&catalog?.resolve(catalog.fromCharacter(source),['standard']);
+   if(selected?.poseId==='standard'){
     const height=width/Math.sqrt(3)*profile.meters*1.1/(profile.y-profile.crown),w=height*profile.aspect;
     return '<g class="combat-paper-doll-universal" data-hero-class="'+source.id+'" pointer-events="none">'+
      '<image href="'+esc(hero.src)+'" x="'+(-w*profile.x)+'" y="'+(-height*profile.y)+'" width="'+w+'" height="'+height+'"/></g>';

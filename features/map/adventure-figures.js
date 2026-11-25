@@ -2,7 +2,7 @@ import {currentEncounter,startEncounter,displayEncounter} from './adventure-enco
 import {readPanelTurn,renderAdventurePanels} from './adventure-panels.js';
 import {createObjectEditor} from './object-library.js';
 import './adventure-figures.css';
-import {defaults,hexPanel,livingHexLayer} from './living-hex.js';
+import {defaults,hexPanel,landFigure,livingHexLayer} from './living-hex.js';
 import { adventureCell, adventureGrid, hexCenter, nearestHex, adventureRoute } from './adventure-hex.js';
 import { mapPointer, mapScreenScale } from './polygon-edit-geometry.js';
 
@@ -77,8 +77,7 @@ function renderPieces(v, landingId) {
     const next=previous?previous.nextElementSibling:v.pieces.firstElementChild;
     if(piece!==next)v.pieces.insertBefore(piece,next);
     previous=piece;
-    if (row.id===landingId && !matchMedia('(prefers-reduced-motion: reduce)').matches)
-      piece.querySelector('[data-face]').animate([{transform:'translateY(-8px) scale(1.08)'},{transform:'translateY(0) scale(.98)',offset:.75},{transform:'scale(1)'}],{duration:185,easing:'ease-out'});
+    if(row.id===landingId)landFigure(piece.querySelector('[data-face]'));
   }
   for(const el of remaining.values())el.remove();
 }
@@ -239,12 +238,11 @@ async function readRows(v) {
   const version=++v.version;
   if(!v.session)return;
   try {
-    const [hex,rows]=await Promise.all([hexRead(v),v.gm?dbJson(table+'?'+scope(v)+'&select='+columns+'&order=r,q'):dbJson('rpc/read_adventure_player_figures',{method:'POST',body:JSON.stringify({p_map_id:v.map.id,p_session_id:v.session})})]);
+    const [hex,encounter,rows]=await Promise.all([hexRead(v),currentEncounter(v),v.gm?dbJson(table+'?'+scope(v)+'&select='+columns+'&order=r,q'):dbJson('rpc/read_adventure_player_figures',{method:'POST',body:JSON.stringify({p_map_id:v.map.id,p_session_id:v.session})})]);
     if(view!==v||v.version!==version)return;
     if(v.gm && !rows.length && !v.scenes){
       v.scenes=await dbJson('campaign_combat_scenes?campaign_id=eq.'+v.campaign+'&select=id,name&order=name');
     }
-    const encounter=await currentEncounter(v);
     // Older map visits may already have a scoped encounter and saved tactical
     // round. Keep their pause/resume path. New map fights enter via the Board.
     const turn=!encounter && rows.length ? await readPanelTurn(v,rows).catch(()=>({unavailable:true})) : null;
