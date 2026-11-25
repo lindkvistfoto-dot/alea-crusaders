@@ -243,7 +243,9 @@ async function readRows(v) {
       v.scenes=await dbJson('campaign_combat_scenes?campaign_id=eq.'+v.campaign+'&select=id,name&order=name');
     }
     const encounter=await currentEncounter(v);
-    const turn=hex?.round ? await readPanelTurn(v,rows).catch(()=>({unavailable:true})) : null;
+    // Older map visits may already have a scoped encounter and saved tactical
+    // round. Keep their pause/resume path. New map fights enter via the Board.
+    const turn=!encounter && rows.length ? await readPanelTurn(v,rows).catch(()=>({unavailable:true})) : null;
     if(view!==v||v.version!==version)return;
     v.panelTurn=turn;
     v.encounter=encounter;
@@ -430,7 +432,14 @@ async function arm(row) {
 modeSwitch.addEventListener('click',event=>{
   const mode=event.target.closest('button')?.dataset.mode;
   if(!mode || !ready(view) || !view.hexLoaded)return;
-  if(mode==='battle' && !view.hex.round)void command(view,'begin',{});
+  if(mode==='battle' && !view.hex.round){
+    if(view.panelTurn?.participants?.length)void command(view,'begin',{});
+    else{
+      boardOpen=true;renderBoard(view);
+      const control=board.querySelector('[data-field=seedScene], [data-action=start-encounter]');
+      control?.scrollIntoView({block:'center'});control?.focus({preventScroll:true});
+    }
+  }
   if(mode==='exploration' && view.hex.round)void command(view,'pause',{});
 });
 board.addEventListener('change',e=>{

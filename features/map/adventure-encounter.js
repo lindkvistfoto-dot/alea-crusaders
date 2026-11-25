@@ -62,6 +62,7 @@ export async function startEncounter(v){
 
 let mounted;
 export function displayEncounter(view){
+  if(mounted?.finishing && mounted.view===view && view.ready)return;
   if(mounted && (mounted.view!==view || mounted.id!==view?.encounter || !view?.ready)){
     mounted.frame.remove();
     mounted.work.hidden=false;
@@ -81,7 +82,7 @@ export function displayEncounter(view){
 window.aleaAdventureEncounterContext=child=>{
   if(!mounted || mounted.frame.contentWindow!==child)return null;
   const {view,id}=mounted;
-  return {id,get map(){return view.map;},gm:view.gm,scope:scope(view),visibleFigures:()=>view.rows.map(f=>f.id),refresh:()=>window.aleaAdventureFigures.refresh()};
+  return {id,get map(){return view.map;},gm:view.gm,scope:scope(view),visibleFigures:()=>view.rows.map(f=>f.id),finishing:value=>{if(mounted?.id===id)mounted.finishing=value;},refresh:()=>window.aleaAdventureFigures.refresh()};
 };
 
 export async function enterEmbeddedEncounter(){
@@ -90,7 +91,17 @@ export async function enterEmbeddedEncounter(){
   if(!context)return;
   const original=dbJson;
   // Every reload, including implicit reloads after movement, stays pinned.
-  window.dbJson=(path,options={})=>{
+  let allowedKey,allowedIds;
+  function visibleActorIds(){
+    const key=context.visibleFigures().join(',');
+    if(key!==allowedKey){
+      allowedKey=key;
+      allowedIds=key?original('combatants?combat_id=eq.'+context.id+'&visible_to_players=eq.true&source_instance_key=in.('+key+')&select=id',{headers})
+        .then(rows=>rows.map(row=>row.id).join(',')).catch(error=>{allowedKey=null;throw error;}):Promise.resolve('');
+    }
+    return allowedIds;
+  }
+  window.dbJson=async(path,options={})=>{
     if(path==='rpc/alea_move_multhex')path='rpc/move_adventure_combatant';
     if(path.split('?')[0]==='combat_instances'){
       if(!path.includes('?'))throw Error('En ny scen kan inte skapas inuti striden.');
@@ -102,7 +113,20 @@ export async function enterEmbeddedEncounter(){
         if(!visible.length)return Promise.resolve([]);
         path+='&visible_to_players=eq.true&source_instance_key=in.('+visible.join(',')+')';
       }
-      if(path.startsWith('combat_log?') || path.startsWith('combat_actions?'))path+='&player_visible=eq.true';
+      if(path.startsWith('combat_instances?') && path.includes('select=*')){
+        const safeColumns='id,name,map_id,campaign_id,session_id,status,round_number,phase,active_actor_id,active_responder_id,updated_at,rows:settings->rows,hex_scale:settings->hex_scale';
+        const rows=await original(path.replace('select=*','select='+safeColumns),{...options,headers:{...options.headers,...headers}});
+        return rows.map(row=>({...row,settings:{rows:row.rows,hex_scale:row.hex_scale}}));
+      }
+      if(path.includes('event_type=eq.gm_hex_trigger'))return [];
+      if(path.startsWith('combat_log?') || path.startsWith('combat_actions?')){
+        const ids=await visibleActorIds();
+        if(!ids)return [];
+        const log=path.startsWith('combat_log?');
+        const actor=log?'actor_id':'combatant_id',target=log?'target_id':'target_combatant_id';
+        path+='&player_visible=eq.true&'+actor+'=in.('+ids+')&or=('+target+'.is.null,'+target+'.in.('+ids+'))';
+      }
+      if(path.startsWith('combat_battlefield_objects?'))path+='&visible_to_players=eq.true';
     }
     return original(path,{...options,headers:{...options.headers,...headers}});
   };
@@ -130,8 +154,9 @@ export async function enterEmbeddedEncounter(){
   document.querySelectorAll('main > section').forEach(el=>el.classList.toggle('hidden',el.id!=='combatPage'));
   const finish=combatFinishAndRecover;
   window.combatFinishAndRecover=async()=>{
-    await finish();
-    if(activeCombat?.status==='completed')await context.refresh();
+    context.finishing(true);
+    try {await finish();}
+    finally {context.finishing(false);await context.refresh();}
   };
   await loadActiveCombat(context.id);
   combatStartPlayerSync();

@@ -2,7 +2,7 @@ import {readFileSync} from 'node:fs';
 import {it,expect} from 'vitest';
 import {PGlite} from '@electric-sql/pglite';
 
-const sql=readFileSync(new URL('../supabase/migrations/20261125182300_adventure_encounters.sql',import.meta.url),'utf8');
+const sql=readFileSync(new URL('../supabase/migrations/20261125183150_adventure_encounters.sql',import.meta.url),'utf8');
 it('pins two independent fights, preserves instance identities and commits map movement atomically',async()=>{
   const db=new PGlite();
   const [campaign,map,session,scene,hero,monster,reference]=Array.from({length:7},()=>crypto.randomUUID());

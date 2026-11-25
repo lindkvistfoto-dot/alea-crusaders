@@ -8,7 +8,7 @@ export async function compareCombatPanels(browser,origin,output){
   const starts=[['Astrid Eldhjärta',-1,6,18],['Lyra Gråväv',-2,8,16],['Evalin Hugger',0,7,15],
     ['Skelettvakt 1',5,1,6],['Skelettvakt 2',5,2,6],['Skelettvakt 3',6,4,6],['Skelettvakt 4',4,4,6]];
   const results=[];
-  for(const embedded of [false,true]){
+  for(const [embedded,gm] of [[false,true],[true,true],[false,false],[true,false]]){
     const ctx=await browser.newContext({viewport:{width:1536,height:960}});
     try{
       await ctx.route('**/*',route=>{
@@ -40,16 +40,25 @@ export async function compareCombatPanels(browser,origin,output){
           if(opts.method==='PATCH')Object.assign(fight,payload);
           return [fight];
         }
+        if(table==='rpc/combat_finish_and_recover'){
+          assert.equal(payload.p_combat_id,fight.id);
+          fight.status='completed';
+          return {spent:0,recovered:0};
+        }
         if(table==='combatants'){
           if(opts.method==='PATCH')Object.assign(byId(actors),payload);
-          return actors;
+          if(!gm && embedded){
+            assert.equal(params.get('visible_to_players'),'eq.true');
+            assert.ok(params.get('source_instance_key')?.startsWith('in.('));
+          }
+          return gm?actors:actors.filter(a=>a.visible_to_players);
         }
         if(table==='combat_log'){
           if(opts.method==='POST')log.push(...[payload].flat().map(row=>({...row,id:randomUUID()})));
           return log.slice().reverse();
         }
         if(table==='combat_actions'){
-          if(opts.method==='POST')actions.push({...JSON.parse(opts.body),id:randomUUID()});
+          if(opts.method==='POST')actions.push({id:randomUUID(),...payload});
           if(opts.method==='PATCH')Object.assign(byId(actions),payload);
           if(opts.method==='DELETE')actions.splice(actions.indexOf(byId(actions)),1);
           return actions;
@@ -67,25 +76,26 @@ export async function compareCombatPanels(browser,origin,output){
         }
         return [];
       });
+      if(!gm)actors.at(-1).visible_to_players=false;
       const page=await ctx.newPage();
       await page.goto(origin);
       await page.waitForFunction(()=>window.aleaEnterEmbeddedEncounter);
       if(embedded){
         // The host provides the same map/session binding as displayEncounter.
-        await page.evaluate(({map,fight,actors})=>{
+        await page.evaluate(({map,fight,actors,gm})=>{
           const iframe=document.createElement('iframe');
           iframe.id='nativeEncounterFixture';iframe.style='position:fixed;inset:0;width:100vw;height:100vh;background:#15110c;z-index:9999';
           window.aleaAdventureEncounterContext=child=>child===iframe.contentWindow?{
-            id:fight.id,gm:true,map,scope:'campaign_id=eq.'+fight.campaign_id+'&session_id=eq.'+fight.session_id+'&map_id=eq.'+map.id,
-            visibleFigures:()=>actors.map(a=>a.source_instance_key),refresh:()=>{}
+            id:fight.id,gm,map,scope:'campaign_id=eq.'+fight.campaign_id+'&session_id=eq.'+fight.session_id+'&map_id=eq.'+map.id,
+            visibleFigures:()=>actors.filter(a=>a.visible_to_players).map(a=>a.source_instance_key),finishing:()=>{},refresh:()=>{}
           }:null;
           document.body.append(iframe);iframe.src='?view=adventure-encounter';
-        },{map,fight,actors});
+        },{map,fight,actors,gm});
         await page.waitForFunction(()=>document.querySelector('#nativeEncounterFixture')?.contentWindow?.aleaEnterEmbeddedEncounter);
       }
       const frame=embedded?page.frames().find(f=>f.url().endsWith('?view=adventure-encounter')):page.mainFrame();
-      await frame.evaluate(async({fight,map,embedded})=>{
-        centralCampaignId=fight.campaign_id;centralCampaignRole='gm';
+      await frame.evaluate(async({fight,map,embedded,gm})=>{
+        centralCampaignId=fight.campaign_id;centralCampaignRole=gm?'gm':'player';
         document.querySelector('#loginScreen').classList.add('hidden');
         document.querySelector('main').classList.remove('hidden');
         document.querySelectorAll('main > section').forEach(el=>el.classList.toggle('hidden',el.id!=='combatPage'));
@@ -95,7 +105,14 @@ export async function compareCombatPanels(browser,origin,output){
           window.loadCombatRuntimeBackground=async()=>{combatRuntimeMapMeta=map;combatRuntimeMapUrl='';};
           await loadActiveCombat(fight.id);
         }
-      },{fight,map,embedded});
+      },{fight,map,embedded,gm});
+      if(!gm){
+        assert.equal(await frame.locator('.combatant-card').count(),6);
+        assert.equal(await frame.locator('.combat-row-attack').isDisabled(),true);
+        assert.equal(await frame.locator('.combat-row-move').isDisabled(),true);
+        assert.equal(await frame.locator('#combatBody .sl-control-board').count(),0);
+        continue;
+      }
       const steps=[];
       for(const [spent,q] of [[8,-1],[9,0],[10,1]]){
         if(spent>8)await frame.evaluate(q=>moveActiveCombatantToHex(q,6),q);
@@ -127,8 +144,38 @@ export async function compareCombatPanels(browser,origin,output){
       assert.equal(fight.round_number,2);
       assert.equal(hero.movement_remaining,18);
       assert.equal(log.filter(row=>row.event_type==='turn_end').length,7);
-      await frame.locator('.combatant-card').first().click();
-      assert.ok(await frame.locator('.combatant-card').count()===7);
+      // Independent melee checkpoint after the round reset, with the same
+      // adjacent defender in each run. Drive the actual target and parry UI.
+      fight.active_actor_id=hero.id;
+      const defender=actors[3];
+      Object.assign(defender,{q:hero.q+1,r:hero.r});
+      hero.state.attack_profile={weapons:[{id:'sword',name:'Svärd',category:'melee',fv:15,damage:'1T6'}]};
+      defender.state.attack_profile={shields:[{id:'shield',name:'Sköld',fv:15,abs:5}]};
+      await frame.evaluate(async({id,roll})=>{
+        window.combatRollDice=async()=>({rolls:[{value:roll}]});
+        await loadActiveCombat(id);
+      },{id:fight.id,roll:embedded?9:8});
+      await frame.locator('.combat-row-attack').click();
+      await frame.waitForFunction(()=>combatChosenAction(combatActiveActor())?.status==='planned');
+      await frame.locator('.combatant-card[data-combatant-id="'+defender.id+'"]').click();
+      await frame.evaluate(()=>combatAttackButton(null,combatActiveActor().id));
+      const attack=actions.find(a=>a.action_type==='attack');
+      assert.equal(attack?.result?.awaiting_parry,true);
+      assert.equal(await frame.locator('.combat-defense-attack').isVisible(),true);
+      await page.screenshot({path:path.join(output,(embedded?'aventyr':'referens')+'-forsvar.png')});
+      await frame.evaluate(async()=>{
+        const pending=combatPendingParryOpportunity();
+        await chooseCombatParry(pending.defender.id,pending.attack.id,pending.options[0].key);
+      });
+      assert.equal(attack.result.parry_decision,'parried');
+      assert.equal(log.filter(r=>r.event_type==='attack').length,1);
+      assert.equal(log.filter(r=>r.event_type==='parry').length,1);
+      await frame.locator('#combatBody .slcb-toggle').click();
+      await frame.locator('#combatBody .combat-stop-btn').click();
+      await frame.locator('#appConfirmOk').click();
+      await frame.waitForFunction(()=>activeCombat?.settings?.end_summary?.format===1);
+      assert.equal(fight.status,'completed');
+      assert.deepEqual([hero.q,hero.r],[1,6]);
       results.push(steps);
     }finally{await ctx.close();}
   }
