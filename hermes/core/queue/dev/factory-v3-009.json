@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Gryta av gjutjärn",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "471df857-8c80-5bee-b6d8-eaf885c0b4b0"
+  },
+  "object_template": {
+    "category": "Inredning och bruksföremål",
+    "campaign_id": null,
+    "length_m": 0.56,
+    "width_m": 0.46,
+    "height_m": 0.34
+  },
+  "drive_file_id": "1oZuMNoin9XI9L-4ExxwmROvpaWbuDNux",
+  "archive_file_id": "1dnCTRdMCBdb0sHpNlwI5Y4hm2wWh0hle",
+  "source_sha256": "541b5f016b4b0153f2467513494f31619bc9792362c7ec2756dc5ef8bb22bdb3"
+}

@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Karmstol i ek",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "dfe84f54-e68c-50b7-bc17-2ed55a04400a"
+  },
+  "object_template": {
+    "category": "Möbler",
+    "campaign_id": null,
+    "length_m": 0.68,
+    "width_m": 0.65,
+    "height_m": 0.92
+  },
+  "drive_file_id": "1mHRiSfaJE_6TBlkSLnJxrfIEmfPhOORC",
+  "archive_file_id": "1iSQuWHFbdJzlxgAVbr96LrXF6eWOqDsj",
+  "source_sha256": "04634827b612787d322962fc7d863e05b32b378126ca7d0fdf47bf0ddcdf719c"
+}

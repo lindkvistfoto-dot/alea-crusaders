@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Diskbalja",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "b63ad399-bc0c-50d5-87db-8425a306b75e"
+  },
+  "object_template": {
+    "category": "Inredning och bruksföremål",
+    "campaign_id": null,
+    "length_m": 0.82,
+    "width_m": 0.56,
+    "height_m": 0.29
+  },
+  "drive_file_id": "1-YzFa5Qky8TpnQUjQIm3N8pC8jo1XnTJ",
+  "archive_file_id": "1LKtOKMgi15LRdpdAP7Ew8ug_h2Jt4FhF",
+  "source_sha256": "d76d0d4d3e9c18e6b5c1db0f1b88305064f08ff5a6ed2b680286284f7dfefb7f"
+}

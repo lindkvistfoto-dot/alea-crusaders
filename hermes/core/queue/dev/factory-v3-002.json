@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Värdshusdisk",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "45ff0b89-f68f-51a2-ae1b-04808a3a6ef9"
+  },
+  "object_template": {
+    "category": "Möbler",
+    "campaign_id": null,
+    "length_m": 2.8,
+    "width_m": 1.45,
+    "height_m": 1.05
+  },
+  "drive_file_id": "1HcAI4gjyXJCwU8Du-xILtHpVTO7FBSMG",
+  "archive_file_id": "1IlBffkbR1ecevvBwxjjSwoMzzfVrcfy8",
+  "source_sha256": "c93969ab88b4f1cf99ac64799303d77108879a882ecd85d6ba4e7d84288ef2ba"
+}

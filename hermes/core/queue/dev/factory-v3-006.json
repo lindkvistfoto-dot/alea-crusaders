@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Ölkrusbricka",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "827f7209-d9c5-58a5-a028-8428319ef950"
+  },
+  "object_template": {
+    "category": "Inredning och bruksföremål",
+    "campaign_id": null,
+    "length_m": 0.48,
+    "width_m": 0.48,
+    "height_m": 0.16
+  },
+  "drive_file_id": "1UrkD35ozEuoBrWJbaocYSco_-bohzGFQ",
+  "archive_file_id": "1gxl9n2HWEycvYWVRbpO089QPcnJIG3uS",
+  "source_sha256": "afe2d14ea793b203e08ea5618c22064d9be48d4a3d6b2deac64c11ace53dd529"
+}

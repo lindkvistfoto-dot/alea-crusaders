@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Ostbricka",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "305a510b-da95-5313-842d-8bb53b2c73a2"
+  },
+  "object_template": {
+    "category": "Inredning och bruksföremål",
+    "campaign_id": null,
+    "length_m": 0.42,
+    "width_m": 0.4,
+    "height_m": 0.13
+  },
+  "drive_file_id": "1rqhZwg_XRPRtF7CVCERd7hESyqkhGlQJ",
+  "archive_file_id": "18eJNDNv2h3tbUf9J5mjABKLsl3sC4qD8",
+  "source_sha256": "295da6e38d0395bd3ebb64a3daad05d5ef3f1523b84047eba3aa8f599b3be92d"
+}

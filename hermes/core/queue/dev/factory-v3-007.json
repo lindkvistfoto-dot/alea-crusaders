@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Brödspade",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "6b011cb6-3e57-5d01-981d-9525cf856d8e"
+  },
+  "object_template": {
+    "category": "Inredning och bruksföremål",
+    "campaign_id": null,
+    "length_m": 1.1,
+    "width_m": 0.34,
+    "height_m": 0.04
+  },
+  "drive_file_id": "1HYXlCgdMzHxrsAI2WQPkejHtHmwERa3B",
+  "archive_file_id": "1_U57NELpigMSQlXPobGtbknl67FP9EdB",
+  "source_sha256": "5160a21fd08db5f83eb34d8c6a94370de3e38beafdef3d8fa38c074cc5066900"
+}

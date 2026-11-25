@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Långbord på bockar",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "2dbefdfc-0cce-5cc9-ad12-24d9dbcdb999"
+  },
+  "object_template": {
+    "category": "Möbler",
+    "campaign_id": null,
+    "length_m": 3.2,
+    "width_m": 0.85,
+    "height_m": 0.76
+  },
+  "drive_file_id": "1AQvYO-Y_iv_X1xlRpJrAj3LyTtkbsR51",
+  "archive_file_id": "1v5Jzr9HwV8J-qECxYZwmPP20o2jdYXnY",
+  "source_sha256": "e44c4d68a890b84ba6bf377ab9291e37c49dc1b36557377ba383b428796a4f1a"
+}

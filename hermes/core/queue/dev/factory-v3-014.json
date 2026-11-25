@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Spelbräde för kvarn",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "e4109330-d0a1-54fb-9649-33a3f030a910"
+  },
+  "object_template": {
+    "category": "Inredning och bruksföremål",
+    "campaign_id": null,
+    "length_m": 0.38,
+    "width_m": 0.38,
+    "height_m": 0.03
+  },
+  "drive_file_id": "1i41PTgYWRTe7l1ZzE8y6-fbIaJSsfNp0",
+  "archive_file_id": "14sSKBx2NPoppICJXLXWOplQxKLYUafrO",
+  "source_sha256": "0244b216a2d466ca4de7235f42cc93937189a177113d9ffc5704a6c7ad2d7a7b"
+}

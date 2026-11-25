@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Hjulformad ljuskrona",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "374c046b-cc84-5509-9a8e-f61c489888b3"
+  },
+  "object_template": {
+    "category": "Eld och belysning",
+    "campaign_id": null,
+    "length_m": 0.98,
+    "width_m": 0.98,
+    "height_m": 0.58
+  },
+  "drive_file_id": "1HkcEo4wGP-jkjkh5R_Cyfv4irgMVjauX",
+  "archive_file_id": "1YAhLAtOIpGKuBwj90pQgPAx8q5_KD8vG",
+  "source_sha256": "d094c85c2398cd1f1f052570ed0dfccb8f69c5ba81addb859f8262931264ac34"
+}

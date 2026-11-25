@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Öppen tunna med äpplen",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "7ac26ff1-11ab-5f82-9b04-faf58f314010"
+  },
+  "object_template": {
+    "category": "Förvaring och gods",
+    "campaign_id": null,
+    "length_m": 0.64,
+    "width_m": 0.64,
+    "height_m": 0.84
+  },
+  "drive_file_id": "19iqEphLz5JIEmIiIM8OzOuAmigUJoAWU",
+  "archive_file_id": "11VP59Uy194q9GMj4IpxiBE811NJ0ydkh",
+  "source_sha256": "2b7cd02b76b66943cb3651dc516f59c3091579bb5e913c3feb3971393405d9de"
+}

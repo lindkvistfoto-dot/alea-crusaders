@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Tappställ för ölfat",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "c5a48784-d5a9-517e-9e3f-bf5dcb5dfd65"
+  },
+  "object_template": {
+    "category": "Förvaring och gods",
+    "campaign_id": null,
+    "length_m": 0.95,
+    "width_m": 0.72,
+    "height_m": 0.8
+  },
+  "drive_file_id": "1-woWLfmJ86TCQnMx5XOPdSYNav9fYNVB",
+  "archive_file_id": "1BB8jfcCdvPkvwY6lx91i_zagifmiYCeA",
+  "source_sha256": "01d10a7797d95ffc6a33d73437947c64c59684325b4f4a1c23e2a10c7bbeee23"
+}

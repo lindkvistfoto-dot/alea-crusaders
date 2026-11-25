@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Öppen vedkorg",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "24cb4eb4-1b6c-5f1d-bf5e-1f4ef894dc8e"
+  },
+  "object_template": {
+    "category": "Förvaring och gods",
+    "campaign_id": null,
+    "length_m": 0.78,
+    "width_m": 0.48,
+    "height_m": 0.43
+  },
+  "drive_file_id": "1CYCB4ZfAaep-_OdbjOriSOSFCefxzN4X",
+  "archive_file_id": "14nlyzgW9e8xXkaNy6EXCmMLplBxzWR8X",
+  "source_sha256": "3ac97366710e4766056df3beea2a45fdbe14579e8f8c5570ff3a4fa3ec270025"
+}

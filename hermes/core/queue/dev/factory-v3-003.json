@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Hörnbänk med dynor",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "dc736166-e0b1-5ea3-afff-1b264fed066f"
+  },
+  "object_template": {
+    "category": "Möbler",
+    "campaign_id": null,
+    "length_m": 1.9,
+    "width_m": 1.4,
+    "height_m": 0.9
+  },
+  "drive_file_id": "1uK5gnfWA-mx22R3-76At-rTPVOuGT8e8",
+  "archive_file_id": "1pryfCtohcZFsoxmzjKB5xTsBb2C0RLAn",
+  "source_sha256": "7b6ad6157f043b0f501ef2b8a992ea4b66886580b5964158088a2d63ce6736d4"
+}

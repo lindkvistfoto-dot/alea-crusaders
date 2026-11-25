@@ -1,0 +1,19 @@
+{
+  "schema": 3,
+  "label": "Oljelampa i lergods",
+  "target": {
+    "kind": "profile",
+    "profile_id": "map-object",
+    "id": "fdceebb6-e1a3-5214-a681-86f620b74d74"
+  },
+  "object_template": {
+    "category": "Eld och belysning",
+    "campaign_id": null,
+    "length_m": 0.21,
+    "width_m": 0.13,
+    "height_m": 0.09
+  },
+  "drive_file_id": "1x6nbMkpImryyIrFOYrAqQwiWNTuynQqr",
+  "archive_file_id": "1ASjEEcBetQm-TMnuO6dVwpEPOFxSp-6P",
+  "source_sha256": "157a0cab34eaed56131172ac05c99dd5f20e1a325b2549aa9c9630d8b67bb497"
+}
