@@ -1,7 +1,7 @@
 name: Living Hex desktop and touch
 on:
   pull_request:
-    branches: [development]
+    branches: [development, feat/adventure-living-hex-v2]
     paths:
       - 'features/map/adventure-*'
       - 'features/map/living-hex.js'

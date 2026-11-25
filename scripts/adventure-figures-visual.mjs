@@ -67,6 +67,8 @@ for(const mobile of [false,true]){
       [row.q,row.r]=v.path.at(-1);requests.push({path,method:'POST',body:v});return [{id:row.id}];
     }
     if(a==='setting')state.prefs[v.key]=v.value;
+    else if(a==='pause'){state.paused=state.round;state.round=0;}
+    else if(a==='begin'&&state.paused){state.round=state.paused;state.paused=0;}
     else{state.round=a==='end'?0:state.round+1;state.budgets=Object.fromEntries(rows.map(r=>[r.id,{max:4,spent:0}]));}
     state.epoch++;return structuredClone(state);
    }
@@ -162,7 +164,7 @@ for(const mobile of [false,true]){
  await page.waitForFunction(()=>document.querySelectorAll('[data-tone=emerald]').length===3);
  assert.equal(await layer.locator('[data-tactical-grid].awakened, .combat-base-aura, image[href*="pointed-hex-high-angle"], image[href*="portrait-stand"]').count(),0);
  const boardToggle=page.locator('#adventureSlBoard .slcb-toggle');
- const openBoard=async()=>{if(!await page.locator('[data-hex-command]').count())await boardToggle.click();};
+ const openBoard=async()=>{if(!await page.locator('[data-objects-toggle]').count())await boardToggle.click();};
  const moveLyra=async()=>{await openBoard();await page.locator('[data-instance]').filter({hasText:'Lyra Gråväv'}).getByText('Flytta',{exact:true}).click();};
  // Force a short detour around an open polyline between two otherwise free centers.
  await page.evaluate(()=>{fixture.config.geometry=[{closed:false,movement:true,points:[[350,179],[350,196]]}];
@@ -174,13 +176,18 @@ for(const mobile of [false,true]){
  const route=await page.evaluate(()=>fixture.requests.at(-1)?.body?.path||fixture.requests.findLast(r=>r.path==='rpc/command_adventure_hex').body.path);
  assert.ok(route.length>3,'The wall between centers must force a detour');
  await openBoard();const before=await page.evaluate(()=>fixture.rows.map(r=>[r.q,r.r]));
- await recordMap(page,mobile,'battle-awakening',async()=>{await page.locator('[data-hex-command="begin"]').click();await layer.locator('[data-tactical-grid].awakened').waitFor({state:'attached'});});await layer.locator('[data-tactical-grid].awakened').waitFor({state:'attached'});
+ await recordMap(page,mobile,'battle-awakening',async()=>{await page.locator('#adventureModeSwitch [data-mode=battle]').click();await layer.locator('[data-tactical-grid].awakened').waitFor({state:'attached'});});await layer.locator('[data-tactical-grid].awakened').waitFor({state:'attached'});
  assert.deepEqual(await page.evaluate(()=>fixture.rows.map(r=>[r.q,r.r])),before);
  await page.locator('#mapViewport').scrollIntoViewIfNeeded();
  await page.waitForTimeout(230);
  await page.locator('#mapViewport').screenshot({path:path.join(output,mobile?'mobile-awakening.png':'awakening.png')});
  await moveLyra();await touch(7,5);await page.waitForFunction(()=>Object.values(fixture.state.budgets).some(a=>a.spent===1));
  await moveLyra();await touch(1,6);assert.equal(await page.evaluate(()=>fixture.rows.find(r=>r.name==='Lyra Gråväv').q),7);
+ await page.locator('#adventureModeSwitch [data-mode=exploration]').click();
+ await layer.locator('[data-tactical-grid].awakened').waitFor({state:'detached'});
+ await page.locator('#adventureModeSwitch [data-mode=battle]').click();
+ await layer.locator('[data-tactical-grid].awakened').waitFor({state:'attached'});
+ assert.equal(await page.evaluate(()=>Object.values(fixture.state.budgets).some(b=>b.spent===1)),true);
  await openBoard();await page.locator('[data-hex-command="end"]').click();
  await layer.locator('[data-tactical-grid].awakened').waitFor({state:'detached'});
  const hero=page.locator('[data-figure-id]').filter({has:page.locator('[data-hero-class="lyra"]')});

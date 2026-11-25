@@ -131,6 +131,7 @@ it('isolates session and campaign state with real SQL constraints and authentica
     `);
     await db.exec(readFileSync(new URL(readdirSync(dir).find(f=>f.endsWith('_adventure_living_hex.sql')),dir),'utf8'));
     await db.exec(readFileSync(new URL(readdirSync(dir).find(f=>f.endsWith('_adventure_hex_trail_boundary.sql')),dir),'utf8'));
+    await db.exec(readFileSync(new URL(readdirSync(dir).find(f=>f.endsWith('_adventure_mode_switch.sql')),dir),'utf8'));
     await db.exec("set role authenticated;set test.role='gm'");
     const command=(epoch,action,values={})=>db.query('select command_adventure_hex($1,$2,$3,$4,$5) as state',[map,session,epoch,action,values]);
     const move=(id,from,path)=>({id,from,path});
@@ -162,6 +163,18 @@ it('isolates session and campaign state with real SQL constraints and authentica
     await db.exec(`reset role;update campaign_map_objects set movement_blocking=false;
       update campaign_map_academy set configuration='{"pixelsPerMeter":10,"freeSight":{"width":60,"height":30,"runs":[[0,376],[377,1423]]}}' where map_id='${map}';set role authenticated`);
     await expect(command(4,'move',move(initial,[7,4],[[8,4]]))).rejects.toThrow(/golvyta/);
+    await command(4,'begin');
+    await command(5,'round');
+    await command(6,'move',move(initial,[7,4],[[6,4]]));
+    const paused=await command(6,'pause');
+    expect(paused.rows[0].state.round).toBe(0);
+    await expect(command(6,'begin')).rejects.toThrow(/ändrats/);
+    await command(7,'move',move(initial,[6,4],[[5,4]]));
+    const resumed=await command(7,'begin');
+    expect(resumed.rows[0].state.round).toBe(2);
+    expect(resumed.rows[0].state.budgets[initial].spent).toBe(1);
+    await command(8,'end');
+    expect((await command(9,'begin')).rows[0].state.round).toBe(1);
     await db.exec("set test.role='player'");
     await expect(command(4,'begin')).rejects.toThrow(/Endast SL/);
     await expect(db.query('select * from adventure_hex_state')).rejects.toThrow(/permission denied/);
