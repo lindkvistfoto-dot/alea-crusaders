@@ -41,7 +41,8 @@ try{
     await frame.locator('.combat-row-move').first().waitFor();
     await mode('exploration').click();
     await page.getByRole('button',{name:'Avsluta strid',exact:true}).click();
-    await frame.locator('#appConfirmOk').click();
+    const confirm=variant==='before'?frame.locator('#appConfirmOk'):page.locator('#appConfirmOk');
+    await confirm.filter({hasText:'Avsluta strid'}).click();
     await page.locator('.adventure-encounter-frame').waitFor({state:'detached'});
   }
   async function startButton(){

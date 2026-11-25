@@ -94,6 +94,7 @@ function conceal(entry){
 function dispose(){
   if(!mounted)return;
   clearTimeout(mounted.timeout);
+  if(mounted.confirming)closeAppConfirm(false);
   conceal(mounted);mounted.frame.remove();mounted=null;
   transitionMessage();
 }
@@ -163,7 +164,15 @@ export function syncEncounterCamera(){mounted?.applyCamera?.();}
 window.aleaAdventureEncounterContext=child=>{
   if(!mounted || mounted.frame.contentWindow!==child)return null;
   const entry=mounted,{view,id,frame}=entry;
-  return {id,viewport,bootstrap:userId=>adventureEncounterBootstrap(view,userId),
+  return {id,viewport,
+    async confirm(...args){
+      if(mounted!==entry || !view.encounter)return false;
+      entry.confirming=true;
+      try{return await askConfirm(...args) && mounted===entry && view.encounter===id;}
+      finally{entry.confirming=false;}
+    },
+    get active(){return mounted===entry && view.encounter===id;},
+    bootstrap:userId=>adventureEncounterBootstrap(view,userId),
     pickRoom(x,y){
       const point=new DOMPoint(x,y);
       const shapes=[...document.querySelectorAll('#mapOverlay .map-zone')];
@@ -262,6 +271,7 @@ export async function enterEmbeddedEncounter(){
     }
     return original(path,{...options,headers:{...options.headers,...headers}});
   };
+  if(context.confirm)window.askConfirm=context.confirm;
   window.combatCanManage=()=>context.gm;
   // Scene replacement belongs to the standalone view. The embedded Control
   // Board controls this encounter only, including its normal finish dialog.
@@ -291,12 +301,14 @@ export async function enterEmbeddedEncounter(){
     finally {context.finishing(false);await context.refresh();}
   };
   const layout=context.camera?connectEncounterCamera(context):null;
+  const suspend=()=>{combatStopPlayerSync();document.getElementById('combatPage').classList.add('hidden');};
   const resume=async()=>{
+    document.getElementById('combatPage').classList.remove('hidden');
     const fight=await loadActiveCombat(context.id,{preserveSelectedTarget:true});
     if(!fight || fight.status!=='active' || !document.querySelector('.combat-board .combat-map-svg'))throw Error('Stridsdata saknas.');
-    combatStartPlayerSync();
+    if(context.active===false)suspend();else combatStartPlayerSync();
   };
-  context.attach?.({layout,applyCamera:window.combatMapApplyView,mask:window.aleaUpdateTacticalDiscovery,resume,suspend:combatStopPlayerSync});
+  context.attach?.({layout,applyCamera:window.combatMapApplyView,mask:window.aleaUpdateTacticalDiscovery,resume,suspend});
   try {await resume();context.ready?.();}
   catch(error){context.fail?.(error);return;}
   if(context.gm)window.aleaReturnToExploration=()=>window.combatFinishAndRecover();

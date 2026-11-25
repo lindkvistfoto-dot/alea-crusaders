@@ -345,6 +345,12 @@ async function scenario(mobile) {
     for(const {page} of clients)await page.locator('.adventure-encounter-frame').waitFor();
     assert.equal(starts,1);
     assert.equal(await gm.page.locator('.adventure-encounter-frame').evaluate(f=>f.contentWindow.performance.timeOrigin),originalDocument);
+    await button('exploration').click();
+    await gm.page.getByRole('button',{name:'Avsluta strid',exact:true}).click();
+    const confirmation=gm.page.locator('#appConfirm');
+    await confirmation.locator('#appConfirmOk').click({trial:true});
+    await confirmation.getByRole('button',{name:'Avbryt'}).click();
+    assert.ok(await gm.page.locator('.adventure-encounter-frame').isVisible());
     assert.equal(pauseCommits,2);
     nativeFight=null;
     for(const {page} of clients){
