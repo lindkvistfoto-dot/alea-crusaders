@@ -97,6 +97,8 @@ body:has(#mapPage:not(.hidden)) main:has(#mapPage) {
 #mapPage .mapworkarea[hidden] {display:none}
 .adventure-encounter-frame {display:block;width:100%;height:calc(100dvh - var(--adventure-header,130px));border:0}
 .adventure-encounter-document .alea-app-header,
+.adventure-encounter-document #aleaAudioDock,
+.adventure-encounter-document #aleaSoundboard,
 .adventure-encounter-document .arcane-character-rail {display:none!important}
 .adventure-encounter-document main,
 .adventure-encounter-document #combatPage .combatpage {width:100%;max-width:none;margin:0;padding:0}

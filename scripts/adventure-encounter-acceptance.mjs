@@ -115,7 +115,12 @@ export async function compareCombatPanels(browser,origin,output){
       }
       const steps=[];
       for(const [spent,q] of [[8,-1],[9,0],[10,1]]){
-        if(spent>8)await frame.evaluate(q=>moveActiveCombatantToHex(q,6),q);
+        if(spent>8){
+          await frame.locator('.combat-row-move').click();
+          await frame.locator('.combat-movement-hit[data-q="'+q+'"][data-r="6"]').click();
+          await frame.getByRole('button',{name:'Bekräfta förflyttning'}).click();
+          await frame.waitForFunction(spent=>combatMovementSpent(combatActiveActor())===spent && !combatMovementCommitting,spent);
+        }
         const state=await frame.evaluate(()=>({
           spent:combatMovementSpent(combatActiveActor()),attack:!document.querySelector('.combat-row-attack').disabled,
           movement:!document.querySelector('.combat-row-move').disabled,
