@@ -121,3 +121,7 @@ body:has(#mapPage:not(.hidden)) main:has(#mapPage) {
   margin-top:.15rem;
   line-height:1.2;
 }
+[data-encounter-choice] {max-width:min(31rem,90vw);color:#f4e4c4;background:#251d15;border:1px solid #937247;border-radius:.6rem;padding:1.1rem}
+[data-encounter-choice]::backdrop {background:#100b08b8}
+[data-encounter-choice] h2 {margin:0 0 1rem;font-size:1.2rem}
+[data-encounter-choice] button {margin-block:.2rem}

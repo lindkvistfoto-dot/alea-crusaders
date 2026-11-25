@@ -115,6 +115,7 @@ function renderBoard(v) {
   modeSwitch.hidden=!(v?.gm && v.session && ((v.hexLoaded && v.grid) || v.encounter));
   for(const button of modeSwitch.querySelectorAll('button')){
     const selected=(button.dataset.mode==='battle')===Boolean(v?.encounter || v?.hex.round);
+    if(button.dataset.mode==='battle')button.textContent=v?.pausedEncounter?'Återuppta strid':'Strid';
     button.setAttribute('aria-pressed',String(selected));
     button.disabled=selected || !v?.ready || v.busy;
   }
@@ -123,7 +124,7 @@ function renderBoard(v) {
   const scenes=v?.gm&&!v.rows.length?(v.scenes||[]):[];
   const selectScene=scenes.length?'<label>Startpositioner<select data-field="seedScene"><option value="">Välj stridsscen</option>'+
     scenes.map(scene=>'<option value="'+escAttr(scene.id)+'" '+(v.seedScene===scene.id?'selected':'')+'>'+escAttr(scene.name)+'</option>').join('')+'</select></label>':'';
-  const fightButton=v?.gm && v.ready && v.session && !v.encounter && v.grid ?
+  const fightButton=v?.gm && v.ready && v.session && !v.encounter && !v.pausedEncounter && v.grid ?
     selectScene+'<button class="btn" data-action="start-encounter" '+(v.busy?'disabled':'')+'>'+(v.seedScene&&!v.rows.length?'Flytta scenens figurer hit och starta strid':'Starta strid på kartan')+'</button>':'';
   const content='<div data-map-controls></div>'+fightButton+(v?.gm?'<section class="slcb-module"><button class="btn" type="button" data-objects-toggle aria-expanded="'+Boolean(v.objects?.active)+'">'+(v.objects?.active?'Avsluta objektredigering':'Objekt')+'</button><div data-object-panel></div></section><section class="slcb-module"><h3>Figurer</h3>'+toolPanel(v)+'</section>'+(v.session&&v.hexLoaded?hexPanel(v.hex):''):'');
   const html=owner?slControlBoardHtml({open:boardOpen,panelId:'adventureFigurePanel',toggle:'aleaAdventureFigures.toggle()',context,panel:boardOpen?content:''}):'<div data-map-controls></div>';
@@ -249,7 +250,8 @@ async function readRows(v) {
     const turn=!encounter && rows.length ? await readPanelTurn(v,rows).catch(()=>({unavailable:true})) : null;
     if(view!==v||v.version!==version)return;
     v.panelTurn=turn;
-    v.encounter=encounter;
+    v.pausedEncounter=encounter?.status==='paused'?encounter.id:null;
+    v.encounter=v.pausedEncounter?null:encounter?.id;
     const previous=v.rows;
     v.rows=rows;setHex(v,hex);v.ready=true;
     v.layer.toggleAttribute('data-gm',v.gm);
@@ -430,11 +432,42 @@ async function arm(row) {
   boardOpen=false;renderBoard(v);
   viewport.scrollIntoView({block:'nearest',behavior:'instant'});
 }
+async function changeEncounterPause(v,id,paused){
+  if(view!==v || v.busy || !v.gm || (paused?v.encounter:v.pausedEncounter)!==id)return;
+  v.busy=true;renderBoard(v);
+  try {
+    await dbJson('rpc/set_adventure_encounter_paused',{method:'POST',body:JSON.stringify({p_encounter:id,p_paused:paused})});
+  } catch(error){window.alert(error.message);}
+  finally{if(view===v){v.busy=false;await readRows(v);}}
+}
+function chooseExploration(v){
+  if(page.querySelector('[data-encounter-choice]'))return;
+  const id=v.encounter;
+  const dialog=document.createElement('dialog');
+  dialog.dataset.encounterChoice='';
+  dialog.setAttribute('aria-labelledby','encounterChoiceTitle');
+  dialog.innerHTML='<form method="dialog"><h2 id="encounterChoiceTitle">Vad vill du göra med den pågående striden?</h2>'+
+    '<button class="btn primary" value="pause" autofocus>Pausa och utforska</button> '+
+    '<button class="btn" value="stay">Stanna kvar i strid</button> '+
+    '<button class="btn" value="finish">Avsluta strid</button></form>';
+  page.append(dialog);
+  dialog.addEventListener('close',()=>{
+    dialog.remove();
+    if(view!==v || v.encounter!==id)return;
+    if(dialog.returnValue==='pause')void changeEncounterPause(v,id,true);
+    if(dialog.returnValue==='finish')page.querySelector('.adventure-encounter-frame')?.contentWindow?.aleaReturnToExploration?.();
+  },{once:true});
+  dialog.showModal();
+}
 modeSwitch.addEventListener('click',event=>{
   const mode=event.target.closest('button')?.dataset.mode;
   if(!mode || !ready(view))return;
   if(view.encounter){
-    if(mode==='exploration')page.querySelector('.adventure-encounter-frame')?.contentWindow?.aleaReturnToExploration?.();
+    if(mode==='exploration')chooseExploration(view);
+    return;
+  }
+  if(view.pausedEncounter){
+    if(mode==='battle')void changeEncounterPause(view,view.pausedEncounter,false);
     return;
   }
   if(!view.hexLoaded)return;

@@ -51,6 +51,7 @@ it('pins two independent fights, preserves instance identities and commits map m
       insert into combat_instances(id,campaign_id,status) values('${reference}','${campaign}','active');
     `);
     await db.exec(sql);
+    await db.exec(readFileSync(new URL('../supabase/migrations/20261125194403_adventure_encounter_pause.sql',import.meta.url),'utf8'));
     const actors=[];
     for(const [i,key] of [hero,monster,monster].entries()){
       const sceneActor=crypto.randomUUID(),id=crypto.randomUUID(),figure=crypto.randomUUID();
@@ -76,12 +77,22 @@ it('pins two independent fights, preserves instance identities and commits map m
     await move([{q:-2,r:6}]);
     expect((await db.query('select q,r from adventure_map_figures where character_id=$1',[hero])).rows).toEqual([{q:-2,r:6}]);
     await expect(move([{q:-3,r:6}])).rejects.toThrow(/flyttats/);
+    const pause=value=>db.query('select set_adventure_encounter_paused($1,$2)',[fight,value]);
+    await db.exec("set test.role='player'");
+    await expect(pause(true)).rejects.toThrow(/Endast SL/);
+    await db.exec("set test.role='gm'");
+    await pause(true);await pause(true);
+    await expect(move([{q:-3,r:6}])).rejects.toThrow();
+    await db.query('update adventure_map_figures set q=-3 where character_id=$1',[hero]);
+    await pause(false);await pause(false);
+    expect((await db.query('select q,movement_remaining from combatants where id=$1',[actors[0].id])).rows[0]).toEqual({q:-3,movement_remaining:'17'});
+    expect((await db.query('select active_actor_id,round_number,status from combat_instances where id=$1',[fight])).rows[0]).toEqual({active_actor_id:actors[0].id,round_number:1,status:'active'});
     await db.query("update combat_instances set status='completed' where id=$1",[fight]);
     actors.forEach(a=>{a.id=crypto.randomUUID();});
-    actors[0].q=-2;
+    actors[0].q=-3;
     const restart=(await start()).rows[0].id;
     expect(restart).not.toBe(fight);
-    expect((await db.query('select q from combatants where combat_id=$1 and source_id=$2',[restart,hero])).rows[0].q).toBe(-2);
+    expect((await db.query('select q from combatants where combat_id=$1 and source_id=$2',[restart,hero])).rows[0].q).toBe(-3);
     expect((await db.query('select status from combat_instances where id=$1',[reference])).rows[0].status).toBe('active');
   }finally{await db.close();}
 },30000);

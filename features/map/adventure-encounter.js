@@ -4,8 +4,8 @@ const clientInfo='alea-adventure-combat';
 const headers={'x-client-info':clientInfo};
 const scope=v=>'campaign_id=eq.'+v.campaign+'&map_id=eq.'+v.map.id+'&session_id=eq.'+v.session;
 export async function currentEncounter(v){
-  const rows=await dbJson('combat_instances?'+scope(v)+'&settings->>origin=eq.adventure&status=in.(active,paused)&select=id&limit=1',{headers});
-  return rows[0]?.id||null;
+  const rows=await dbJson('combat_instances?'+scope(v)+'&settings->>origin=eq.adventure&status=in.(active,paused)&select=id,status&limit=1',{headers});
+  return rows[0]||null;
 }
 
 export async function startEncounter(v){

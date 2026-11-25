@@ -23,3 +23,7 @@
 Webbläsarprovet kör två separata strider i varsin webbläsarkontext med simulerad databastransport. Det använder de sju startpositionerna från Skelettbyn och båda vyernas riktiga paneler och kommandon. Efter rörelseprovet ställs en försvarare intill Astrid för ett reproducerbart närstridsprov. Referensen och Äventyrsvyn använder olika lyckade tärningsslag. Skärmbilder från 8, 9, 10 och försvarsreaktionen finns i CI-artefakten **adventure-paneler**.
 
 SQL-provet kör migrationen i PostgreSQL via PGlite. Det kontrollerar SL-behörighet, dubbelt startkommando, två exemplar av samma monster, avgränsning från referensen, blockerad väg, positionsuppdatering och ny strid med eget ID efter avslut.
+
+## Pausa och återuppta
+
+I Äventyrsvyn öppnar **Utforskning** under strid tre val. **Stanna kvar i strid** stänger dialogen. **Pausa och utforska** visar utforskningspanelen för hela gruppen. **Återuppta strid** fortsätter med samma strids-ID, runda, tur och förbrukade handlingar. Om SL flyttat en kartfigur under pausen används dess nya position. **Avsluta strid** öppnar den ordinarie avslutsbekräftelsen.

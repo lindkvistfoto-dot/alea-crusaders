@@ -26,7 +26,7 @@ async function scenario(mobile) {
   // Resume a saved, partly spent round. Resetting to the defaults must be detectable.
   const hex = {round:0,paused:3,epoch:0,prefs:{grid:'hidden'},budgets:{[hero.id]:{max:18,spent:8}}};
   const clients = [];
-  let nativeFight=null,starts=0;
+  let nativeFight=null,nativePaused=false,starts=0;
   const config = {version:1,darkness:0,pixelsPerMeter:25,lights:[],geometry:[],freeSight:null};
   async function client(manager) {
     const page = await browser.newPage({viewport:mobile?{width:390,height:844}:{width:1440,height:960},hasTouch:mobile,isMobile:mobile});
@@ -48,6 +48,10 @@ async function scenario(mobile) {
         assert.equal(new Set(values.p_initiative.order).size,2);
         starts++;nativeFight=randomUUID();hex.round=0;hex.paused=0;
         await notifyOthers();return nativeFight;
+      }
+      if(key==='rpc/set_adventure_encounter_paused'){
+        assert.ok(manager);assert.equal(values.p_encounter,nativeFight);
+        nativePaused=values.p_paused;await notifyOthers();return null;
       }
       if(key==='rpc/command_adventure_hex'){
         assert.ok(manager);assert.equal(values.p_epoch,hex.epoch);
@@ -82,7 +86,7 @@ async function scenario(mobile) {
         return [hero,guard];
       }
       if(key.startsWith('combat_instances?')){
-        if(key.includes('settings->>origin=eq.adventure'))return nativeFight && !key.includes('status=eq.completed')?[{id:nativeFight}]:[];
+        if(key.includes('settings->>origin=eq.adventure'))return nativeFight && !key.includes('status=eq.completed')?[{id:nativeFight,status:nativePaused?'paused':'active'}]:[];
         const query=new URLSearchParams(key.split('?')[1]);
         assert.equal(query.get('map_id'),'eq.'+map.id);
         assert.equal(query.get('session_id'),'eq.'+session.id);
@@ -260,6 +264,17 @@ async function scenario(mobile) {
       assert.equal(await page.locator('.adventure-encounter-frame').count(),1);
       assert.equal(await page.locator('.mapworkarea').isVisible(),false);
     }
+    assert.equal(starts,1);
+    await button('exploration').click();
+    await gm.page.getByRole('button',{name:'Stanna kvar i strid'}).click();
+    assert.equal(nativePaused,false);
+    await button('exploration').click();
+    await gm.page.getByRole('button',{name:'Pausa och utforska'}).click();
+    for(const {page} of clients)await page.locator('.mapworkarea').waitFor({state:'visible'});
+    await player.enter();
+    assert.equal(await player.page.locator('.adventure-encounter-frame').count(),0);
+    await gm.page.getByRole('button',{name:'Återuppta strid'}).click();
+    for(const {page} of clients)await page.locator('.adventure-encounter-frame').waitFor();
     assert.equal(starts,1);
     nativeFight=null;
     for(const {page} of clients){
