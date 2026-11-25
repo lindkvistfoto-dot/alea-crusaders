@@ -96,7 +96,7 @@ async function syncCampaign(map, areas, refresh = false) {
     }
     state.view ??= mount(host, map, adventureCameraFrame);
     const renderer = await state.view.ready;
-    if (current === state && state.request === request) renderer?.update(state.data.config, state.areas, state.data.positions);
+    if (current === state && state.request === request) renderer?.update(state.data.config, state.areas, state.data.positions, state.manager && !state.areas.length);
   } catch (error) {
     if (current !== state || state.request !== request) return;
     state.loading = null;

@@ -1,3 +1,4 @@
+import {connectEncounterCamera} from './adventure-encounter-camera.js';
 import {figureTravel,landFigure} from './living-hex.js';
 // Each embedded fight has its own document. Legacy event handlers, selected
 // targets and pending dice animations belong to that document for its lifetime.
@@ -62,28 +63,109 @@ export async function startEncounter(v){
 }
 
 let mounted;
+const work=document.querySelector('#mapPage .mapworkarea');
+const viewport=document.getElementById('mapViewport');
+const feedback=document.createElement('div');
+feedback.className='adventure-transition';
+feedback.setAttribute('role','status');
+viewport.after(feedback);
+let feedbackTimer;
+export function transitionMessage(message,retry){
+  clearTimeout(feedbackTimer);
+  feedback.replaceChildren();
+  if(!message)return;
+  const show=()=>{
+    feedback.textContent=message;
+    if(retry){
+      const button=document.createElement('button');
+      button.type='button';button.className='btn';button.textContent='Försök igen';
+      button.onclick=retry;feedback.append(' ',button);
+    }
+  };
+  if(retry)show();else feedbackTimer=setTimeout(show,160);
+}
+function conceal(entry){
+  entry.frame.hidden=true;entry.frame.inert=true;
+  work.classList.remove('encounter-active');
+  work.style.removeProperty('--encounter-height');
+}
+function dispose(){
+  if(!mounted)return;
+  clearTimeout(mounted.timeout);
+  conceal(mounted);mounted.frame.remove();mounted=null;
+  transitionMessage();
+}
+function reveal(entry){
+  if(mounted!==entry || !entry.view.encounter)return;
+  entry.frame.hidden=false;entry.frame.inert=false;
+  work.classList.add('encounter-active');
+  entry.layout?.();
+  transitionMessage();
+}
+function loadPanels(entry,operation){
+  const revision=++entry.revision;
+  entry.pending=true;
+  function failed(){
+    if(mounted!==entry || entry.revision!==revision)return;
+    ++entry.revision;entry.pending=false;entry.failed=true;conceal(entry);
+    transitionMessage('Stridspanelerna kunde inte laddas.',()=>{
+      dispose();displayEncounter(entry.view);
+    });
+  }
+  clearTimeout(entry.timeout);
+  entry.timeout=setTimeout(failed,45000);
+  Promise.resolve().then(operation).then(async()=>{
+    await document.getElementById('mapImage').decode();
+    if(mounted!==entry || entry.revision!==revision)return;
+    clearTimeout(entry.timeout);entry.pending=false;
+    reveal(entry);
+  }).catch(failed);
+}
 export function displayEncounter(view){
   if(mounted?.finishing && mounted.view===view && view.ready)return;
-  if(mounted && (mounted.view!==view || mounted.id!==view?.encounter || !view?.ready)){
-    mounted.frame.remove();
-    mounted.work.hidden=false;
-    mounted=null;
+  const id=view?.encounter||view?.pausedEncounter;
+  if(mounted && (mounted.view!==view || mounted.id!==id || !view?.ready))dispose();
+  if(!view?.ready || !id)return;
+  if(!view.encounter){
+    if(mounted && !mounted.paused){
+      mounted.paused=true;mounted.pending=false;++mounted.revision;
+      clearTimeout(mounted.timeout);mounted.suspend?.();conceal(mounted);transitionMessage();
+    }
+    return;
   }
-  if(mounted || !view?.ready || !view.encounter)return;
-  const work=document.querySelector('#mapPage .mapworkarea');
+  if(mounted){
+    if(mounted.paused){
+      mounted.paused=false;
+      transitionMessage('Återupptar striden …');
+      if(mounted.resume)loadPanels(mounted,mounted.resume);
+      else {dispose();displayEncounter(view);}
+    }
+    return;
+  }
   const frame=document.createElement('iframe');
-  frame.className='adventure-encounter-frame';
+  frame.className='adventure-encounter-frame';frame.hidden=true;frame.inert=true;
   frame.title='Strid på '+view.map.name;
-  frame.src='?view=adventure-encounter';
-  mounted={view,id:view.encounter,frame,work};
-  work.before(frame);work.hidden=true;
+  const entry=mounted={view,id,frame,revision:0};
+  let ready,fail;
+  const started=new Promise((resolve,reject)=>{ready=resolve;fail=reject;});
+  entry.ready=ready;entry.fail=fail;
+  transitionMessage(view.transitionLabel||'Laddar striden …');
+  loadPanels(entry,()=>started);
+  frame.addEventListener('error',fail,{once:true});
+  frame.src='?view=adventure-encounter';work.append(frame);
 }
-
+export function syncEncounterCamera(){mounted?.layout?.();}
 // The child can only attach to the frame created for this map and session.
 window.aleaAdventureEncounterContext=child=>{
   if(!mounted || mounted.frame.contentWindow!==child)return null;
-  const {view,id}=mounted;
-  return {id,get motion(){return view.hex?.prefs?.motion;},drawFigure(combatant,width){
+  const entry=mounted,{view,id,frame}=entry;
+  return {id,viewport,get grid(){return view.grid;},camera:adventureCameraFrame,
+    center:()=>resetMapView(),pan(dx,dy){mapView.fitted=false;mapView.x+=dx;mapView.y+=dy;applyMapTransform();},
+    zoom(factor,x,y){const rect=frame.getBoundingClientRect();mapZoomAt(factor,x+rect.left,y+rect.top);},
+    select(id){if(view.rows.some(row=>row.id===id))view.selectFigure(id);},
+    height(height){if(mounted===entry && !frame.hidden)work.style.setProperty('--encounter-height',height+'px');},
+    attach(api){Object.assign(entry,api);},ready:entry.ready,fail:entry.fail,
+    get motion(){return view.hex?.prefs?.motion;},drawFigure(combatant,width){
     const row=view.rows.find(row=>row.id===combatant.source_instance_key);
     if(!row)return '';
     return window.aleaCombatPaperDollMap.renderAdventureToken({...combatant,
@@ -184,7 +266,7 @@ export async function enterEmbeddedEncounter(){
   };
   combatSelectedSceneId=null;
   window.loadCombatRuntimeBackground=async()=>{
-    combatRuntimeMapUrl=context.map.image_url;
+    combatRuntimeMapUrl=context.camera?'':context.map.image_url;
     combatRuntimeMapMeta={width:context.map.width,height:context.map.height,name:context.map.name};
     combatRuntimeMapError='';
   };
@@ -196,8 +278,15 @@ export async function enterEmbeddedEncounter(){
     try {await finish();}
     finally {context.finishing(false);await context.refresh();}
   };
-  await loadActiveCombat(context.id);
+  const layout=context.camera?connectEncounterCamera(context):null;
+  const resume=async()=>{
+    const fight=await loadActiveCombat(context.id,{preserveSelectedTarget:true});
+    if(!fight || fight.status!=='active' || !document.querySelector('.combat-board .combat-map-svg'))throw Error('Stridsdata saknas.');
+    combatStartPlayerSync();
+  };
+  context.attach?.({layout,resume,suspend:combatStopPlayerSync});
+  try {await resume();context.ready?.();}
+  catch(error){context.fail?.(error);return;}
   if(context.gm)window.aleaReturnToExploration=()=>window.combatFinishAndRecover();
-  combatStartPlayerSync();
 }
 window.aleaEnterEmbeddedEncounter=enterEmbeddedEncounter;

@@ -26,7 +26,7 @@ async function scenario(mobile) {
   // Resume a saved, partly spent round. Resetting to the defaults must be detectable.
   const hex = {round:0,paused:3,epoch:0,prefs:{grid:'hidden'},budgets:{[hero.id]:{max:18,spent:8}}};
   const clients = [];
-  let nativeFight=null,nativePaused=false,starts=0;
+  let nativeFight=null,nativePaused=false,starts=0,actors=[];
   const config = {version:1,darkness:0,pixelsPerMeter:25,lights:[],geometry:[],freeSight:null};
   async function client(manager) {
     const page = await browser.newPage({viewport:mobile?{width:390,height:844}:{width:1440,height:960},hasTouch:mobile,isMobile:mobile});
@@ -38,6 +38,19 @@ async function scenario(mobile) {
       if(url.pathname.includes('dice-box.es.min.js')) return route.fulfill({contentType:'text/javascript',body:'export default class DiceBox {}'});
       return url.origin===origin ? route.continue() : route.abort();
     });
+    page.on('framenavigated',async frame=>{
+      if(!frame.url().endsWith('?view=adventure-encounter'))return;
+      try{
+        await frame.waitForFunction(()=>window.aleaEnterEmbeddedEncounter);
+        await frame.evaluate(async({campaign,manager})=>{
+          centralCampaignId=campaign;centralCampaignRole=manager?'gm':'player';
+          window.dbJson=window.panelFixtureRead;
+          document.getElementById('loginScreen').classList.add('hidden');
+          document.querySelector('main').classList.remove('hidden');
+          await window.aleaEnterEmbeddedEncounter();
+        },{campaign:session.campaign_id,manager});
+      }catch(error){if(!frame.isDetached())failures.push(error.message);}
+    });
     // Only the transport is simulated. A server change notifies the other session.
     await page.exposeFunction('panelFixtureRead', async (key,opts={})=>{
       const values = JSON.parse(opts.body||'{}');
@@ -46,6 +59,7 @@ async function scenario(mobile) {
         assert.equal(values.p_session,session.id);assert.equal(values.p_map,map.id);
         assert.deepEqual(values.p_actors.map(a=>[a.figure_id,a.q,a.r]),[[hero.id,hero.q,hero.r],[guard.id,guard.q,guard.r]]);
         assert.equal(new Set(values.p_initiative.order).size,2);
+        actors=values.p_actors.map(a=>({...a,source_instance_key:a.figure_id}));
         starts++;nativeFight=randomUUID();hex.round=0;hex.paused=0;
         await notifyOthers();return nativeFight;
       }
@@ -88,6 +102,7 @@ async function scenario(mobile) {
       if(key.startsWith('combat_instances?')){
         if(key.includes('settings->>origin=eq.adventure'))return nativeFight && !key.includes('status=eq.completed')?[{id:nativeFight,status:nativePaused?'paused':'active'}]:[];
         const query=new URLSearchParams(key.split('?')[1]);
+        if(nativeFight && query.get('id')==='eq.'+nativeFight)return [{id:nativeFight,round_number:1,status:nativePaused?'paused':'active',active_actor_id:actors[0].id,settings:{rows:30}}];
         assert.equal(query.get('map_id'),'eq.'+map.id);
         assert.equal(query.get('session_id'),'eq.'+session.id);
         assert.equal(query.get('campaign_id'),'eq.'+session.campaign_id);
@@ -95,6 +110,7 @@ async function scenario(mobile) {
       }
       if(key.startsWith('combatants?')){
         const query=new URLSearchParams(key.split('?')[1]);
+        if(nativeFight && query.get('combat_id')==='eq.'+nativeFight)return actors.filter(a=>manager||a.visible_to_players);
         assert.equal(query.get('combat_id'),'eq.'+session.id);
         if(!manager) assert.equal(query.get('visible_to_players'),'eq.true');
         return [hero,guard].filter(f=>manager||f.player_visible).map(f=>({
@@ -262,7 +278,11 @@ async function scenario(mobile) {
       await page.locator('.adventure-encounter-frame').waitFor();
       await page.evaluate(()=>window.aleaAdventureFigures.refresh());
       assert.equal(await page.locator('.adventure-encounter-frame').count(),1);
-      assert.equal(await page.locator('.mapworkarea').isVisible(),false);
+      assert.ok(await page.locator('#mapViewport').isVisible());
+      assert.ok(await page.locator('.adventure-camera-tools').isVisible());
+      const overlay=page.frameLocator('.adventure-encounter-frame').locator('.combat-map-svg');
+      const mapBox=await page.locator('#mapViewport').boundingBox(),tactical=await overlay.boundingBox();
+      for(const key of ['x','y','width','height'])assert.ok(Math.abs(tactical[key]-mapBox[key])<3,'Kartlagren skiljer sig '+JSON.stringify({mapBox,tactical}));
       const sameArt=await page.evaluate(({id,source})=>{
         const child=document.querySelector('.adventure-encounter-frame').contentWindow;
         const host=window.aleaAdventureEncounterContext(child);
@@ -281,7 +301,7 @@ async function scenario(mobile) {
     assert.equal(nativePaused,false);
     await button('exploration').click();
     await gm.page.getByRole('button',{name:'Pausa och utforska'}).click();
-    for(const {page} of clients)await page.locator('.mapworkarea').waitFor({state:'visible'});
+    for(const {page} of clients)await page.locator('.adventure-encounter-frame').waitFor({state:'hidden'});
     await player.enter();
     assert.equal(await player.page.locator('.adventure-encounter-frame').count(),0);
     await gm.page.getByRole('button',{name:'Återuppta strid'}).click();

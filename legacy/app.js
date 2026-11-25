@@ -4296,16 +4296,18 @@ function renderMapPanel(){
   status.textContent=placeholder.querySelector('h3').textContent;renderMapLibraryControls();return
  }
  placeholder.classList.add('hidden');img.classList.remove('hidden');overlay.classList.remove('hidden');
- img.src=activeCampaignMap.image_url||activeCampaignMap.imageUrl||'';img.alt=activeCampaignMap.name||'Kampanjkarta';
+ const imageUrl=activeCampaignMap.image_url||activeCampaignMap.imageUrl||'';
+ if(img.getAttribute('src')!==imageUrl)img.src=imageUrl;img.alt=activeCampaignMap.name||'Kampanjkarta';
  let w=Number(activeCampaignMap.width)||1600,h=Number(activeCampaignMap.height)||1000;
  viewport?.style.setProperty('--campaign-map-aspect-ratio',w+' / '+h);
  viewport?.style.setProperty('--campaign-map-aspect-ratio-number',String(w/h));
  img.width=w;img.height=h;overlay.setAttribute('viewBox',`0 0 ${w} ${h}`);overlay.setAttribute('width',w);overlay.setAttribute('height',h);
  status.textContent=(activeCampaignMap.name||'Karta')+' · '+campaignMapAreas.length+' områden';
  let maskId='fogMask_'+String(activeCampaignMap.id||'map').replace(/[^a-zA-Z0-9_-]/g,'');
+ const fog=campaignMapAreas.length || !adventureCanManage();
  let maskShapes=campaignMapAreas.map(a=>mapFogMaskShape(a)).join('');
  let hitShapes=campaignMapAreas.map(a=>mapAreaHitSvg(a)).join('');
- overlay.innerHTML=`<defs><mask id="${maskId}" maskUnits="userSpaceOnUse"><rect x="0" y="0" width="${w}" height="${h}" fill="white"/>${maskShapes}</mask></defs><rect class="map-fog" x="0" y="0" width="${w}" height="${h}" mask="url(#${maskId})"/>${hitShapes}`;
+ overlay.innerHTML=`<defs><mask id="${maskId}" maskUnits="userSpaceOnUse"><rect x="0" y="0" width="${w}" height="${h}" fill="white"/>${maskShapes}</mask></defs><rect class="map-fog" visibility="${fog?'visible':'hidden'}" x="0" y="0" width="${w}" height="${h}" mask="url(#${maskId})"/>${hitShapes}`;
  window.renderArcaneMapObjects?.();
  void window.syncArcaneMapObjects?.(activeCampaignMap.id);
  renderMapLibraryControls();applyMapTransform();

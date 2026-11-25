@@ -1,4 +1,4 @@
-import {currentEncounter,startEncounter,displayEncounter} from './adventure-encounter.js';
+import {currentEncounter,startEncounter,displayEncounter,syncEncounterCamera,transitionMessage} from './adventure-encounter.js';
 import {readPanelTurn,renderAdventurePanels} from './adventure-panels.js';
 import {createObjectEditor} from './object-library.js';
 import './adventure-figures.css';
@@ -15,7 +15,7 @@ const modeSwitch=document.getElementById('adventureModeSwitch');
 const status = document.getElementById('adventureFigureStatus');
 const viewport = document.getElementById('mapViewport');
 const page = document.getElementById('mapPage');
-page.querySelector('.mapworkarea').before(modeSwitch);
+page.querySelector('.adventure-camera-tools').before(modeSwitch);
 const art = () => window.aleaCombatPaperDollMap;
 const controls=document.getElementById('adventureControls');
 let boardOpen=false;
@@ -178,7 +178,7 @@ function close() {
   cancel();
   view?.hexLayer.destroy();view?.objects?.destroy();
   view?.layer.remove(); view=null;
-  renderBoard(null); notice();
+  transitionMessage();renderBoard(null); notice();
 }
 function sync(map) {
   if (!map?.image_url || !centralCampaignId || page.classList.contains('hidden')) { if(view)close();else renderBoard(null); return; }
@@ -192,6 +192,7 @@ function sync(map) {
   bounds.append(lights,pieces); layer.append(bounds); viewport.append(layer);
   view={map,campaign,gm,layer,pieces,lights,hexLayer,hex:{prefs:{...defaults},round:0,epoch:0,budgets:{}},session:undefined,rows:[],open:false,ready:false,version:0,category:'character',hidden:true,prepared:new Set()};
   const v=view;
+  v.selectFigure=id=>selectPiece(v,id);
   v.objects=createObjectEditor({map,parent:bounds,before:lights,live:true,manager:gm,areas:()=>campaignMapAreas,
     getScale:()=>Number(v.config?.pixelsPerMeter)||Number(v.map.pixels_per_meter)||0,onEnter:cancel,
     onPick:()=>viewport.scrollIntoView({block:'nearest'})});
@@ -203,6 +204,7 @@ function syncCamera() {
   const {width,height,x,y,scale} = adventureCameraFrame();
   if (!width || !height) return;
   view.layer.setAttribute('viewBox', [-x/scale,-y/scale,width/scale,height/scale].join(' '));
+  syncEncounterCamera();
   updatePointer();
 }
 function setGeometry(map,config) {
@@ -430,13 +432,36 @@ async function arm(row) {
   boardOpen=false;renderBoard(v);
   viewport.scrollIntoView({block:'nearest',behavior:'instant'});
 }
-async function changeEncounterPause(v,id,paused){
-  if(view!==v || v.busy || !v.gm || (paused?v.encounter:v.pausedEncounter)!==id)return;
-  v.busy=true;renderBoard(v);
-  try {
-    await dbJson('rpc/set_adventure_encounter_paused',{method:'POST',body:JSON.stringify({p_encounter:id,p_paused:paused})});
-  } catch(error){window.alert(error.message);}
-  finally{if(view===v){v.busy=false;await readRows(v);}}
+async function switchEncounter(v,label,write,retry){
+  if(view!==v||v.busy)return;
+  const session=v.session;
+  v.busy=true;v.transitionLabel=label;transitionMessage(label);renderBoard(v);
+  try{
+    await write();
+    if(view!==v||v.session!==session)return;
+    await readRows(v);
+    if(!v.ready)throw Error('Kartans läge kunde inte läsas.');
+    if(!v.encounter)transitionMessage();
+  }catch(error){
+    if(view===v&&v.session===session){
+      transitionMessage('Kunde inte växla kartläge. '+error.message,async()=>{
+        transitionMessage();await refresh();
+        if(view===v&&v.session===session)retry();
+      });
+    }
+  }finally{
+    if(view===v&&v.session===session){v.busy=false;v.transitionLabel=null;renderBoard(v);}
+  }
+}
+function startMapEncounter(v){
+  if(!v.ready||v.encounter||v.pausedEncounter)return;
+  return switchEncounter(v,'Startar striden …',()=>startEncounter(v),()=>startMapEncounter(v));
+}
+function changeEncounterPause(v,id,paused){
+  if(!v.gm||(paused?v.encounter:v.pausedEncounter)!==id)return;
+  return switchEncounter(v,paused?'Pausar striden …':'Återupptar striden …',
+    ()=>dbJson('rpc/set_adventure_encounter_paused',{method:'POST',body:JSON.stringify({p_encounter:id,p_paused:paused})}),
+    ()=>changeEncounterPause(v,id,paused));
 }
 function chooseExploration(v){
   if(page.querySelector('[data-encounter-choice]'))return;
@@ -498,10 +523,7 @@ board.addEventListener('click',async e=>{
   if(action==='session'){window.openGameSessionPanel();return;}
   if(!ready(v))return;
   if(action==='start-encounter'){
-    v.busy=true;renderBoard(v);
-    try {await startEncounter(v);}
-    catch(error){if(view===v)notice(error.message);}
-    finally {if(view===v){v.busy=false;await readRows(v);}}
+    await startMapEncounter(v);
     return;
   }
   if(action==='place'){
@@ -608,7 +630,7 @@ if(typeof activeCampaignMap!=='undefined' && !page.classList.contains('hidden'))
 const header=document.querySelector('.alea-app-header');
 if(header)new ResizeObserver(()=>page.style.setProperty('--adventure-header',header.offsetHeight+'px')).observe(header);
 
-new ResizeObserver(()=>{if(view&&mapView.fitted)resetMapView();else syncCamera();}).observe(viewport);
+new ResizeObserver(()=>{if(view && !view.encounter && !view.pausedEncounter && mapView.fitted && viewport.clientWidth && viewport.clientHeight)resetMapView();else syncCamera();}).observe(viewport);
 
 document.getElementById('sharedMapList').addEventListener('click',event=>{
   const id=event.target.closest('[data-shared-map]')?.dataset.sharedMap;
