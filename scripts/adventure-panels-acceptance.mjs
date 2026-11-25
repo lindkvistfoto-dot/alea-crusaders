@@ -34,7 +34,7 @@ async function scenario(mobile) {
     page.setDefaultTimeout(8000);
     await page.route('**/*', route=>{
       const url = new URL(route.request().url());
-      if(url.pathname==='/crypt.webp') return route.fulfill({path:painting,contentType:'image/webp'});
+      if(url.pathname==='/crypt.webp' || url.pathname.includes('/hermes/system-asset/arcane-hero-class-')) return route.fulfill({path:painting,contentType:'image/webp'});
       if(url.pathname.includes('dice-box.es.min.js')) return route.fulfill({contentType:'text/javascript',body:'export default class DiceBox {}'});
       return url.origin===origin ? route.continue() : route.abort();
     });
@@ -263,6 +263,17 @@ async function scenario(mobile) {
       await page.evaluate(()=>window.aleaAdventureFigures.refresh());
       assert.equal(await page.locator('.adventure-encounter-frame').count(),1);
       assert.equal(await page.locator('.mapworkarea').isVisible(),false);
+      const sameArt=await page.evaluate(({id,source})=>{
+        const child=document.querySelector('.adventure-encounter-frame').contentWindow;
+        const host=window.aleaAdventureEncounterContext(child);
+        const actor={source_instance_key:id,source_type:'character',source_id:source,name_snapshot:'Astrid Eldhjärta'};
+        const drawing=host.drawFigure(actor,Math.sqrt(3)*37.5/1.5);
+        const original=document.querySelector('[data-figure-id="'+id+'"] [data-hero-class]');
+        const comparison=new DOMParser().parseFromString('<svg xmlns="http://www.w3.org/2000/svg">'+drawing+'</svg>','image/svg+xml');
+        const figure=comparison.querySelector('[data-hero-class]');
+        return !!figure && !!original && figure.isEqualNode(original);
+      },{id:hero.id,source:hero.character_id});
+      assert.ok(sameArt,'Samma Hero Class-original, fotpunkt och skala i båda lägena');
     }
     assert.equal(starts,1);
     await button('exploration').click();

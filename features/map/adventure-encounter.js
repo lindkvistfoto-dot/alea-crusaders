@@ -1,3 +1,4 @@
+import {figureTravel,landFigure} from './living-hex.js';
 // Each embedded fight has its own document. Legacy event handlers, selected
 // targets and pending dice animations belong to that document for its lifetime.
 const clientInfo='alea-adventure-combat';
@@ -82,7 +83,13 @@ export function displayEncounter(view){
 window.aleaAdventureEncounterContext=child=>{
   if(!mounted || mounted.frame.contentWindow!==child)return null;
   const {view,id}=mounted;
-  return {id,get map(){return view.map;},gm:view.gm,scope:scope(view),visibleFigures:()=>view.rows.map(f=>f.id),finishing:value=>{if(mounted?.id===id)mounted.finishing=value;},refresh:()=>window.aleaAdventureFigures.refresh()};
+  return {id,get motion(){return view.hex?.prefs?.motion;},drawFigure(combatant,width){
+    const row=view.rows.find(row=>row.id===combatant.source_instance_key);
+    if(!row)return '';
+    return window.aleaCombatPaperDollMap.renderAdventureToken({...combatant,
+      side:row.character_id?'heroes':row.monster_id?'enemies':'neutral',
+      race:row.race,gender:row.gender},width);
+  },get map(){return view.map;},gm:view.gm,scope:scope(view),visibleFigures:()=>view.rows.map(f=>f.id),finishing:value=>{if(mounted?.id===id)mounted.finishing=value;},refresh:()=>window.aleaAdventureFigures.refresh()};
 };
 
 let attachedEncounter;
@@ -91,6 +98,30 @@ export async function enterEmbeddedEncounter(){
   const context=window.parent.aleaAdventureEncounterContext?.(window);
   if(!context||attachedEncounter===context.id)return;
   attachedEncounter=context.id;
+  const art=window.aleaCombatPaperDollMap;
+  let committedRoute;
+  window.aleaCombatPaperDollMap={...art,render(classic,actor,cell,grid){
+    if(actor.status==='dead')return classic;
+    const w=grid.xPitch;
+    const figure=context.drawFigure?context.drawFigure(actor,w):art.renderAdventureToken(actor,w);
+    return '<g transform="translate('+cell.x+' '+cell.y+')"><rect x="'+(-.47*w)+'" y="'+(-.85*w)+'" width="'+(.94*w)+'" height="'+w+'" fill="transparent"/><g data-face="">'+figure+'</g></g>';
+  }};
+  window.combatAnimateCommittedMovement=()=>{
+    const move=combatMovementAnimation;
+    if(!move)return;
+    const grid=combatRuntimeGeometry();
+    const token=document.querySelector('[data-token-id="'+CSS.escape(move.combatantId)+'"]');
+    if(!grid||!token)return;
+    combatMovementAnimation=null;
+    if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+    const route=committedRoute?.id===move.combatantId?committedRoute.path:[];
+    committedRoute=null;
+    const end=route.findIndex(c=>c.q===move.toQ && c.r===move.toR);
+    const cells=[{q:move.fromQ,r:move.fromR},...(end<0?[{q:move.toQ,r:move.toR}]:route.slice(0,end+1))];
+    const points=cells.map(c=>[grid.xPitch*(c.q-move.toQ+(c.r-move.toR)/2),grid.rowPitch*(c.r-move.toR)]);
+    const {keyframes,duration}=figureTravel(points,context.motion);
+    token.animate(keyframes,{duration,easing:'linear'}).finished.then(()=>landFigure(token.querySelector('[data-face]')),()=>{});
+  };
   const original=dbJson;
   // Every reload, including implicit reloads after movement, stays pinned.
   let allowedKey,allowedIds;
@@ -104,7 +135,12 @@ export async function enterEmbeddedEncounter(){
     return allowedIds;
   }
   window.dbJson=async(path,options={})=>{
-    if(path==='rpc/alea_move_multhex')path='rpc/move_adventure_combatant';
+    if(path==='rpc/alea_move_multhex'){
+      const moved=await original('rpc/move_adventure_combatant',{...options,headers:{...options.headers,...headers}});
+      const args=JSON.parse(options.body);
+      committedRoute={id:args.p_combatant_id,path:args.p_path};
+      return moved;
+    }
     if(path.split('?')[0]==='combat_instances'){
       if(!path.includes('?'))throw Error('En ny scen kan inte skapas inuti striden.');
       path+='&id=eq.'+context.id+'&'+context.scope;

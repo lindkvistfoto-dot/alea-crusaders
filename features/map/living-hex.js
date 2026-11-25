@@ -1,6 +1,15 @@
 import {hexCenter} from './adventure-hex.js';
 
 export const defaults={grid:'auto',actors:true,path:true,opacity:38,glow:65,motion:80};
+export function landFigure(face){
+  if(face && !matchMedia('(prefers-reduced-motion: reduce)').matches)
+    face.animate([{transform:'translateY(-8px) scale(1.08)'},{transform:'translateY(0) scale(.98)',offset:.75},{transform:'scale(1)'}],{duration:185,easing:'ease-out'});
+}
+export function figureTravel(points,motion=defaults.motion){
+  const steps=points.length-1;
+  const step=Math.min(240,1800/steps)*(.5+motion/160);
+  return {step,duration:step*steps,keyframes:points.map(([x,y])=>({transform:'translate('+x+'px,'+y+'px)'}))};
+}
 const ns='http://www.w3.org/2000/svg';
 function element(tag,attrs={}) {
   const node=document.createElementNS(ns,tag);
@@ -112,11 +121,10 @@ export function livingHexLayer(parent,map,manager){
     if(!grid||!piece||!path?.length||reduced())return;
     motions.get(row.id)?.forEach(a=>a.cancel());
     const cells=[row,...path],points=cells.map(c=>hexCenter(grid,c.q,c.r));
-    const step=Math.min(240,1800/path.length)*(.5+prefs.motion/160),duration=step*path.length;
+    const {step,duration,keyframes}=figureTravel(points,prefs.motion);
     // Keep stationary Hero Class originals on the native SVG surface at maximum zoom.
     if(!manager)piece.parentElement.setAttribute('mask','url(#'+id+'-mask)');
     const actorLayer=piece.parentElement;
-    const keyframes=points.map(([x,y])=>({transform:'translate('+x+'px,'+y+'px)'}));
     const anims=[piece,markers.get(row.id)].filter(Boolean).map(n=>n.animate(keyframes,{duration,easing:'linear'}));
     motions.set(row.id,anims);
     anims[0].finished.catch(()=>{}).then(()=>{if(motions.get(row.id)===anims)motions.delete(row.id);if(!manager&&!motions.size)actorLayer.removeAttribute('mask');});

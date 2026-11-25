@@ -2,7 +2,7 @@ import {currentEncounter,startEncounter,displayEncounter} from './adventure-enco
 import {readPanelTurn,renderAdventurePanels} from './adventure-panels.js';
 import {createObjectEditor} from './object-library.js';
 import './adventure-figures.css';
-import {defaults,hexPanel,livingHexLayer} from './living-hex.js';
+import {defaults,hexPanel,landFigure,livingHexLayer} from './living-hex.js';
 import { adventureCell, adventureGrid, hexCenter, nearestHex, adventureRoute } from './adventure-hex.js';
 import { mapPointer, mapScreenScale } from './polygon-edit-geometry.js';
 
@@ -77,8 +77,7 @@ function renderPieces(v, landingId) {
     const next=previous?previous.nextElementSibling:v.pieces.firstElementChild;
     if(piece!==next)v.pieces.insertBefore(piece,next);
     previous=piece;
-    if (row.id===landingId && !matchMedia('(prefers-reduced-motion: reduce)').matches)
-      piece.querySelector('[data-face]').animate([{transform:'translateY(-8px) scale(1.08)'},{transform:'translateY(0) scale(.98)',offset:.75},{transform:'scale(1)'}],{duration:185,easing:'ease-out'});
+    if(row.id===landingId)landFigure(piece.querySelector('[data-face]'));
   }
   for(const el of remaining.values())el.remove();
 }
