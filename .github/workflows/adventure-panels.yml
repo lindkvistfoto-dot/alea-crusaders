@@ -15,7 +15,7 @@ permissions:
   contents: read
 jobs:
   panels:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
@@ -26,7 +26,6 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci && npm install --no-save --package-lock=false playwright@1.56.1
-      - run: npx playwright install --with-deps chromium
       - run: npm run build
         env:
           ALEA_BUILD_ENV: development
@@ -42,7 +41,7 @@ jobs:
           server=$!
           trap 'kill "$server"' EXIT
           curl --retry 10 --retry-connrefused -fsS http://127.0.0.1:4173/ -o /dev/null
-          node scripts/adventure-panels-acceptance.mjs http://127.0.0.1:4173 crypt-fixture/preview/art-first/warm-floor.webp visual-results/panels
+          CHROMIUM_PATH="$(command -v google-chrome)" node scripts/adventure-panels-acceptance.mjs http://127.0.0.1:4173 crypt-fixture/preview/art-first/warm-floor.webp visual-results/panels
       - uses: actions/upload-artifact@v4
         if: always()
         with:
