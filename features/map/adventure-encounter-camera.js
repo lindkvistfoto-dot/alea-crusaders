@@ -61,9 +61,16 @@ export function connectEncounterCamera(context) {
       event.preventDefault();event.stopImmediatePropagation();
     }
   },true);
+  shell.addEventListener('click',event=>{
+    const svg=event.target.closest('.combat-map-svg');
+    if(!svg||event.target.closest('[onclick]:not(svg)')||Date.now()<combatMapSuppressClickUntil)return;
+    const point=combatSvgPoint(event,svg);
+    if(point)context.pickRoom(point.x,point.y);
+  });
   function layout(){
     const work=viewport.closest('.mapworkarea');
     const style=getComputedStyle(work);
+    root.toggleAttribute('data-stacked',style.gridTemplateColumns.split(' ').length===1);
     root.style.setProperty('--encounter-tracks',style.gridTemplateColumns);
     root.style.setProperty('--encounter-gap',style.columnGap);
     root.style.setProperty('--encounter-map-height',viewport.offsetHeight+'px');

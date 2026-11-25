@@ -249,6 +249,8 @@ async function readRows(v) {
     // round. Keep their pause/resume path. New map fights enter via the Board.
     const turn=!encounter && rows.length ? await readPanelTurn(v,rows).catch(()=>({unavailable:true})) : null;
     if(view!==v||v.version!==version)return;
+    if(v.ready && (v.encounter||v.pausedEncounter||encounter) &&
+      (v.encounter!==encounter?.id || encounter?.status==='paused'))mapView.fitted=false;
     v.panelTurn=turn;
     v.pausedEncounter=encounter?.status==='paused'?encounter.id:null;
     v.encounter=v.pausedEncounter?null:encounter?.id;

@@ -104,10 +104,9 @@ function reveal(entry){
 }
 function loadPanels(entry,operation){
   const revision=++entry.revision;
-  entry.pending=true;
   function failed(){
     if(mounted!==entry || entry.revision!==revision)return;
-    ++entry.revision;entry.pending=false;entry.failed=true;conceal(entry);
+    ++entry.revision;conceal(entry);
     transitionMessage('Stridspanelerna kunde inte laddas.',()=>{
       dispose();displayEncounter(entry.view);
     });
@@ -117,7 +116,7 @@ function loadPanels(entry,operation){
   Promise.resolve().then(operation).then(async()=>{
     await document.getElementById('mapImage').decode();
     if(mounted!==entry || entry.revision!==revision)return;
-    clearTimeout(entry.timeout);entry.pending=false;
+    clearTimeout(entry.timeout);
     reveal(entry);
   }).catch(failed);
 }
@@ -128,12 +127,15 @@ export function displayEncounter(view){
   if(!view?.ready || !id)return;
   if(!view.encounter){
     if(mounted && !mounted.paused){
-      mounted.paused=true;mounted.pending=false;++mounted.revision;
+      mounted.paused=true;++mounted.revision;
       clearTimeout(mounted.timeout);mounted.suspend?.();conceal(mounted);transitionMessage();
     }
     return;
   }
   if(mounted){
+    if(!view.gm && mounted.areas!==campaignMapAreas){
+      mounted.areas=campaignMapAreas;mounted.mask?.();
+    }
     if(mounted.paused){
       mounted.paused=false;
       transitionMessage('Återupptar striden …');
@@ -160,6 +162,12 @@ window.aleaAdventureEncounterContext=child=>{
   if(!mounted || mounted.frame.contentWindow!==child)return null;
   const entry=mounted,{view,id,frame}=entry;
   return {id,viewport,bootstrap:userId=>adventureEncounterBootstrap(view,userId),
+    pickRoom(x,y){
+      const point=new DOMPoint(x,y);
+      const shapes=[...document.querySelectorAll('#mapOverlay .map-zone')];
+      const room=shapes.reverse().find(shape=>shape.isPointInFill(point));
+      if(room)void openMapLocationInfoByArea(room.dataset.areaId);
+    },
     playerAreas:()=>campaignMapAreas.filter(area=>area.status==='explored'),get grid(){return view.grid;},camera:adventureCameraFrame,
     center:()=>resetMapView(),pan(dx,dy){mapView.fitted=false;mapView.x+=dx;mapView.y+=dy;applyMapTransform();},
     zoom(factor,x,y){const rect=frame.getBoundingClientRect();mapZoomAt(factor,x+rect.left,y+rect.top);},
@@ -222,6 +230,7 @@ export async function enterEmbeddedEncounter(){
       const moved=await original('rpc/move_adventure_combatant',{...options,headers:{...options.headers,...headers}});
       const args=JSON.parse(options.body);
       committedRoute={id:args.p_combatant_id,path:args.p_path};
+      void context.refresh();
       return moved;
     }
     if(path.split('?')[0]==='combat_instances'){
@@ -285,7 +294,7 @@ export async function enterEmbeddedEncounter(){
     if(!fight || fight.status!=='active' || !document.querySelector('.combat-board .combat-map-svg'))throw Error('Stridsdata saknas.');
     combatStartPlayerSync();
   };
-  context.attach?.({layout,applyCamera:window.combatMapApplyView,resume,suspend:combatStopPlayerSync});
+  context.attach?.({layout,applyCamera:window.combatMapApplyView,mask:window.aleaUpdateTacticalDiscovery,resume,suspend:combatStopPlayerSync});
   try {await resume();context.ready?.();}
   catch(error){context.fail?.(error);return;}
   if(context.gm)window.aleaReturnToExploration=()=>window.combatFinishAndRecover();

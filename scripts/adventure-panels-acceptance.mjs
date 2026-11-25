@@ -19,7 +19,7 @@ async function scenario(mobile) {
   const device = mobile ? 'mobile' : 'desktop';
   const session = {id:randomUUID(), campaign_id:randomUUID(), status:'active'};
   const map = {id:randomUUID(), campaign_id:session.campaign_id, name:'Kryptans dörr', width:800, height:680, image_url:origin+'/crypt.webp', player_visible:true};
-  const room = {id:randomUUID(), location_id:randomUUID(), name:'Portkammaren', status:'explored', shape_type:'rect', shape_data:{x:0,y:0,width:800,height:680}};
+  const room = {id:randomUUID(), location_id:randomUUID(), name:'Portkammaren', status:'explored', shape_type:'rect', shape_data:{x:0,y:0,width:650,height:680}};
   const astrid=art.heroes.find(hero=>hero.name==='Astrid Eldhjärta');
   const hero = {id:randomUUID(), character_id:astrid.id, name:astrid.name, q:4,r:5,player_visible:true};
   const guard = {id:randomUUID(), monster_id:randomUUID(), name:'Kryptväktare', q:7,r:4,player_visible:false};
@@ -271,6 +271,27 @@ async function scenario(mobile) {
         await page.getByRole('img',{name:'Kryptporten'}).waitFor();
       }
     }
+    async function cameraControls(page){
+      const camera=()=>page.evaluate(()=>[mapView.scale,-mapView.x/mapView.scale,-mapView.y/mapView.scale]);
+      const presets=page.locator('#adventureZoomPreset');
+      await page.locator('.adventure-camera-tools').scrollIntoViewIfNeeded();
+      const battle=await button('battle').getAttribute('aria-pressed');
+      for(const preset of ['all','room','battle','group','person']){
+        await presets.selectOption(preset);
+        assert.ok((await camera()).every(Number.isFinite));
+      }
+      const before=await camera();
+      await page.locator('.adventure-camera-tools [aria-label="Zooma ut"]').click();
+      assert.ok((await camera())[0]<before[0]);
+      await page.locator('.adventure-camera-tools [aria-label="Zooma in"]').click();
+      const restored=await camera();
+      restored.forEach((value,i)=>assert.ok(Math.abs(value-before[i])<.01));
+      await page.locator('.adventure-camera-tools').getByRole('button',{name:'Centrera'}).click();
+      assert.equal(await button('battle').getAttribute('aria-pressed'),battle);
+    }
+    // A deliberate selection unlocks Person. The previously opened room unlocks Rum.
+    await gm.page.evaluate(()=>{const el=document.querySelector('[data-figure-id]');el.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,button:0,isPrimary:true}));el.dispatchEvent(new PointerEvent('pointerup',{bubbles:true,button:0,isPrimary:true}));});
+    await cameraControls(gm.page);
     const start=gm.page.locator('[data-action=start-encounter]');
     if(!await start.isVisible())await toggle.click();
     await start.click();
@@ -295,6 +316,10 @@ async function scenario(mobile) {
       },{id:hero.id,source:hero.character_id});
       assert.ok(sameArt,'Samma Hero Class-original, fotpunkt och skala i båda lägena');
     }
+    await cameraControls(gm.page);
+    const playerMask=player.page.frameLocator('.adventure-encounter-frame').locator('#encounter-discovery rect');
+    assert.equal(await playerMask.getAttribute('width'),'650');
+    const originalDocument=await gm.page.locator('.adventure-encounter-frame').evaluate(f=>{f.contentWindow.cameraSessionMarker='same encounter';return f.contentWindow.performance.timeOrigin;});
     assert.equal(starts,1);
     await button('exploration').click();
     await gm.page.getByRole('button',{name:'Stanna kvar i strid'}).click();
@@ -307,6 +332,7 @@ async function scenario(mobile) {
     await gm.page.getByRole('button',{name:'Återuppta strid'}).click();
     for(const {page} of clients)await page.locator('.adventure-encounter-frame').waitFor();
     assert.equal(starts,1);
+    assert.equal(await gm.page.locator('.adventure-encounter-frame').evaluate(f=>f.contentWindow.performance.timeOrigin),originalDocument);
     nativeFight=null;
     for(const {page} of clients){
       await page.evaluate(()=>window.aleaAdventureFigures.refresh());

@@ -162,12 +162,8 @@ html.adventure-tactical-overlay {overflow:hidden;color-scheme:normal}
 }
 .adventure-tactical-overlay .combat-map-presets,.adventure-tactical-overlay .combat-board-footer {display:none}
 .adventure-tactical-overlay #combatPage .combat-board-wrap > :not(.combat-board,.combat-board-footer) {position:absolute;bottom:0;z-index:1}
-@media(max-width:900px){
-  .adventure-tactical-overlay #combatPage .combat-shell-live {display:flex;flex-direction:column}
-  .adventure-tactical-overlay #combatPage :is(.combat-left-column,.combat-center-column){display:contents}
-  .adventure-tactical-overlay #combatPage .combat-board-wrap {order:-1;width:100%}
-}
-@media(min-width:901px){
-  .adventure-tactical-overlay #combatPage :is(.combat-left-column,.combat-center-column){display:flex;flex-direction:column}
-}
+.adventure-tactical-overlay[data-stacked] #combatPage .combat-shell-live {display:flex;flex-direction:column}
+.adventure-tactical-overlay[data-stacked] #combatPage :is(.combat-left-column,.combat-center-column){display:contents}
+.adventure-tactical-overlay[data-stacked] #combatPage .combat-board-wrap {order:-1;width:100%}
+.adventure-tactical-overlay:not([data-stacked]) #combatPage :is(.combat-left-column,.combat-center-column){display:flex;flex-direction:column}
 .adventure-tactical-overlay .combat-map-svg {touch-action:none}

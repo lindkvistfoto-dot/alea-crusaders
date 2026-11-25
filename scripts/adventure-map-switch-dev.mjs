@@ -85,6 +85,27 @@ try{
     await fs.writeFile(output+'/times.json',JSON.stringify(timings,null,2));
     return result;
   }
+  async function checkPlayerProjection(){
+    const spectator=await context.newPage();
+    try{
+      await spectator.goto(url);
+      const preview=spectator.locator('#adventurePreview');
+      await preview.click();
+      async function masked(active){
+        await spectator.waitForFunction(({map,active})=>{
+          const image=document.querySelector('#mapImage'),frame=document.querySelector('.adventure-encounter-frame');
+          return adventurePlayerPreview && activeCampaignMap?.id===map && image.naturalWidth===1 &&
+            !campaignMapAreas.length && !document.querySelector('[data-figure-id]') &&
+            (active ? frame?.getClientRects().length && frame.contentDocument?.querySelector('#encounter-discovery')?.childElementCount===0 : !frame?.getClientRects().length);
+        },{map,active},{timeout:45000});
+      }
+      await masked(true);
+      await mode('exploration').click();await page.getByRole('button',{name:'Pausa och utforska'}).click();
+      await masked(false);
+      await mode('battle').click();await masked(true);
+      console.log('Spelarprojektion verifierad före, under och efter paus på provkartan.');
+    }finally{await spectator.close();}
+  }
   async function recordSwitch(){
     const folder=await fs.mkdtemp(os.tmpdir()+'/bystrid-video-');
     const cdp=await context.newCDPSession(page),frames=[],writes=[];
@@ -122,6 +143,20 @@ try{
     execFileSync('ffmpeg',['-loglevel','error','-f','concat','-safe','0','-i',folder+'/frames.txt','-vf','crop=iw:ih-'+top+':0:'+top+',fps=25,format=yuv420p','-c:v','libx264','-crf','22','-movflags','+faststart','-y',output+'/Bystrid-kartvaxling.mp4']);
     await fs.rm(folder,{recursive:true});
   }
+  async function checkFigureAlignment(){
+    const actor=await frame.locator('.combat-map-svg').evaluate(svg=>{
+      const a=combatActiveActor(),g=combatRuntimeGeometry(),matrix=svg.getScreenCTM();
+      const p=new DOMPoint(g.xPitch*(a.q+a.r/2),g.rowPitch*a.r).matrixTransform(matrix);
+      return {id:a.source_instance_key,x:p.x,y:p.y,scale:matrix.a};
+    });
+    const delta=await page.evaluate(a=>{
+      const frame=document.querySelector('.adventure-encounter-frame').getBoundingClientRect();
+      const piece=document.querySelector('[data-figure-id="'+a.id+'"]').getScreenCTM();
+      return {x:frame.left+a.x-piece.e,y:frame.top+a.y-piece.f,scale:a.scale-piece.a};
+    },actor);
+    assert.ok(Math.abs(delta.x)<2&&Math.abs(delta.y)<2&&Math.abs(delta.scale)<.005,JSON.stringify(delta));
+    console.log('Avvikelse vid figurens fotpunkt',JSON.stringify(delta));
+  }
   async function checkMovement(){
     await frame.locator('.combat-row-move').click();
     const candidates=frame.locator('.combat-movement-hit');
@@ -148,6 +183,7 @@ try{
   for(const cycle of [1,2]){
     await measure('start',cycle,await startButton());
     const board=frame.locator('.combat-map-svg');
+    if(variant==='after')await checkFigureAlignment();
     const box=await board.boundingBox();
     await page.mouse.move(box.x+box.width*.5,box.y+box.height*.55);
     await page.mouse.wheel(0,-175);
@@ -175,7 +211,8 @@ try{
     if(variant==='after'){assert.ok(pause.usable!==null);assert.deepEqual(await camera(),beforeCamera);}
     await measure('återuppta',cycle,mode('battle'));
     assert.deepEqual(await readTurn(),beforeTurn);
-    if(variant==='after')assert.deepEqual(await camera(),beforeCamera);
+    if(variant==='after'){assert.deepEqual(await camera(),beforeCamera);await checkFigureAlignment();}
+    if(variant==='after' && cycle===2)await checkPlayerProjection();
     if(variant==='after' && cycle===1){
       console.log('Sparad tur, förflyttning och handlingar verifierade',JSON.stringify(beforeTurn));
       await recordSwitch();
