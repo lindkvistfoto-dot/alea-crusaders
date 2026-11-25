@@ -2,11 +2,31 @@ import { chromium } from 'playwright';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import assert from 'node:assert/strict';
+import {spawnSync} from 'node:child_process';
+import {tmpdir} from 'node:os';
 const [origin, painting, output] = process.argv.slice(2);
 assert.ok(new URL(origin).hostname === '127.0.0.1' || /^[a-z0-9-]+\.alea-crusaders\.pages\.dev$/.test(new URL(origin).hostname));
 await fs.mkdir(output, {recursive:true});
 const fixtures=JSON.parse(await fs.readFile(new URL('../tests/fixtures/adventure-figure-art.json',import.meta.url)));
 const browser=await chromium.launch({channel:'chrome',args:['--enable-unsafe-swiftshader']});
+// Optional short map-only clips alongside the mandatory stills in the PR artifact.
+async function recordMap(page,mobile,name,action){
+ if(mobile||spawnSync('ffmpeg',['-version'],{stdio:'ignore'}).status!==0)return action();
+ const dir=await fs.mkdtemp(path.join(tmpdir(),'living-hex-')),frames=[];
+ try{
+  await action();
+  const surface=page.locator('#mapViewport'),start=Date.now();
+  do{
+   const file=path.join(dir,frames.length+'.jpg'),time=Date.now();
+   await surface.screenshot({path:file,type:'jpeg',quality:85,animations:'allow'});
+   frames.push({file,time});await page.waitForTimeout(45);
+  }while(Date.now()-start<1900);
+  const timing=frames.map((f,i)=>"file '"+f.file+"'\nduration "+((frames[i+1]?.time||Date.now())-f.time)/1000).join('\n');
+  await fs.writeFile(path.join(dir,'frames'),timing+"\nfile '"+frames.at(-1).file+"'\n");
+  const encode=spawnSync('ffmpeg',['-loglevel','error','-f','concat','-safe','0','-i',path.join(dir,'frames'),'-vf','pad=ceil(iw/2)*2:ceil(ih/2)*2','-pix_fmt','yuv420p','-y',path.join(output,name+'.mp4')]);
+  if(encode.status!==0)throw Error(String(encode.stderr));
+ }finally{await fs.rm(dir,{recursive:true,force:true});}
+}
 let currentPage;
 try{
 for(const mobile of [false,true]){
@@ -29,13 +49,39 @@ for(const mobile of [false,true]){
  await page.evaluate(async ({assets,heroes,poses})=>{
   const map={id:crypto.randomUUID(),campaign_id:crypto.randomUUID(),width:800,height:680,name:'Kryptkammaren',image_url:location.origin+'/fixture-map.webp',player_visible:true};
   const session={id:crypto.randomUUID(),campaign_id:map.campaign_id,status:'active'};
-  const rows=[], requests=[];
+  const rows=[], requests=[], state={round:0,epoch:0,prefs:{},budgets:{}};
   const enemy={id:crypto.randomUUID(),name:'Kryptväktare',active:true},npc={id:crypto.randomUUID(),name:'Vägvisaren',active:true};
   chars=heroes.map(x=>({id:x.name.split(' ')[0].toLowerCase(),_dbId:x.id,name:x.name,isNpc:false,live:{KP:12,KPmax:12,PSY:10,PSYmax:10},identity:{namn:x.name},ownerId:'fixture'}));
   campaignNpcs=[npc];campaignMonsters=[enemy];campaignMaps=[map];centralCampaignId=map.campaign_id;centralCampaignRole='gm';
   const config={version:1,darkness:0,pixelsPerMeter:25,lights:[],geometry:[],freeSight:null};
   const room={id:crypto.randomUUID(),location_id:crypto.randomUUID(),name:'Kryptan',status:'explored',shape_type:'rect',shape_data:{x:0,y:0,width:800,height:680}};
   window.dbJson=async(path,opts={})=>{
+   // This visual regression resumes a map visit using the older tactical
+   // overlay. The separate encounter suite exercises the native combat board.
+   if(path.startsWith('combat_instances?')){
+    if(path.includes('settings->>origin=eq.adventure'))return [];
+    const active=rows.find(row=>row.character_id);
+    return active?[path.includes('select=active_actor_id')?{active_actor_id:active.id}:{id:session.id}]:[];
+   }
+   if(path.startsWith('combatants?'))return rows.filter(row=>row.character_id).map(row=>({
+    id:row.id,source_id:row.character_id,source_type:'character'
+   }));
+   if(path==='rpc/read_adventure_hex')return structuredClone(state);
+   if(path==='rpc/command_adventure_hex'){
+    if(centralCampaignRole!=='gm')throw Error('Endast SL');
+    const {p_action:a,p_values:v,p_epoch:e}=JSON.parse(opts.body);
+    if(e!==state.epoch)throw Error('Kartläget har ändrats.');
+    if(a==='move'){
+      const row=rows.find(r=>r.id===v.id);
+      if(state.round){if(state.budgets[v.id].spent+v.path.length>state.budgets[v.id].max)throw Error('Budget');state.budgets[v.id].spent+=v.path.length;}
+      [row.q,row.r]=v.path.at(-1);requests.push({path,method:'POST',body:v});return [{id:row.id}];
+    }
+    if(a==='setting')state.prefs[v.key]=v.value;
+    else if(a==='pause'){state.paused=state.round;state.round=0;}
+    else if(a==='begin'&&state.paused){state.round=state.paused;state.paused=0;}
+    else{state.round=a==='end'?0:state.round+1;state.budgets=Object.fromEntries(rows.map(r=>[r.id,{max:4,spent:0}]));}
+    state.epoch++;return structuredClone(state);
+   }
    if(path.startsWith('adventure_map_figures?')){
     const u=new URL('https://fixture.test/'+path),args=u.searchParams,method=opts.method||'GET',body=JSON.parse(opts.body||'{}');
     if(method==='GET'){if(args.get('session_id')!=='eq.'+session.id||args.get('map_id')!=='eq.'+map.id||args.get('campaign_id')!=='eq.'+map.campaign_id)throw Error('Unscoped query');}
@@ -56,7 +102,7 @@ for(const mobile of [false,true]){
    if(path.includes('read_campaign_map_academy_player'))return config;
    return [];
   };
-  window.fixture={rows,requests,map,room};
+  window.fixture={rows,requests,map,room,state,config};
   document.getElementById('loginScreen').classList.add('hidden');
   document.getElementById('landing').classList.add('hidden');
   document.querySelectorAll('header,main').forEach(n=>n.classList.remove('hidden'));
@@ -95,7 +141,7 @@ for(const mobile of [false,true]){
   await page.keyboard.press('Escape');await page.locator('.arcane-character-drawer.is-open').waitFor({state:'detached'});
   await start();
   await page.mouse.move(...await point(4,6));await page.locator('[data-cell="4,6"]:not([data-fading])').waitFor();
-  assert.ok(await page.locator('.adventure-figure-ghost').innerHTML().then(h=>h.includes('arcane-hero-class-astrid')&&h.includes('arcane-bronze-ivory-pointed-hex-high-angle')));
+  assert.ok(await page.locator('.adventure-figure-ghost').innerHTML().then(h=>h.includes('arcane-hero-class-astrid')&&!h.includes('arcane-bronze-ivory-pointed-hex-high-angle')));
   await page.mouse.move(...await point(5,6));await page.locator('[data-cell="5,6"]:not([data-fading])').waitFor();
   await page.screenshot({path:path.join(output,'lift.png')});
   await page.mouse.up();await verifyCount(1); await waitToken();
@@ -125,6 +171,35 @@ for(const mobile of [false,true]){
  await arm('Kryptväktare','monster');await touch(5,7);await verifyCount(6);
  await page.waitForFunction(()=>document.querySelectorAll('[data-concealed]').length===2);
  await page.screenshot({path:path.join(output,(mobile?'mobile':'desktop')+'.png')});
+ await page.waitForFunction(()=>document.querySelectorAll('[data-tone=emerald]').length===3);
+ assert.equal(await layer.locator('[data-tactical-grid].awakened, .combat-base-aura, image[href*="pointed-hex-high-angle"], image[href*="portrait-stand"]').count(),0);
+ const boardToggle=page.locator('#adventureSlBoard .slcb-toggle');
+ const openBoard=async()=>{if(!await page.locator('[data-objects-toggle]').count())await boardToggle.click();};
+ const moveLyra=async()=>{await openBoard();await page.locator('[data-instance]').filter({hasText:'Lyra Gråväv'}).getByText('Flytta',{exact:true}).click();};
+ // Force a short detour around an open polyline between two otherwise free centers.
+ await page.evaluate(()=>{fixture.config.geometry=[{closed:false,movement:true,points:[[350,179],[350,196]]}];
+   window.aleaAdventureFigures.setGeometry(fixture.map,{...fixture.config});});
+ await moveLyra();
+ if(!mobile){await page.mouse.move(...await point(8,5));await layer.locator('[data-destination]').waitFor();
+  await page.locator('#mapViewport').screenshot({path:path.join(output,'planned-route.png')});}
+ await recordMap(page,mobile,'living-path',()=>touch(8,5));await page.waitForFunction(()=>fixture.rows.find(r=>r.name==='Lyra Gråväv').q===8);
+ const route=await page.evaluate(()=>fixture.requests.at(-1)?.body?.path||fixture.requests.findLast(r=>r.path==='rpc/command_adventure_hex').body.path);
+ assert.ok(route.length>3,'The wall between centers must force a detour');
+ await openBoard();const before=await page.evaluate(()=>fixture.rows.map(r=>[r.q,r.r]));
+ await recordMap(page,mobile,'battle-awakening',async()=>{await page.locator('#adventureModeSwitch [data-mode=battle]').click();await layer.locator('[data-tactical-grid].awakened').waitFor({state:'attached'});});await layer.locator('[data-tactical-grid].awakened').waitFor({state:'attached'});
+ assert.deepEqual(await page.evaluate(()=>fixture.rows.map(r=>[r.q,r.r])),before);
+ await page.locator('#mapViewport').scrollIntoViewIfNeeded();
+ await page.waitForTimeout(230);
+ await page.locator('#mapViewport').screenshot({path:path.join(output,mobile?'mobile-awakening.png':'awakening.png')});
+ await moveLyra();await touch(7,5);await page.waitForFunction(()=>Object.values(fixture.state.budgets).some(a=>a.spent===1));
+ await moveLyra();await touch(1,6);assert.equal(await page.evaluate(()=>fixture.rows.find(r=>r.name==='Lyra Gråväv').q),7);
+ await page.locator('#adventureModeSwitch [data-mode=exploration]').click();
+ await layer.locator('[data-tactical-grid].awakened').waitFor({state:'detached'});
+ await page.locator('#adventureModeSwitch [data-mode=battle]').click();
+ await layer.locator('[data-tactical-grid].awakened').waitFor({state:'attached'});
+ assert.equal(await page.evaluate(()=>Object.values(fixture.state.budgets).some(b=>b.spent===1)),true);
+ await openBoard();await page.locator('[data-hex-command="end"]').click();
+ await layer.locator('[data-tactical-grid].awakened').waitFor({state:'detached'});
  const hero=page.locator('[data-figure-id]').filter({has:page.locator('[data-hero-class="lyra"]')});
  await hero.click({force:true});
  await page.evaluate(()=>openMapLocationInfoByArea(fixture.room.id));
@@ -144,6 +219,7 @@ for(const mobile of [false,true]){
  await page.waitForFunction(()=>document.querySelectorAll('[data-figure-id]').length===5);
  await page.evaluate(()=>{centralCampaignRole='player';renderMapPanel()});
  await page.waitForFunction(()=>document.querySelectorAll('[data-figure-id]').length===4&&!document.querySelector('#adventureSlBoard .slcb-toggle'));
+ await page.locator('#mapViewport').screenshot({path:path.join(output,mobile?'mobile-player.png':'player.png')});
  assert.equal(await page.locator('[data-concealed]').count(),0);assert.deepEqual(errors,[]);
  await verifyZoomDetail(page, mobile);
  console.log(mobile?'Touch PASS':'Desktop PASS');

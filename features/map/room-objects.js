@@ -15,6 +15,22 @@ export function containsObjectPoint(row,size,[mapX,mapY]){
   return Math.abs(x*cos+y*sin)<=size.width/2 && Math.abs(y*cos-x*sin)<=size.depth/2;
 }
 
+// Clip a center-to-center movement segment against the rotated physical rectangle.
+export function intersectsObjectStep(row,size,from,to){
+  if(!size)return false;
+  const angle=Number(row.rotation)*Math.PI/180,c=Math.cos(angle),s=Math.sin(angle);
+  const local=([x,y])=>[(x-row.x)*c+(y-row.y)*s,(y-row.y)*c-(x-row.x)*s];
+  const a=local(from),b=local(to);
+  let enter=0,leave=1;
+  for(const [axis,half] of [[0,size.width/2],[1,size.depth/2]]){
+    const d=b[axis]-a[axis];
+    if(Math.abs(d)<1e-9){if(Math.abs(a[axis])>half)return false;continue;}
+    const t1=(-half-a[axis])/d,t2=(half-a[axis])/d;
+    enter=Math.max(enter,Math.min(t1,t2));leave=Math.min(leave,Math.max(t1,t2));
+  }
+  return enter<=leave;
+}
+
 export function renderRoomObjects(host,rows,definition,change,{loaded,pending,error}){
   if(!host?.isConnected)return;
   const heading=document.createElement('h4');heading.textContent='Objekt i rummet';

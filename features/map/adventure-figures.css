@@ -13,17 +13,11 @@
 .adventure-figure-layer[data-gm] [data-figure-id] { pointer-events:all; cursor:grab; touch-action:none }
 .adventure-figure-layer [data-concealed] { opacity:.65 }
 .adventure-figure-layer [data-concealed] .figure-secret { fill:#242034; stroke:#e4bee7; stroke-width:1.5; vector-effect:non-scaling-stroke }
-.adventure-hex-light { fill:#f5cc76; fill-opacity:.3; stroke:#fff0b9; stroke-width:2; vector-effect:non-scaling-stroke; filter:drop-shadow(0 0 3px #e3aa48) }
-.adventure-hex-light[data-fading] { animation:hex-afterglow 120ms ease-out forwards }
-@keyframes hex-afterglow { to { opacity:0 } }
 .adventure-figure-ghost { pointer-events:none; position:fixed; top:0; left:0; z-index:10002; overflow:visible; filter:drop-shadow(0 5px 4px #160e0ac9); will-change:transform }
 body:has(.adventure-figure-layer[data-gm]) .arcane-character-portrait[data-character] { cursor:grab; touch-action:none; user-select:none }
 body:has(.adventure-figure-ghost), body:has(.adventure-figure-ghost) * { cursor:grabbing!important; user-select:none!important }
-@media (prefers-reduced-motion:reduce) { .adventure-hex-light[data-fading] { animation-duration:1ms } }
 #mapPage #adventureControls[hidden] { display:none }
-.adventure-figure-layer [data-selected] > ellipse { fill:#d4b16444; stroke:#ffe4a1; stroke-width:2; vector-effect:non-scaling-stroke }
 .adventure-figure-layer [data-figure-id] { pointer-events:all }
-body:has(#mapPage:not(.hidden)) .alea-app-header > .bar { max-width:none }
 body:has(#mapPage:not(.hidden)) main:has(#mapPage) {
   box-sizing:border-box; width:100%; max-width:none; margin:0;
   padding:0 var(--alea-navigation-inline-padding);
@@ -52,19 +46,13 @@ body:has(#mapPage:not(.hidden)) main:has(#mapPage) {
   #mapPage .map-location-images-panel, #mapPage .map-location-panel {max-height:none}
 }
 
-@media(min-width:901px) {
-  body:has(#mapPage:not(.hidden)) .alea-app-header { --adventure-nav-size:clamp(54px,6.3vw,104px); padding-inline:var(--alea-navigation-inline-padding) }
-  body:has(#mapPage:not(.hidden)) .alea-app-header > .bar {width:100%;padding-inline:0}
-  body:has(#mapPage:not(.hidden)) .alea-app-header::before {width:calc(100% - 2 * var(--alea-navigation-inline-padding))}
-  body:has(#mapPage:not(.hidden)) .alea-toolstrip {min-height:var(--adventure-nav-size);padding-left:calc(var(--adventure-nav-size) + 12px)}
-  body:has(#mapPage:not(.hidden)) .alea-banner-home-link,
-  body:has(#mapPage:not(.hidden)) .alea-banner-home-icon {width:var(--adventure-nav-size);height:var(--adventure-nav-size)}
-  body:has(#mapPage:not(.hidden)) .alea-toolstrip > .btn.alea-nav-art {
-    flex-basis:var(--adventure-nav-size)!important;width:var(--adventure-nav-size)!important;
-    min-width:var(--adventure-nav-size)!important;max-width:var(--adventure-nav-size)!important;
-    height:var(--adventure-nav-size)!important;min-height:var(--adventure-nav-size)!important;
+@media(min-width:1024px) {
+  body:has(#mapPage:not(.hidden)) main:has(#mapPage) {
+    width:min(var(--alea-desktop-grid-width),calc(100% - var(--alea-desktop-grid-gutters)));
+    margin-inline:auto;
+    padding-inline:0;
   }
-  body:has(.arcane-character-rail:not([hidden])) #mapPage #mapLocationPanel {padding-inline-end:4.25rem}
+  #mapPage .mapworkarea {gap:12px}
 }
 
 #sharedMapArchive {margin-top:.65rem;border-top:1px solid #685137;padding-top:.5rem}
@@ -72,3 +60,68 @@ body:has(#mapPage:not(.hidden)) main:has(#mapPage) {
 #sharedMapList {display:grid;gap:.35rem;padding:.5rem 0}
 #sharedMapList .btn {text-align:left;white-space:normal}
 #sharedMapList [aria-pressed=true] {border-color:#c8a36b}
+
+.arcane-mesh-line {fill:none;stroke:#d0bd8a;stroke-width:1;vector-effect:non-scaling-stroke}
+[data-tactical-grid] {opacity:0;transition:opacity var(--fade-time,800ms) ease-out}
+[data-tactical-grid].awakened {opacity:var(--grid-opacity,.38)}
+[data-actor-hex] {--tone:#c5c1b6;color:var(--tone)}
+[data-tone=emerald] {--tone:#6cc89e}
+[data-tone=ruby] {--tone:#df7773}
+[data-tone=amber] {--tone:#cda662}
+[data-tone=sapphire] {--tone:#70a2dd}
+.hex-halo,.hex-edge,.hex-path,.hex-invalid {vector-effect:non-scaling-stroke;pointer-events:none}
+.hex-halo {fill:none;stroke:currentColor;stroke-width:4;opacity:calc(.16 * var(--hex-glow))}
+.hex-edge {fill:none;stroke:currentColor;stroke-width:1.3;opacity:calc(.52 + .36 * var(--hex-glow))}
+[data-actor-hex][data-selected] .hex-edge {stroke-width:2.4;opacity:1}
+[data-actor-hex][data-selected] .hex-halo {stroke-width:6;opacity:calc(.3 * var(--hex-glow))}
+.hex-path,.hex-invalid {fill:#acdcc4;fill-opacity:.09;stroke:#9edbbb;stroke-width:1.4}
+.hex-path[data-destination] {stroke:#f0deb0;stroke-width:2;fill-opacity:.2}
+.hex-path[data-move-type=half] {fill:#80bb77;stroke:#8dd076}
+.hex-path[data-move-type=full] {fill:#d59637;stroke:#f3b54e}
+.hex-invalid {stroke:#b36664;fill:#8d4342;fill-opacity:.13}
+.hex-settings details {margin-block:.5rem}
+.hex-settings summary {cursor:pointer}
+.hex-settings details[open] {display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:.5rem}
+.hex-settings summary {grid-column:1/-1}
+#adventureSlBoard .hex-settings label:has([type=checkbox]) {display:flex;align-items:center}
+.adventure-initials {fill:#f7eaca;stroke:#31251b;stroke-width:.06em;paint-order:stroke;font-family:Georgia,serif}
+
+.adventure-mode-switch:not([hidden]) {display:flex;justify-content:center;gap:.35rem;margin:.4rem 0}
+.adventure-mode-switch button[aria-pressed="true"] {opacity:1;border-color:var(--gold,#aa8956);font-weight:bold;text-decoration:underline;text-underline-offset:.22em}
+
+#mapPage aside:not(.in-battle) > .battle-content,
+#mapPage aside.in-battle > .exploration-content {display:none}
+#mapPage .battle-content ol {padding-inline-start:1.6rem}
+#mapPage .adventure-participant {padding:.5rem .3rem;border-bottom:1px solid #55432f}
+
+#mapPage .mapworkarea[hidden] {display:none}
+.adventure-encounter-frame {display:block;width:100%;height:calc(100dvh - var(--adventure-header,130px));border:0}
+.adventure-encounter-document .alea-app-header,
+.adventure-encounter-document #aleaAudioDock,
+.adventure-encounter-document #aleaSoundboard,
+.adventure-encounter-document .arcane-character-rail {display:none!important}
+.adventure-encounter-document main,
+.adventure-encounter-document #combatPage .combatpage {width:100%;max-width:none;margin:0;padding:0}
+
+/* The embedded viewport can be shorter than the outer game window. */
+.adventure-encounter-document #combatPage .combat-shell-live .combat-turn-actions .combat-row-tool-btn {
+  width:min(100%, 3.4rem);
+  height:auto;
+  min-height:0;
+  aspect-ratio:1;
+  flex:none;
+}
+.adventure-encounter-document #combatPage .combat-turn-actions .combat-turn-action-tool {
+  flex-direction:column;
+  align-items:center;
+}
+.adventure-encounter-document #combatPage .combat-turn-actions .combat-turn-action-tool::after {
+  position:static;
+  transform:none;
+  margin-top:.15rem;
+  line-height:1.2;
+}
+[data-encounter-choice] {max-width:min(31rem,90vw);color:#f4e4c4;background:#251d15;border:1px solid #937247;border-radius:.6rem;padding:1.1rem}
+[data-encounter-choice]::backdrop {background:#100b08b8}
+[data-encounter-choice] h2 {margin:0 0 1rem;font-size:1.2rem}
+[data-encounter-choice] button {margin-block:.2rem}

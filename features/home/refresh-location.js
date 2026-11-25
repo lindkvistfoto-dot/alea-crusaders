@@ -2,6 +2,10 @@
  * Never repeat dice throws, combat actions or form submissions. */
 (function(){
  'use strict';
+ if(window.parent && window.parent!==window && window.location?.search==='?view=adventure-encounter'){
+  document.documentElement.classList.remove('alea-route-restoring');
+  return;
+ }
  const KEY='alea-refresh-location-v1';
  const PAGES=new Set(['landing','home','view','shopPage','innPage','academyPage',
   'combatPage','mapPage','dicePage','journalPage','admin','legolasPanel']);

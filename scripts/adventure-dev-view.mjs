@@ -42,7 +42,7 @@ try{
  });
  const layout=await page.evaluate(()=>{
   const rect=s=>{const r=document.querySelector(s).getBoundingClientRect();return [r.left,r.width,r.right]};
-  return ['.alea-app-header > .bar','#mapPage .mapworkarea','#mapLocationImagesPanel','#mapPage .mapmain','#mapLocationPanel'].map(rect);
+  return ['.alea-app-header > .bar','#mapPage .mapworkarea','#mapPage .map-location-images-panel','#mapPage .mapmain','#mapPage .map-location-panel'].map(rect);
  });
  assert.ok(Math.abs(layout[0][0]-layout[1][0])<3&&Math.abs(layout[0][2]-layout[1][2])<3,JSON.stringify(layout));
  assert.ok(Math.abs(layout[2][1]*2-layout[3][1])<3&&Math.abs(layout[4][1]-layout[2][1])<3,JSON.stringify(layout));
