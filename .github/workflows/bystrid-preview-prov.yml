@@ -1,0 +1,26 @@
+name: Bystrid Skelett – startprov i DEV
+on:
+  push:
+    branches: [prov/bystrid-skelett-start]
+permissions:
+  contents: read
+concurrency: bystrid-skelett-start
+jobs:
+  startprov:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-save playwright@1.56.1 && npx playwright install --with-deps chromium
+      - run: node scripts/bystrid-preview-prov.mjs
+        env:
+          ALEA_DEV_TEST_EMAIL: ${{ secrets.ALEA_DEV_TEST_EMAIL }}
+          ALEA_DEV_TEST_PASSWORD: ${{ secrets.ALEA_DEV_TEST_PASSWORD }}
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: bystrid-runda-1
+          path: test-results/bystrid-start.png
