@@ -87,7 +87,10 @@ try{
     return result;
   }
   async function checkPlayerProjection(){
-    const spectator=await context.newPage();
+    // A second browser represents the player's screen; changing focus in a
+    // single browser can suspend the other tab's animation frames.
+    const playerBrowser=await chromium.launch({channel:'chrome',args:['--enable-unsafe-swiftshader']});
+    const spectator=await playerBrowser.newPage({storageState:await context.storageState(),viewport:{width:1440,height:920}});
     try{
       await spectator.goto(url);
       await spectator.waitForFunction(id=>activeCampaignMap?.id===id && document.querySelector('.mapworkarea.encounter-active'),map,{timeout:75000});
@@ -99,14 +102,23 @@ try{
           return adventurePlayerPreview && activeCampaignMap?.id===map && image.naturalWidth===1 &&
             !campaignMapAreas.length && !document.querySelector('[data-figure-id]') &&
             (active ? frame?.getClientRects().length && frame.contentDocument?.querySelector('#encounter-discovery')?.childElementCount===0 : !frame?.getClientRects().length);
-        },{map,active},{timeout:45000});
+        },{map,active},{timeout:45000,polling:150}).catch(async error=>{
+          console.log('Spelarens kartstatus',await spectator.evaluate(()=>({
+            preview:adventurePlayerPreview,map:activeCampaignMap?.id,areas:campaignMapAreas.length,
+            width:document.querySelector('#mapImage').naturalWidth,visibility:document.visibilityState,
+            figures:document.querySelectorAll('[data-figure-id]').length,connection:document.querySelector('#mapPage').dataset.realtime,
+            frame:document.querySelector('.adventure-encounter-frame')?.hidden,notice:document.querySelector('.adventure-transition')?.textContent,
+            status:document.querySelector('#mapStatusText')?.textContent
+          })));
+          throw error;
+        });
       }
       await masked(true);
       await mode('exploration').click();await page.getByRole('button',{name:'Pausa och utforska'}).click();
       await masked(false);
       await mode('battle').click();await masked(true);
       console.log('Spelarprojektion verifierad före, under och efter paus på provkartan.');
-    }finally{await spectator.close();}
+    }finally{await playerBrowser.close();}
   }
   async function checkExploredRoom(){
     const village='dca58a7b-217d-46bc-8526-1468fad1dd69';

@@ -164,7 +164,7 @@ export function syncEncounterCamera(){mounted?.applyCamera?.();}
 window.aleaAdventureEncounterContext=child=>{
   if(!mounted || mounted.frame.contentWindow!==child)return null;
   const entry=mounted,{view,id,frame}=entry;
-  return {id,viewport,
+  return {id,viewport,observeEncounter:view.observeEncounter,
     async confirm(...args){
       if(mounted!==entry || !view.encounter)return false;
       entry.confirming=true;
@@ -253,6 +253,11 @@ export async function enterEmbeddedEncounter(){
         const visible=context.visibleFigures();
         if(!visible.length)return Promise.resolve([]);
         path+='&visible_to_players=eq.true&source_instance_key=in.('+visible.join(',')+')';
+      }
+      if(path.startsWith('combat_instances?') && path.includes('select=id,updated_at,status')){
+        const rows=await original(path,{...options,headers:{...options.headers,...headers}});
+        void context.observeEncounter?.(rows[0]||null);
+        return rows;
       }
       if(path.startsWith('combat_instances?') && path.includes('select=*')){
         const safeColumns='id,name,map_id,campaign_id,session_id,status,round_number,phase,active_actor_id,active_responder_id,updated_at,rows:settings->rows,hex_scale:settings->hex_scale';

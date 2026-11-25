@@ -176,6 +176,7 @@ function zoomTo(mode){
 document.getElementById('adventureZoomPreset').addEventListener('change',e=>{zoomTo(e.target.value);e.target.value='';});
 function close() {
   cancel();
+  clearInterval(view?.encounterTimer);
   view?.hexLayer.destroy();view?.objects?.destroy();
   view?.layer.remove(); view=null;
   transitionMessage();renderBoard(null); notice();
@@ -193,6 +194,10 @@ function sync(map) {
   view={map,campaign,gm,layer,pieces,lights,hexLayer,hex:{prefs:{...defaults},round:0,epoch:0,budgets:{}},session:undefined,rows:[],open:false,ready:false,version:0,category:'character',hidden:true,prepared:new Set()};
   const v=view;
   v.selectFigure=id=>selectPiece(v,id);
+  if(!gm){
+    v.observeEncounter=row=>observePlayerEncounter(v,row);
+    v.encounterTimer=setInterval(()=>void followPlayerEncounter(v),5000);
+  }
   v.objects=createObjectEditor({map,parent:bounds,before:lights,live:true,manager:gm,areas:()=>campaignMapAreas,
     getScale:()=>Number(v.config?.pixelsPerMeter)||Number(v.map.pixels_per_meter)||0,onEnter:cancel,
     onPick:()=>viewport.scrollIntoView({block:'nearest'})});
@@ -236,11 +241,31 @@ async function prepare(v,rows) {
   }
   if(view===v && fresh.length)renderPieces(v);
 }
-async function readRows(v) {
+// Signals reconcile map discovery too. Follow the shared encounter independently
+// when a missed signal or a slow raster refresh would leave the player in the old mode.
+function observePlayerEncounter(v,row){
+  if(view!==v || !v.ready || !v.session)return;
+  v.lastEncounterRead=performance.now();
+  if((row?.id??null)!==(v.encounter||v.pausedEncounter||null) ||
+    (row?.status==='paused')!==Boolean(v.pausedEncounter))return readRows(v,row);
+}
+async function followPlayerEncounter(v){
+  if(view!==v || !v.ready || !v.session || v.checkingEncounter || document.hidden ||
+    performance.now()-(v.lastEncounterRead??0)<8000)return;
+  const session=v.session,version=v.version;
+  v.checkingEncounter=true;
+  try{
+    const row=await currentEncounter(v);
+    if(view!==v || v.session!==session || v.version!==version)return;
+    await observePlayerEncounter(v,row);
+  }catch{/* Normal map reconciliation and the next status read can recover. */}
+  finally{v.checkingEncounter=false;}
+}
+async function readRows(v,knownEncounter) {
   const version=++v.version;
   if(!v.session)return;
   try {
-    const [hex,encounter,rows]=await Promise.all([hexRead(v),currentEncounter(v),v.gm?dbJson(table+'?'+scope(v)+'&select='+columns+'&order=r,q'):dbJson('rpc/read_adventure_player_figures',{method:'POST',body:JSON.stringify({p_map_id:v.map.id,p_session_id:v.session})})]);
+    const [hex,encounter,rows]=await Promise.all([hexRead(v),knownEncounter===undefined?currentEncounter(v):knownEncounter,v.gm?dbJson(table+'?'+scope(v)+'&select='+columns+'&order=r,q'):dbJson('rpc/read_adventure_player_figures',{method:'POST',body:JSON.stringify({p_map_id:v.map.id,p_session_id:v.session})})]);
     if(view!==v||v.version!==version)return;
     if(v.gm && !rows.length && !v.scenes){
       v.scenes=await dbJson('campaign_combat_scenes?campaign_id=eq.'+v.campaign+'&select=id,name&order=name');
@@ -251,6 +276,7 @@ async function readRows(v) {
     if(view!==v||v.version!==version)return;
     if(v.ready && (v.encounter||v.pausedEncounter||encounter) &&
       (v.encounter!==encounter?.id || encounter?.status==='paused'))mapView.fitted=false;
+    v.lastEncounterRead=performance.now();
     v.panelTurn=turn;
     v.pausedEncounter=encounter?.status==='paused'?encounter.id:null;
     v.encounter=v.pausedEncounter?null:encounter?.id;
