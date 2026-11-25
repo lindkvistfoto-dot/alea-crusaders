@@ -1,5 +1,6 @@
 // Run against a locally served DEV build:
 // node scripts/adventure-panels-acceptance.mjs http://127.0.0.1:4173 crypt.webp visual-results/panels
+import {compareCombatPanels} from './adventure-encounter-acceptance.mjs';
 import {chromium} from 'playwright';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -19,10 +20,11 @@ async function scenario(mobile) {
   const session = {id:randomUUID(), campaign_id:randomUUID(), status:'active'};
   const map = {id:randomUUID(), campaign_id:session.campaign_id, name:'Kryptans dörr', width:800, height:680, image_url:origin+'/crypt.webp', player_visible:true};
   const room = {id:randomUUID(), location_id:randomUUID(), name:'Portkammaren', status:'explored', shape_type:'rect', shape_data:{x:0,y:0,width:800,height:680}};
-  const hero = {id:randomUUID(), character_id:art.heroes[0].id, name:art.heroes[0].name, q:4,r:5,player_visible:true};
+  const astrid=art.heroes.find(hero=>hero.name==='Astrid Eldhjärta');
+  const hero = {id:randomUUID(), character_id:astrid.id, name:astrid.name, q:4,r:5,player_visible:true};
   const guard = {id:randomUUID(), monster_id:randomUUID(), name:'Kryptväktare', q:7,r:4,player_visible:false};
   // Resume a saved, partly spent round. Resetting to the defaults must be detectable.
-  const hex = {round:0,paused:3,epoch:0,prefs:{grid:'hidden'},budgets:{[hero.id]:{max:4,spent:1}}};
+  const hex = {round:0,paused:3,epoch:0,prefs:{grid:'hidden'},budgets:{[hero.id]:{max:18,spent:8}}};
   const clients = [];
   const config = {version:1,darkness:0,pixelsPerMeter:25,lights:[],geometry:[],freeSight:null};
   async function client(manager) {
@@ -71,6 +73,7 @@ async function scenario(mobile) {
         return [hero,guard];
       }
       if(key.startsWith('combat_instances?')){
+        if(key.includes('settings->>origin=eq.adventure'))return [];
         const query=new URLSearchParams(key.split('?')[1]);
         assert.equal(query.get('map_id'),'eq.'+map.id);
         assert.equal(query.get('session_id'),'eq.'+session.id);
@@ -184,42 +187,49 @@ async function scenario(mobile) {
     await gm.page.locator('[data-hex-setting=grid]').selectOption('always');
     await gm.page.locator('[data-tactical-grid].awakened').waitFor({state:'attached'});
     await toggle.click();await inspect('strid-på',true,true);
-    await toggle.click();
-    await gm.page.locator('[data-instance="'+hero.id+'"] [data-action=move]').click();
-    const layer=gm.page.locator('.adventure-figure-layer');
-    await gm.page.locator('#mapViewport').scrollIntoViewIfNeeded();
-    const target=await layer.evaluate(async el=>{
-      // Centre this one-step move in the viewport after the board has closed.
-      const viewport=document.querySelector('#mapViewport');
-      const dest=new DOMPoint(25*Math.sqrt(3)*(5+5/2),37.5*5);
-      const bounds=viewport.getBoundingClientRect();
-      const prior=dest.matrixTransform(el.getScreenCTM());
-      mapView.x+=bounds.left+bounds.width/2-prior.x;
-      mapView.y+=bounds.top+bounds.height/2-prior.y;
-      applyMapTransform();
-      await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+    assert.match(await gm.page.locator('.adventure-move-cost').innerText(),/8\/18/);
+    for(const [q,spent,type] of [[5,9,'half'],[6,10,'full']]){
+      await toggle.click();
+      await gm.page.locator('[data-instance="'+hero.id+'"] [data-action=move]').click();
+      const layer=gm.page.locator('.adventure-figure-layer');
+      await gm.page.locator('#mapViewport').scrollIntoViewIfNeeded();
+      const target=await layer.evaluate(async (el,q)=>{
+        // Centre this one-step move in the viewport after the board has closed.
+        const viewport=document.querySelector('#mapViewport');
+        const dest=new DOMPoint(25*Math.sqrt(3)*(q+5/2),37.5*5);
+        const bounds=viewport.getBoundingClientRect();
+        const prior=dest.matrixTransform(el.getScreenCTM());
+        mapView.x+=bounds.left+bounds.width/2-prior.x;
+        mapView.y+=bounds.top+bounds.height/2-prior.y;
+        applyMapTransform();
+        await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
 
-      const point=new DOMPoint(25*Math.sqrt(3)*(5+5/2),37.5*5).matrixTransform(el.getScreenCTM());
-      return [point.x,point.y];
-    });
-    await gm.page.waitForFunction(([x,y])=>document.querySelector('#mapViewport').contains(document.elementFromPoint(x,y)),target);
-    if(mobile) await gm.page.touchscreen.tap(...target);
-    else await gm.page.mouse.click(...target);
-    await gm.page.waitForFunction(()=>!document.querySelector('[data-cancel]'));
-    for(const {page} of clients){
-      await page.waitForFunction(id=>{
-        const piece=document.querySelector('[data-figure-id="'+id+'"]');
-        const matrix=piece?.transform.baseVal.consolidate()?.matrix;
-        return matrix && Math.abs(matrix.e-25*Math.sqrt(3)*7.5)<0.01 && Math.abs(matrix.f-187.5)<0.01;
-      },hero.id);
+        const point=new DOMPoint(25*Math.sqrt(3)*(q+5/2),37.5*5).matrixTransform(el.getScreenCTM());
+        return [point.x,point.y];
+      },q);
+      await gm.page.waitForFunction(([x,y])=>document.querySelector('#mapViewport').contains(document.elementFromPoint(x,y)),target);
+      if(mobile) await gm.page.touchscreen.tap(...target);
+      else await gm.page.mouse.click(...target);
+      await gm.page.waitForFunction(()=>!document.querySelector('[data-cancel]'));
+      for(const {page} of clients){
+        await page.waitForFunction(({id,q})=>{
+          const piece=document.querySelector('[data-figure-id="'+id+'"]');
+          const matrix=piece?.transform.baseVal.consolidate()?.matrix;
+          return matrix && Math.abs(matrix.e-25*Math.sqrt(3)*(q+2.5))<0.01 && Math.abs(matrix.f-187.5)<0.01;
+        },{id:hero.id,q});
+      }
+      assert.deepEqual([hero.q,hero.r],[q,5]);
+      const cost=gm.page.locator('.adventure-move-cost');
+      await gm.page.locator('.adventure-move-cost[data-move-type='+type+']').filter({hasText:spent+'/18'}).waitFor();
+      assert.ok((await cost.innerText()).includes(spent+'/18'));
+      await gm.page.screenshot({path:path.join(output,device+'-sl-'+spent+'-av-18.png')});
     }
-    assert.deepEqual([hero.q,hero.r],[5,5]);
     await mode('exploration');await inspect('utforskning-på',false,true);
     await mode('battle');await inspect('återupptagen',true,true);
     await player.enter();await inspect('omladdning',true,true);
     await toggle.click();
     const card=gm.page.locator('[data-instance="'+hero.id+'"]');
-    assert.match(await card.innerText(),/Förflyttning 2 \/ 4/);
+    assert.match(await card.innerText(),/Förflyttning 8 \/ 18/);
     await gm.page.locator('[data-instance="'+guard.id+'"] [data-action=visibility]').click();
     await player.page.locator('[data-figure-id="'+guard.id+'"]').waitFor({state:'attached'});
     await toggle.click();await inspect('avslöjad',true,true);
@@ -236,6 +246,7 @@ async function scenario(mobile) {
 }
 
 try{
+  await compareCombatPanels(browser,origin,output);
   for(const mobile of [false,true]) await scenario(mobile);
   await fs.writeFile(path.join(output,'result.json'),JSON.stringify({failures},null,2));
   assert.equal(failures.length,0,failures.join('\n'));

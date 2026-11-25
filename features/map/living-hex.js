@@ -94,11 +94,15 @@ export function livingHexLayer(parent,map,manager){
     }
     for(const [k,n] of markers)if(!keep.has(k)){n.remove();markers.delete(k);}
   }
-  function route(path,valid=true){
+  function route(path,valid=true,budget=null){
     preview.replaceChildren();
     if(!grid||!path?.length||!prefs.path)return;
     path.forEach(({x,y,q,r},i)=>{
       const end=i===path.length-1,el=polygon(x,y,valid?'hex-path':'hex-invalid');
+      if(valid&&budget){
+        const actor={movement_max:budget.max,movement_remaining:budget.max-budget.spent};
+        el.dataset.moveType=combatDestinationKeepsAction(actor,i+1)?'half':'full';
+      }
       el.dataset.cell=q+','+r;if(end)el.dataset.destination='';
       if(!reduced())el.animate([{opacity:.08},{opacity:1}],{duration:190,delay:Math.min(i*22,200),fill:'backwards'});
       preview.append(el);

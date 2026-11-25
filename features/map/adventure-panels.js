@@ -39,8 +39,13 @@ export function renderAdventurePanels(view) {
   }
   const current = actor && figureFor(actor);
   const budget = current && view.hex.budgets?.[current.id];
+  const movement = budget && {movement_max:budget.max,movement_remaining:budget.max-budget.spent};
+  const movementNote = movement ? '<p class="adventure-move-cost" data-move-type="'+
+    (combatMovementHasUsedMoreThanHalf(movement)?'full':'half')+'">'+
+    (combatMovementHasUsedMoreThanHalf(movement)?'Hel förflyttning · över handlingsgränsen':'Inom halv förflyttning')+
+    ' · '+combatMovementSpent(movement)+'/'+combatMovementMaximum(movement)+'</p>' : '';
   left.innerHTML = '<h3>Runda '+Number(view.hex.round)+'</h3><p>'+ (current ? 'På tur · '+escAttr(current.name) : 'Ingen synlig aktör på tur') +
-    '</p><h4>Handlingar</h4><p>'+(budget ? 'Förflyttning '+Math.max(0,budget.max-budget.spent)+' / '+Number(budget.max) : 'Taktisk förflyttning')+'</p>';
+    '</p><h4>Handlingar</h4><p>'+(budget ? 'Förflyttning '+Math.max(0,budget.max-budget.spent)+' / '+Number(budget.max) : 'Taktisk förflyttning')+'</p>'+movementNote;
   const cards = turn?.participants?.flatMap(p=>{
     const figure=figureFor(p);
     if (!figure) return [];

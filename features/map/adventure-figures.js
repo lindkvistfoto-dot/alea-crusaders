@@ -1,3 +1,4 @@
+import {currentEncounter,startEncounter,displayEncounter} from './adventure-encounter.js';
 import {readPanelTurn,renderAdventurePanels} from './adventure-panels.js';
 import {createObjectEditor} from './object-library.js';
 import './adventure-figures.css';
@@ -108,6 +109,7 @@ function toolPanel(v) {
     (list?'<h4>På kartan</h4><div class="slcb-visibility-list">'+list+'</div>':'');
 }
 function renderBoard(v) {
+  displayEncounter(v);
   renderAdventurePanels(v);
   modeSwitch.hidden=!(v?.gm && v.session && v.hexLoaded && v.grid);
   for(const button of modeSwitch.querySelectorAll('button')){
@@ -117,7 +119,12 @@ function renderBoard(v) {
   }
   const owner=canManageCampaignMaps();
   const context=adventurePlayerPreview?'Spelarvy':v?.map.name||'Karta';
-  const content='<div data-map-controls></div>'+(v?.gm?'<section class="slcb-module"><button class="btn" type="button" data-objects-toggle aria-expanded="'+Boolean(v.objects?.active)+'">'+(v.objects?.active?'Avsluta objektredigering':'Objekt')+'</button><div data-object-panel></div></section><section class="slcb-module"><h3>Figurer</h3>'+toolPanel(v)+'</section>'+(v.session&&v.hexLoaded?hexPanel(v.hex):''):'');
+  const scenes=v?.gm&&!v.rows.length?(v.scenes||[]):[];
+  const selectScene=scenes.length?'<label>Startpositioner<select data-field="seedScene"><option value="">Välj stridsscen</option>'+
+    scenes.map(scene=>'<option value="'+escAttr(scene.id)+'" '+(v.seedScene===scene.id?'selected':'')+'>'+escAttr(scene.name)+'</option>').join('')+'</select></label>':'';
+  const fightButton=v?.gm && v.ready && v.session && !v.encounter && v.grid ?
+    selectScene+'<button class="btn" data-action="start-encounter" '+(v.busy?'disabled':'')+'>'+(v.seedScene&&!v.rows.length?'Flytta scenens figurer hit och starta strid':'Starta strid på kartan')+'</button>':'';
+  const content='<div data-map-controls></div>'+fightButton+(v?.gm?'<section class="slcb-module"><button class="btn" type="button" data-objects-toggle aria-expanded="'+Boolean(v.objects?.active)+'">'+(v.objects?.active?'Avsluta objektredigering':'Objekt')+'</button><div data-object-panel></div></section><section class="slcb-module"><h3>Figurer</h3>'+toolPanel(v)+'</section>'+(v.session&&v.hexLoaded?hexPanel(v.hex):''):'');
   const html=owner?slControlBoardHtml({open:boardOpen,panelId:'adventureFigurePanel',toggle:'aleaAdventureFigures.toggle()',context,panel:boardOpen?content:''}):'<div data-map-controls></div>';
   if(board.htmlSignature!==html){
     const hexExpanded=board.querySelector('.hex-settings details')?.open;
@@ -232,9 +239,14 @@ async function readRows(v) {
   try {
     const [hex,rows]=await Promise.all([hexRead(v),v.gm?dbJson(table+'?'+scope(v)+'&select='+columns+'&order=r,q'):dbJson('rpc/read_adventure_player_figures',{method:'POST',body:JSON.stringify({p_map_id:v.map.id,p_session_id:v.session})})]);
     if(view!==v||v.version!==version)return;
+    if(v.gm && !rows.length && !v.scenes){
+      v.scenes=await dbJson('campaign_combat_scenes?campaign_id=eq.'+v.campaign+'&select=id,name&order=name');
+    }
+    const encounter=await currentEncounter(v);
     const turn=hex?.round ? await readPanelTurn(v,rows).catch(()=>({unavailable:true})) : null;
     if(view!==v||v.version!==version)return;
     v.panelTurn=turn;
+    v.encounter=encounter;
     const previous=v.rows;
     v.rows=rows;setHex(v,hex);v.ready=true;
     v.layer.toggleAttribute('data-gm',v.gm);
@@ -357,7 +369,7 @@ function updatePointer() {
       const next=search.next();
       if(next.done){
         token.search=null;
-        if(next.value?.length){token.cell=cell;token.route=next.value;v.hexLayer.route(next.value);}
+        if(next.value?.length){token.cell=cell;token.route=next.value;v.hexLayer.route(next.value,true,v.hex.round?budget:null);}
         else invalid();
         if(token.released)persist();
         return;
@@ -429,7 +441,7 @@ board.addEventListener('change',e=>{
   v[field]=field==='hidden'?e.target.checked:e.target.value;
   renderBoard(v);
 });
-board.addEventListener('click',e=>{
+board.addEventListener('click',async e=>{
   if(e.target.closest('[data-objects-toggle]')&&view?.gm){
     view.objects.editing(!view.objects.active);renderBoard(view);return;
   }
@@ -439,6 +451,13 @@ board.addEventListener('click',e=>{
   if(!action||!v?.gm)return;
   if(action==='session'){window.openGameSessionPanel();return;}
   if(!ready(v))return;
+  if(action==='start-encounter'){
+    v.busy=true;renderBoard(v);
+    try {await startEncounter(v);}
+    catch(error){if(view===v)notice(error.message);}
+    finally {if(view===v){v.busy=false;await readRows(v);}}
+    return;
+  }
   if(action==='place'){
     const row=sources(v.category).find(r=>r[sourceField(r)]===v.choice);
     if(row)void arm({...row,player_visible:v.category==='character'||!v.hidden});

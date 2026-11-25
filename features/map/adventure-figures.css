@@ -76,6 +76,8 @@ body:has(#mapPage:not(.hidden)) main:has(#mapPage) {
 [data-actor-hex][data-selected] .hex-halo {stroke-width:6;opacity:calc(.3 * var(--hex-glow))}
 .hex-path,.hex-invalid {fill:#acdcc4;fill-opacity:.09;stroke:#9edbbb;stroke-width:1.4}
 .hex-path[data-destination] {stroke:#f0deb0;stroke-width:2;fill-opacity:.2}
+.hex-path[data-move-type=half] {fill:#80bb77;stroke:#8dd076}
+.hex-path[data-move-type=full] {fill:#d59637;stroke:#f3b54e}
 .hex-invalid {stroke:#b36664;fill:#8d4342;fill-opacity:.13}
 .hex-settings details {margin-block:.5rem}
 .hex-settings summary {cursor:pointer}
@@ -91,3 +93,10 @@ body:has(#mapPage:not(.hidden)) main:has(#mapPage) {
 #mapPage aside.in-battle > .exploration-content {display:none}
 #mapPage .battle-content ol {padding-inline-start:1.6rem}
 #mapPage .adventure-participant {padding:.5rem .3rem;border-bottom:1px solid #55432f}
+
+#mapPage .mapworkarea[hidden] {display:none}
+.adventure-encounter-frame {display:block;width:100%;height:calc(100dvh - var(--adventure-header,130px));border:0}
+.adventure-encounter-document .alea-app-header,
+.adventure-encounter-document .arcane-character-rail {display:none!important}
+.adventure-encounter-document main,
+.adventure-encounter-document #combatPage .combatpage {width:100%;max-width:none;margin:0;padding:0}
