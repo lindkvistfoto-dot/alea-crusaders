@@ -1,0 +1,51 @@
+name: Äventyrsvyn – panelbyte
+on:
+  pull_request:
+    branches: [development, feat/adventure-mode-switch]
+    paths:
+      - 'index.html'
+      - 'legacy/app.js'
+      - 'features/map/**'
+      - 'features/combat/**'
+      - 'features/material/map-image-gallery*'
+      - 'scripts/adventure-panels-acceptance.mjs'
+      - 'tests/fixtures/adventure-figure-art.json'
+      - '.github/workflows/adventure-panels.yml'
+permissions:
+  contents: read
+jobs:
+  panels:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci && npm install --no-save --package-lock=false playwright@1.56.1
+      - run: npx playwright install --with-deps chromium
+      - run: npm run build
+        env:
+          ALEA_BUILD_ENV: development
+      - uses: actions/checkout@v4
+        with:
+          ref: 50e116696aa47a8f4179874638a149e4cc510fd0
+          path: crypt-fixture
+          sparse-checkout: preview/art-first
+          persist-credentials: false
+      - name: Compare GM and player panels on desktop and touch
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 --directory dist > "$RUNNER_TEMP/panels-http.log" 2>&1 &
+          server=$!
+          trap 'kill "$server"' EXIT
+          curl --retry 10 --retry-connrefused -fsS http://127.0.0.1:4173/ -o /dev/null
+          node scripts/adventure-panels-acceptance.mjs http://127.0.0.1:4173 crypt-fixture/preview/art-first/warm-floor.webp visual-results/panels
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: adventure-paneler
+          path: visual-results/panels
+          retention-days: 14
