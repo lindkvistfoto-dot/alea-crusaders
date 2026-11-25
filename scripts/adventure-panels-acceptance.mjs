@@ -27,6 +27,7 @@ async function scenario(mobile) {
   const hex = {round:0,paused:3,epoch:0,prefs:{grid:'hidden'},budgets:{[hero.id]:{max:18,spent:8}}};
   const clients = [];
   let nativeFight=null,nativePaused=false,starts=0,actors=[];
+  let failNextResume=true,pauseCommits=0;
   const config = {version:1,darkness:0,pixelsPerMeter:25,lights:[],geometry:[],freeSight:null};
   async function client(manager) {
     const page = await browser.newPage({viewport:mobile?{width:390,height:844}:{width:1440,height:960},hasTouch:mobile,isMobile:mobile});
@@ -65,7 +66,9 @@ async function scenario(mobile) {
       }
       if(key==='rpc/set_adventure_encounter_paused'){
         assert.ok(manager);assert.equal(values.p_encounter,nativeFight);
-        nativePaused=values.p_paused;await notifyOthers();return null;
+        if(!values.p_paused && failNextResume){failNextResume=false;throw Error('Tillfälligt avbrott i provet');}
+        await new Promise(resolve=>setTimeout(resolve,350));
+        pauseCommits++;nativePaused=values.p_paused;await notifyOthers();return null;
       }
       if(key==='rpc/command_adventure_hex'){
         assert.ok(manager);assert.equal(values.p_epoch,hex.epoch);
@@ -206,7 +209,13 @@ async function scenario(mobile) {
       const before=await Promise.all(clients.map(c=>snapshot(c.page)));
       await button(value).click();
       await gm.page.waitForFunction(value=>document.querySelector('[data-mode="'+value+'"]').getAttribute('aria-pressed')==='true',value);
-      assert.deepEqual(await Promise.all(clients.map(c=>snapshot(c.page))),before,'Kameran eller figurpositionerna ändrades vid lägesbyte');
+      const after=await Promise.all(clients.map(c=>snapshot(c.page)));
+      for(const [i,result] of after.entries()){
+        assert.deepEqual(result.pieces,before[i].pieces);
+        assert.deepEqual(result.camera.slice(0,3),before[i].camera.slice(0,3));
+        // Subtracting browser client rectangles can differ by a fraction of a CSS pixel.
+        for(const axis of [3,4])assert.ok(Math.abs(result.camera[axis]-before[i].camera[axis])<.01);
+      }
     }
     const toggle=gm.page.locator('#adventureSlBoard .slcb-toggle');
     await inspect('utforskning-av',false,false);
@@ -294,7 +303,7 @@ async function scenario(mobile) {
     await cameraControls(gm.page);
     const start=gm.page.locator('[data-action=start-encounter]');
     if(!await start.isVisible())await toggle.click();
-    await start.click();
+    await start.evaluate(button=>{button.click();button.click();});
     for(const {page} of clients){
       await page.locator('.adventure-encounter-frame').waitFor();
       await page.evaluate(()=>window.aleaAdventureFigures.refresh());
@@ -319,7 +328,7 @@ async function scenario(mobile) {
     await cameraControls(gm.page);
     const playerMask=player.page.frameLocator('.adventure-encounter-frame').locator('#encounter-discovery rect');
     assert.equal(await playerMask.getAttribute('width'),'650');
-    const originalDocument=await gm.page.locator('.adventure-encounter-frame').evaluate(f=>{f.contentWindow.cameraSessionMarker='same encounter';return f.contentWindow.performance.timeOrigin;});
+    const originalDocument=await gm.page.locator('.adventure-encounter-frame').evaluate(f=>f.contentWindow.performance.timeOrigin);
     assert.equal(starts,1);
     await button('exploration').click();
     await gm.page.getByRole('button',{name:'Stanna kvar i strid'}).click();
@@ -330,9 +339,13 @@ async function scenario(mobile) {
     await player.enter();
     assert.equal(await player.page.locator('.adventure-encounter-frame').count(),0);
     await gm.page.getByRole('button',{name:'Återuppta strid'}).click();
+    await gm.page.locator('.adventure-transition').filter({hasText:'Tillfälligt avbrott'}).waitFor();
+    await gm.page.getByRole('button',{name:'Försök igen'}).click();
+    await gm.page.locator('.adventure-transition').filter({hasText:'Återupptar striden'}).waitFor();
     for(const {page} of clients)await page.locator('.adventure-encounter-frame').waitFor();
     assert.equal(starts,1);
     assert.equal(await gm.page.locator('.adventure-encounter-frame').evaluate(f=>f.contentWindow.performance.timeOrigin),originalDocument);
+    assert.equal(pauseCommits,2);
     nativeFight=null;
     for(const {page} of clients){
       await page.evaluate(()=>window.aleaAdventureFigures.refresh());

@@ -89,6 +89,7 @@ try{
     const spectator=await context.newPage();
     try{
       await spectator.goto(url);
+      await spectator.waitForFunction(id=>activeCampaignMap?.id===id && document.querySelector('.mapworkarea.encounter-active'),map,{timeout:75000});
       const preview=spectator.locator('#adventurePreview');
       await preview.click();
       async function masked(active){
@@ -105,6 +106,22 @@ try{
       await mode('battle').click();await masked(true);
       console.log('Spelarprojektion verifierad före, under och efter paus på provkartan.');
     }finally{await spectator.close();}
+  }
+  async function checkExploredRoom(){
+    const village='dca58a7b-217d-46bc-8526-1468fad1dd69';
+    await page.goto(new URL('?view=adventure&map='+village,origin).href);
+    await page.waitForFunction(id=>activeCampaignMap?.id===id && campaignMapAreas.some(a=>a.status==='explored') && campaignMapAreas.some(a=>a.status!=='explored'),village);
+    const expected=await page.evaluate(async()=>{
+      const rooms=campaignMapAreas.filter(a=>a.status==='explored');
+      await openMapLocationInfoByArea(rooms[0].id);
+      return rooms.map(a=>a.id).sort();
+    });
+    await page.locator('#adventureZoomPreset').selectOption('room');
+    await page.locator('#adventurePreview').click();
+    await page.waitForFunction(id=>adventurePlayerPreview && activeCampaignMap?.id===id && document.querySelector('#mapImage').naturalWidth>1,village);
+    assert.deepEqual(await page.evaluate(()=>campaignMapAreas.map(a=>a.id).sort()),expected);
+    assert.equal(await page.locator('.sl-outline,[data-concealed]').count(),0);
+    console.log('Rum och serverbeskuren spelarvy kontrollerade på Skelettbyn med',expected.length,'utforskade områden.');
   }
   async function recordSwitch(){
     const folder=await fs.mkdtemp(os.tmpdir()+'/bystrid-video-');
@@ -219,5 +236,6 @@ try{
     }
     await finish();
   }
+  if(variant==='after')await checkExploredRoom();
   await context.close();
 }finally{await browser.close();}

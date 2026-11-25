@@ -69,8 +69,10 @@ const feedback=document.createElement('div');
 feedback.className='adventure-transition';
 feedback.setAttribute('role','status');
 viewport.after(feedback);
-let feedbackTimer;
+let feedbackTimer,feedbackLabel;
 export function transitionMessage(message,retry){
+  if(message && !retry && message===feedbackLabel)return;
+  feedbackLabel=message;
   clearTimeout(feedbackTimer);
   feedback.replaceChildren();
   if(!message)return;
