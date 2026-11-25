@@ -2,6 +2,8 @@
 import {chromium} from 'playwright';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
+import {execFileSync} from 'node:child_process';
+import os from 'node:os';
 const [origin,variant]=process.argv.slice(2);
 assert.match(origin,/^https:\/\/[a-z0-9-]+\.alea-crusaders\.pages\.dev\/?$/);
 assert.ok(['before','after'].includes(variant));
@@ -83,6 +85,62 @@ try{
     await fs.writeFile(output+'/times.json',JSON.stringify(timings,null,2));
     return result;
   }
+  async function recordSwitch(){
+    const folder=await fs.mkdtemp(os.tmpdir()+'/bystrid-video-');
+    const cdp=await context.newCDPSession(page),frames=[],writes=[];
+    await page.evaluate(()=>{
+      window.scrollTo(0,0);
+      document.addEventListener('click',event=>{
+        const dot=document.createElement('i');
+        Object.assign(dot.style,{position:'fixed',zIndex:2147483647,left:event.clientX-12+'px',top:event.clientY-12+'px',width:'24px',height:'24px',border:'3px solid gold',borderRadius:'50%',pointerEvents:'none'});
+        (document.querySelector('dialog[open]')||document.body).append(dot);
+        dot.animate([{opacity:1,transform:'scale(.6)'},{opacity:0,transform:'scale(1.8)'}],{duration:450}).finished.then(()=>dot.remove());
+      },true);
+    });
+    const top=Math.max(0,Math.floor((await mode('exploration').boundingBox()).y/2)*2-8);
+    cdp.on('Page.screencastFrame',e=>{
+      const filename='frame-'+String(frames.length).padStart(5,'0')+'.jpg';
+      frames.push({filename,time:e.metadata.timestamp});
+      writes.push(fs.writeFile(folder+'/'+filename,Buffer.from(e.data,'base64')));
+      void cdp.send('Page.screencastFrameAck',{sessionId:e.sessionId}).catch(()=>{});
+    });
+    await cdp.send('Page.startScreencast',{format:'jpeg',quality:82});
+    await page.waitForTimeout(700);
+    await mode('exploration').click();
+    await page.waitForTimeout(450);
+    await page.getByRole('button',{name:'Pausa och utforska'}).click();
+    await page.locator('.adventure-encounter-frame').waitFor({state:'hidden'});
+    await page.waitForTimeout(1000);
+    await mode('battle').click();
+    await page.locator('.adventure-encounter-frame:visible').waitFor();
+    await frame.locator('.combat-token-group').first().waitFor();
+    await page.waitForTimeout(1200);
+    await cdp.send('Page.stopScreencast');await cdp.detach();await Promise.all(writes);
+    assert.ok(frames.length>3);
+    const sequence=frames.map(({filename,time},i)=>'file '+filename+'\nduration '+Math.max(.016,(frames[i+1]?.time??time+1)-time)).join('\n');
+    await fs.writeFile(folder+'/frames.txt',sequence+'\nfile '+frames.at(-1).filename+'\n');
+    execFileSync('ffmpeg',['-loglevel','error','-f','concat','-safe','0','-i',folder+'/frames.txt','-vf','crop=iw:ih-'+top+':0:'+top+',fps=25,format=yuv420p','-c:v','libx264','-crf','22','-movflags','+faststart','-y',output+'/Bystrid-kartvaxling.mp4']);
+    await fs.rm(folder,{recursive:true});
+  }
+  async function checkMovement(){
+    await frame.locator('.combat-row-move').click();
+    const candidates=frame.locator('.combat-movement-hit');
+    const key=await candidates.evaluateAll(nodes=>{
+      const svg=document.querySelector('.combat-map-svg'),rect=svg.getBoundingClientRect();
+      const actor=combatActiveActor();
+      return nodes.map(el=>({el,r:el.getBoundingClientRect()})).filter(({r})=>r.x+r.width/2>rect.left && r.x+r.width/2<rect.right && r.y+r.height/2>rect.top && r.y+r.height/2<rect.bottom)
+        .sort((a,b)=>combatAxialDistance(actor,{q:+a.el.dataset.q,r:+a.el.dataset.r})-combatAxialDistance(actor,{q:+b.el.dataset.q,r:+b.el.dataset.r}))
+        .map(({el})=>[el.dataset.q,el.dataset.r])[0];
+    });
+    assert.ok(key,'En synlig nåbar hex krävs');
+    await frame.locator('.combat-movement-hit[data-q="'+key[0]+'"][data-r="'+key[1]+'"]').click();
+    await frame.getByRole('button',{name:'Bekräfta förflyttning'}).click();
+    await frame.locator('.combat-row-move').evaluate(async()=>{
+      const end=performance.now()+15000;
+      while(combatMovementCommitting && performance.now()<end)await new Promise(r=>setTimeout(r,30));
+      if(combatMovementCommitting || combatMovementSpent(combatActiveActor())<1)throw Error('Förflyttningen registrerades inte');
+    });
+  }
   await open();
   if(await mode('battle').textContent()==='Återuppta strid')await mode('battle').click();
   if(await mode('battle').getAttribute('aria-pressed')==='true'||await page.locator('.adventure-encounter-frame').count())await finish();
@@ -98,6 +156,14 @@ try{
     const readTurn=()=>frame.locator('.combat-map-svg').evaluate(()=>({id:activeCombat.id,turn:activeCombat.active_actor_id,
       left:combatActiveActor().movement_remaining,round:activeCombat.round_number,
       actions:combatActions.map(a=>[a.id,a.status]).sort()}));
+    if(variant==='after' && cycle===1){
+      await page.locator('#adventureZoomPreset').selectOption('all');
+      await checkMovement();
+      await page.locator('#adventureZoomPreset').selectOption('group');
+      await page.locator('#adventureZoomPreset').selectOption('battle');
+      await page.locator('.adventure-camera-tools [aria-label="Zooma ut"]').click();
+      await page.locator('.adventure-camera-tools [aria-label="Zooma in"]').click();
+    }
     const beforeCamera=await camera(),beforeTurn=await readTurn();
     await mode('exploration').click();
     const pause=await measure('paus',cycle,page.getByRole('button',{name:'Pausa och utforska'}));
@@ -110,6 +176,10 @@ try{
     await measure('återuppta',cycle,mode('battle'));
     assert.deepEqual(await readTurn(),beforeTurn);
     if(variant==='after')assert.deepEqual(await camera(),beforeCamera);
+    if(variant==='after' && cycle===1){
+      console.log('Sparad tur, förflyttning och handlingar verifierade',JSON.stringify(beforeTurn));
+      await recordSwitch();
+    }
     await finish();
   }
   await context.close();

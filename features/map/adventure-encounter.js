@@ -154,12 +154,13 @@ export function displayEncounter(view){
   frame.addEventListener('error',fail,{once:true});
   frame.src='?view=adventure-encounter';work.append(frame);
 }
-export function syncEncounterCamera(){mounted?.layout?.();}
+export function syncEncounterCamera(){mounted?.applyCamera?.();}
 // The child can only attach to the frame created for this map and session.
 window.aleaAdventureEncounterContext=child=>{
   if(!mounted || mounted.frame.contentWindow!==child)return null;
   const entry=mounted,{view,id,frame}=entry;
-  return {id,viewport,get grid(){return view.grid;},camera:adventureCameraFrame,
+  return {id,viewport,bootstrap:userId=>adventureEncounterBootstrap(view,userId),
+    playerAreas:()=>campaignMapAreas.filter(area=>area.status==='explored'),get grid(){return view.grid;},camera:adventureCameraFrame,
     center:()=>resetMapView(),pan(dx,dy){mapView.fitted=false;mapView.x+=dx;mapView.y+=dy;applyMapTransform();},
     zoom(factor,x,y){const rect=frame.getBoundingClientRect();mapZoomAt(factor,x+rect.left,y+rect.top);},
     select(id){if(view.rows.some(row=>row.id===id))view.selectFigure(id);},
@@ -284,7 +285,7 @@ export async function enterEmbeddedEncounter(){
     if(!fight || fight.status!=='active' || !document.querySelector('.combat-board .combat-map-svg'))throw Error('Stridsdata saknas.');
     combatStartPlayerSync();
   };
-  context.attach?.({layout,resume,suspend:combatStopPlayerSync});
+  context.attach?.({layout,applyCamera:window.combatMapApplyView,resume,suspend:combatStopPlayerSync});
   try {await resume();context.ready?.();}
   catch(error){context.fail?.(error);return;}
   if(context.gm)window.aleaReturnToExploration=()=>window.combatFinishAndRecover();

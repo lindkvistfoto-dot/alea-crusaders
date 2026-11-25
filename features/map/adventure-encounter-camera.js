@@ -70,6 +70,34 @@ export function connectEncounterCamera(context) {
     window.combatMapApplyView();
     context.height(Math.ceil(shell.getBoundingClientRect().height));
   }
+  if(!context.gm){
+    // The parent raster is already server-redacted. Clip tactical terrain,
+    // movement and hit targets to the same explored rooms before painting.
+    const ns='http://www.w3.org/2000/svg';
+    function maskTactics(){
+      const svg=shell.querySelector('.combat-map-svg');
+      if(!svg)return;
+      let clip=svg.querySelector('#encounter-discovery');
+      if(!clip){
+        const group=document.createElementNS(ns,'g');
+        group.setAttribute('clip-path','url(#encounter-discovery)');
+        for(const el of [...svg.children])if(el.tagName!=='defs')group.append(el);
+        clip=document.createElementNS(ns,'clipPath');clip.id='encounter-discovery';
+        const defs=document.createElementNS(ns,'defs');defs.append(clip);svg.append(defs,group);
+      }
+      clip.replaceChildren();
+      for(const area of context.playerAreas()){
+        const d=area.shape_data;
+        const shape=document.createElementNS(ns,area.shape_type==='rect'?'rect':'polygon');
+        if(area.shape_type==='rect'){
+          for(const key of ['x','y','width','height'])shape.setAttribute(key,d[key]);
+        }else shape.setAttribute('points',(d.points||[]).map(p=>p.join(',')).join(' '));
+        clip.append(shape);
+      }
+    }
+    new MutationObserver(maskTactics).observe(shell,{childList:true});
+    window.aleaUpdateTacticalDiscovery=maskTactics;
+  }
   const resize=new ResizeObserver(layout);
   resize.observe(viewport);resize.observe(shell);
   window.addEventListener('pagehide',()=>resize.disconnect(),{once:true});
