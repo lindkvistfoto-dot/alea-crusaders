@@ -21,6 +21,18 @@ try {
   assert.ok(mapId);
   await page.locator('#mapPicker').selectOption(mapId);
   await page.waitForFunction(id=>activeCampaignMap?.id===id && campaignMapAreas.some(a=>a.status==='explored'),mapId);
+  // Validate actual SL-only art without publishing campaign secrets in CI screenshots.
+  const privateRoom=await page.evaluate(async()=>{
+    const candidates=await dbJson('campaign_location_assets?campaign_id=eq.'+centralCampaignId+'&player_visible=eq.false&asset_type=eq.image&select=location_id');
+    return campaignMapAreas.find(a=>candidates.some(c=>c.location_id===a.location_id))?.id;
+  });
+  assert.ok(privateRoom);
+  await page.evaluate(id=>openMapLocationInfoByArea(id),privateRoom);
+  const privateThumb=page.locator('#explorerGallery .eg-thumbs button').filter({has:page.locator('[data-shared=false]')}).first();
+  await privateThumb.click();
+  await page.locator('#explorerGallery [data-do=full] img:not([hidden])').evaluate(i=>i.decode());
+  await page.locator('#explorerGallery [data-do=share]').waitFor();
+  console.log('DEV: SL could select and decode a real private place picture before sharing.');
   const projection = page.waitForResponse(r=>r.url().endsWith('/functions/v1/adventure-player-map') && r.request().method()==='POST');
   await page.locator('#adventurePreview').click();
   assert.equal((await projection).status(),200);

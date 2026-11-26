@@ -4482,7 +4482,7 @@ async function openMapLocationInfoByArea(areaId,keepToken){
  try{
   let queries=[
    dbJson('campaign_location_player_texts?location_id=eq.'+encodeURIComponent(a.location_id)+(adventureCanManage()?'':'&player_visible=eq.true')+'&select=player_description,player_visible&limit=1'),
-   dbJson('campaign_location_assets?location_id=eq.'+encodeURIComponent(a.location_id)+'&player_visible=eq.true&select=id,asset_type,title,description,storage_path,player_visible,sort_order&order=sort_order.asc')
+   dbJson('campaign_location_assets?location_id=eq.'+encodeURIComponent(a.location_id)+(adventureCanManage()?'':'&player_visible=eq.true')+'&select=id,asset_type,title,description,storage_path,player_visible,sort_order&order=sort_order.asc')
   ];
   if(adventureCanManage())queries.push(dbJson('campaign_location_gm_notes?location_id=eq.'+encodeURIComponent(a.location_id)+'&select=gm_description,hidden_discoveries&limit=1'));
   let rows=await Promise.all(queries);if(token!==mapLocationInfoToken)return;

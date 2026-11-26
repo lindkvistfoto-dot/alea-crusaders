@@ -14,6 +14,7 @@ function connect(session,b,events){
   params:{apikey:SUPABASE_KEY},accessToken:async()=>supabaseSession?.access_token||null});
  const channel=socket.channel('gather:'+session,{config:{private:true,presence:{key:b.user}}});
  channel.on('broadcast',{event:'gather'},({payload})=>events.message(payload))
+  .on('broadcast',{event:'arcane-reveal'},({payload})=>events.reveal(payload))
   .on('presence',{event:'sync'},()=>events.presence(channel.presenceState()));
  return {start:()=>channel.subscribe(status=>events.status(status==='SUBSCRIBED')),
   track:data=>channel.track(data),refreshAuth:()=>socket.setAuth(),
@@ -35,7 +36,8 @@ function render(state){
    state.ready&&identity()?.gm?(state.online===1?'1 spelare ansluten.':state.online+' spelare anslutna.'):'';
  }
 }
-const gather=createGather({identity,connect,open:openDestination,announce:m=>showBackupToast(m),
+const gather=createGather({identity,connect,open:openDestination,
+ reveal:(session,event,valid)=>window.aleaExplorerGallery?.receive(session,event,valid),announce:m=>showBackupToast(m),
  readSession:campaign=>rpc('read_gather_session',{p_campaign_id:campaign}),
  publish:(campaign,session,view,target,id)=>rpc('send_session_gather',{p_campaign_id:campaign,p_session_id:session,p_view:view,p_target_id:target,p_command_id:id}),
  changed:render,uuid:()=>crypto.randomUUID()});

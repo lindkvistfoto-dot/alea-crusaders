@@ -1,4 +1,4 @@
-// The adventure map owns navigation. The gallery owns only this player's image selection.
+// One gallery for both roles. Selection and presentation windows belong to this client.
 const root=document.getElementById('explorerGallery');
 const page=document.getElementById('mapPage');
 const holder=root.closest('aside');
@@ -11,7 +11,7 @@ const icon=key=>'<i class="eg-icon" data-art="'+key+'" aria-hidden="true"></i>';
 root.innerHTML='<canvas class="eg-frame" aria-hidden="true"></canvas><div class="eg-heading"><h3></h3><p></p></div>'+
  '<div class="eg-stage">'+btn('full','Öppna bilden i helbild','<img alt="" hidden><span class="eg-empty"></span>')+
  btn('prev','Föregående bild')+btn('next','Nästa bild')+btn('expand','Visa helbild')+'<output aria-live="polite"></output></div>'+
- '<section class="eg-location"><h4>'+icon('ICON_IMAGE')+'Platsens bilder</h4><div class="eg-thumbs"></div><p class="eg-no-room"></p></section>'+
+ '<section class="eg-location"><h4>'+icon('ICON_IMAGE')+'Platsens bilder</h4><div class="eg-thumbs"></div><p class="eg-no-room"></p><div class="eg-presented" hidden><small>Visas av SL</small><div class="eg-thumbs"></div></div><div class="eg-actions" hidden><p class="eg-status"></p><div>'+btn('share','Dela och visa i helbild','Dela och visa')+btn('frame','Visa i spelarnas bildram','Visa i bildram')+btn('present','Visa i helbild för spelarna','Visa i helbild')+btn('revoke','Återkalla delning','Återkalla')+'</div><p class="eg-result" role="status"></p></div></section>'+
  '<div class="eg-divider" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div><section class="eg-nav"><h4>'+icon('ICON_MAP')+'Karta / Struktur'+btn('info','Om kartvisning')+'</h4>'+
  '<p class="eg-info" hidden>Följ gruppens karta eller studera en delad karta på egen hand. Spelledaren kan samla gruppen igen.</p>'+
  '<div class="eg-modes">'+btn('follow','Följer gruppen',icon('ICON_GROUP')+'<span>Följer gruppen</span>')+btn('free','Fri kartvisning',icon('COMPASS')+'<span>Fri kartvisning</span>')+'</div>'+
@@ -21,17 +21,20 @@ const control=id=>$('[data-do="'+id+'"]');
 const mainImage=$('.eg-stage img'),empty=$('.eg-empty'),picker=$('select'),strip=$('.eg-thumbs');
 const dialog=document.createElement('dialog');
 dialog.className='explorer-image-viewer';dialog.setAttribute('aria-label','Helbild');
-dialog.innerHTML='<button type="button" aria-label="Stäng helbild">×</button><img alt="">';
+dialog.innerHTML='<button type="button" aria-label="Stäng helbild">Stäng</button><img alt="">';
 document.body.append(dialog);
 const fullImage=dialog.querySelector('img');
 dialog.querySelector('button').onclick=()=>dialog.close();
 dialog.onclick=e=>{if(e.target===dialog)dialog.close();};
-dialog.onclose=()=>{fullImage.removeAttribute('src');if(!root.hidden)control('expand').focus({preventScroll:true});};
+dialog.onclose=()=>{if(dialog.open)return;fullImage.removeAttribute('src');dialog.classList.remove('eg-floating-frame');if(!root.hidden)control('expand').focus({preventScroll:true});};
 let scope='',roomKey='',roomRows=[],shared=[],selected='',shown='',liveToken='',newRoom=false,pendingRoom=false;
 let menuKey='',thumbKey='',busyRoom=false,artLoading=false,artReady=false,artRetry=0,frameImage;
 const media=new Map();
-const rows=()=>[...roomRows,...shared];
-const area=()=>campaignMapAreas.find(a=>a.id===mapSelectedAreaId && a.status==='explored');
+let presented=null, actionPending=false, requestedWindow='', externalKey='';
+const extra=()=>presented&&!roomRows.some(r=>r.id===presented.id)?presented:null;
+const rows=()=>[...roomRows,...(extra()?[presented]:[]),...shared];
+const manage=()=>adventureCanManage() && !!activeUser();
+const area=()=>campaignMapAreas.find(a=>a.id===mapSelectedAreaId && (manage()||a.status==='explored'));
 const usable=()=>!root.hidden && !page.classList.contains('hidden') && !holder.classList.contains('in-battle') && !work.classList.contains('encounter-active');
 function forget(id,entry){
  media.delete(id);
@@ -40,26 +43,45 @@ function forget(id,entry){
 function release(){
  for(const [id,entry] of media)forget(id,entry);
  if(dialog.open)dialog.close();
+ presented=null;requestedWindow='';externalKey='';actionPending=false;$('.eg-result').textContent='';
  roomRows=[];shared=[];selected='';shown='';roomKey='';liveToken='';thumbKey='';menuKey='';pendingRoom=false;
- strip.replaceChildren();mainImage.removeAttribute('src');mainImage.alt='';mainImage.hidden=true;
+ $('.eg-presented .eg-thumbs').replaceChildren();$('.eg-presented').hidden=true;$('.eg-actions').hidden=true;
+ fullImage.removeAttribute('src');fullImage.alt='';strip.replaceChildren();mainImage.removeAttribute('src');mainImage.alt='';mainImage.hidden=true;
 }
 async function load(row){
  let entry=media.get(row.id);
  if(entry&&entry.version===row.version)return entry.task;
  if(entry)forget(row.id,entry);
  entry={version:row.version};media.set(row.id,entry);
- entry.task=Promise.resolve().then(row.read).then(blob=>{
-  if(media.get(row.id)!==entry)return '';
+ entry.task=Promise.resolve().then(()=>media.get(row.id)===entry?row.read():null).then(blob=>{
+  if(!blob||media.get(row.id)!==entry)return '';
   entry.url=URL.createObjectURL(blob);return entry.url;
  }).catch(()=>{if(media.get(row.id)===entry)media.delete(row.id);return '';});
  return entry.task;
 }
+function openPicture(floating=false){
+ if(mainImage.hidden || !mainImage.getAttribute('src'))return;
+ if(dialog.open && dialog.classList.contains('eg-floating-frame')!==floating)dialog.close();
+ fullImage.src=mainImage.src;fullImage.alt=mainImage.alt;
+ dialog.classList.toggle('eg-floating-frame',floating);
+ if(!dialog.open){if(floating)dialog.show();else dialog.showModal();}
+}
+function actions(row){
+ const active=manage()&&row?.source;
+ $('.eg-actions').hidden=!active;
+ if(!active)return;
+ $('.eg-status').textContent=row.visible?'Delad med spelarna':'Endast SL';
+ for(const action of ['share','frame','present','revoke']){
+  const button=control(action);
+  button.hidden=action==='share'?row.visible:!row.visible;button.disabled=actionPending;
+ }
+}
 function paintSelected(){
  const all=rows(),r=all.find(x=>x.id===selected);
- const index=all.indexOf(r);
+ const index=all.indexOf(r);actions(r);
  control('prev').disabled=control('next').disabled=all.length<2;
  $('output').textContent=all.length?(index+1)+' / '+all.length:'0 / 0';
- for(const el of strip.children)el.setAttribute('aria-pressed',String(el.dataset.id===selected));
+ for(const el of root.querySelectorAll('.eg-thumbs button'))el.setAttribute('aria-pressed',String(el.dataset.id===selected));
  if(!r){
   shown='';mainImage.removeAttribute('src');mainImage.alt='';mainImage.hidden=true;
   if(dialog.open)dialog.close();
@@ -67,7 +89,7 @@ function paintSelected(){
   control('full').disabled=control('expand').disabled=true;return;
  }
  const current=r.id+'|'+(r.version||'');
- if(shown===current)return;
+ if(shown===current){if(requestedWindow && !mainImage.hidden){openPicture(requestedWindow==='frame');requestedWindow='';}return;}
  shown=current;mainImage.hidden=true;mainImage.removeAttribute('src');empty.hidden=false;empty.textContent='Hämtar bilden …';
  control('full').disabled=control('expand').disabled=true;
  if(dialog.open)dialog.close();
@@ -77,49 +99,61 @@ function paintSelected(){
   try{await mainImage.decode();}catch{if(shown===current){empty.textContent='Bilden kunde inte öppnas.';shown='';}return;}
   if(shown!==current||mainImage.getAttribute('src')!==url)return;
   mainImage.hidden=false;empty.hidden=true;control('full').disabled=control('expand').disabled=false;
+  if(requestedWindow){openPicture(requestedWindow==='frame');requestedWindow='';}
  });
 }
 function paintPhotos(){
  const all=rows(),valid=new Map(all.map(r=>[r.id,r.version]));
  for(const [id,e] of media)if(!valid.has(id)||valid.get(id)!==e.version)forget(id,e);
  if(!valid.has(selected))selected=roomRows[0]?.id||shared.at(-1)?.id||'';
- const key=JSON.stringify(roomRows.map(r=>[r.id,r.version,r.title]));
- if(thumbKey!==key){
-  thumbKey=key;strip.replaceChildren();
-  for(const row of roomRows){
-   const b=document.createElement('button'),img=document.createElement('img');
-   b.type='button';b.dataset.id=row.id;b.setAttribute('aria-label',row.title||'Platsbild');img.alt='';b.append(img);strip.append(b);
-   void load(row).then(url=>{if(url&&b.isConnected)img.src=url;});
-  }
+ const key=JSON.stringify(roomRows.map(r=>[r.id,r.version,r.title,r.visible,manage()]));
+ if(thumbKey!==key){thumbKey=key;strip.replaceChildren(...roomRows.map(thumbnail));}
+ const other=extra(),otherBox=$('.eg-presented');
+ const nextExternal=other?other.id+'|'+other.version:'';
+ if(nextExternal!==externalKey){
+  externalKey=nextExternal;
+  otherBox.querySelector('.eg-thumbs').replaceChildren(...(other?[thumbnail(other)]:[]));
  }
+ otherBox.hidden=!other;
  const msg=$('.eg-no-room');msg.hidden=roomRows.length>0;
  msg.textContent=pendingRoom?'Hämtar bilder …':area()?'Inga platsbilder har delats.':'Välj en utforskad plats på kartan.';
  paintSelected();
+}
+function thumbnail(row){
+ const b=document.createElement('button'),img=document.createElement('img');
+ b.type='button';b.dataset.id=row.id;b.setAttribute('aria-label',row.title);img.alt='';b.append(img);
+ if(manage()&&row.source){
+  const mark=document.createElement('span');
+  mark.className='eg-badge';mark.dataset.shared=String(row.visible);mark.textContent=row.visible?'✓':'SL';
+  mark.title=row.visible?'Delad med spelarna':'Endast SL';b.setAttribute('aria-label',row.title+' · '+mark.title);b.append(mark);
+ }
+ void load(row).then(url=>{if(url&&b.isConnected)img.src=url;});return b;
 }
 function readShared(){
  const feed=window.aleaPresentedImages?.()||{rows:[],live:'',revision:-1};
  shared=feed.rows;
  const next=feed.revision+'|'+feed.live;
  if(feed.live&&next!==liveToken&&shared.some(r=>r.id==='material:'+feed.live)){
-  selected='material:'+feed.live;newRoom=false;liveToken=next;
+  if(!manage() && (!presented || liveToken)){requestedWindow='';selected='material:'+feed.live;newRoom=false;}liveToken=next;
  }
  if(!feed.live)liveToken=next;
 }
 function sync(){
- const enabled=!page.classList.contains('hidden')&&!!centralCampaignId&&!adventureCanManage()&&!!activeUser()&&
-  document.getElementById('loginScreen').classList.contains('hidden');
+ const authenticated=!!centralCampaignId&&!!activeUser()&&document.getElementById('loginScreen').classList.contains('hidden');
+ const enabled=authenticated&&!page.classList.contains('hidden');
  root.hidden=!enabled;
  holder.classList.toggle('explorer-gallery-panel',enabled);
- const current=enabled?[centralCampaignId,activeUser().id,adventurePlayerPreview].join('|'):'';
+ const current=authenticated?[centralCampaignId,activeUser().id,manage(),adventurePlayerPreview].join('|'):'';
  if(current!==scope){release();scope=current;}
  if(!enabled)return;
  const a=area(),nextKey=(activeCampaignMap?.id||'')+'|'+(a?.id||'');
  if(nextKey!==roomKey){
-  roomKey=nextKey;roomRows=[];newRoom=!!a?.location_id;pendingRoom=newRoom;
+  roomKey=nextKey;roomRows=[];newRoom=!!a?.location_id;pendingRoom=newRoom;$('.eg-result').textContent='';
  }
  $('.eg-heading h3').textContent=activeCampaignMap?.name||'Äventyrskarta';
  $('.eg-heading p').textContent=a?.name||'Utforskning';
- const maps=campaignMaps.filter(m=>m.player_visible);
+ const maps=campaignMaps.filter(m=>manage()||m.player_visible);
+ $('.eg-modes').hidden=manage();
  const sig=JSON.stringify([campaignActiveMapId,...maps.map(m=>[m.id,m.name])]);
  if(sig!==menuKey){
   menuKey=sig;picker.replaceChildren(...maps.map(m=>new Option(m.name+(m.id===campaignActiveMapId?' (aktuell)':''),m.id)));
@@ -133,23 +167,70 @@ function sync(){
 }
 function room(id,images,read){
  sync();if(root.hidden||area()?.id!==id)return;
- const incoming=images.filter(r=>r.player_visible===true).map(r=>({
-  id:'room:'+r.id,title:r.title||'Platsbild',version:(r.storage_bucket||'campaign-location-assets')+'/'+r.storage_path,read:()=>read(r)
- }));
+ const incoming=images.filter(r=>manage()||r.player_visible===true).map(r=>pictureRow(r,read));
  const prev=new Set(roomRows.map(r=>r.id));const added=incoming.filter(r=>!prev.has(r.id));
- if((newRoom||!pendingRoom)&&added.length)selected=(newRoom?incoming[0]:added.at(-1)).id;
+ if((newRoom||(!pendingRoom&&!manage()&&!presented))&&added.length)selected=(newRoom?incoming[0]:added.at(-1)).id;
  newRoom=false;pendingRoom=false;roomRows=incoming;paintPhotos();
 }
-window.aleaExplorerGallery={sync,room,enabled:()=>!root.hidden,closeViewer:()=>{if(dialog.open)dialog.close();},roomFailed(id){if(!root.hidden&&area()?.id===id){roomRows=[];pendingRoom=false;paintPhotos();}}};
+function pictureRow(row,read=window.readExplorerImageBlob){
+ const source=row.source||'legacy';
+ return {id:'room:'+source+':'+row.id,picture:row.id,source,visible:row.player_visible===true,title:row.title||'Platsbild',
+  version:(row.storage_bucket||'campaign-location-assets')+'/'+row.storage_path,read:()=>read(row)};
+}
+const rpc=(method,body)=>dbJson('rpc/'+method,{method:'POST',body:JSON.stringify(body)});
+async function recheckPresented(){
+ const before=presented,stamp=scope;
+ if(!before)return;
+ let row;
+ try{row=await rpc('read_arcane_gallery_image',{p_campaign:centralCampaignId,p_source:before.source,p_picture:before.picture});}
+ catch{row=null;}
+ if(stamp!==scope||before!==presented)return;
+ if(!row?.player_visible){presented=null;requestedWindow='';
+  roomRows=roomRows.filter(r=>r.id!==before.id);paintPhotos();}
+}
+async function receive(session,event,valid){
+ if(!valid()||manage())return;
+ sync();
+ const stamp=scope,ok=()=>valid()&&stamp===scope&&!manage()&&!!activeUser();
+ if(!['refresh','frame','full'].includes(event.mode))return;
+ const picture=event.mode==='refresh'?null:await rpc('read_arcane_reveal',{p_session:session,p_command:event.id,p_ref:event.ref});
+ if(!ok())return;
+ const a=area();
+ if(a?.location_id){
+  try{await window.refreshExplorerRoomPhotos?.(a);}catch{window.aleaExplorerGallery.roomFailed(a.id);}
+ }
+ if(!ok())return;
+ if(!picture?.player_visible){await recheckPresented();return;}
+ presented=pictureRow(picture);selected=presented.id;newRoom=false;
+ requestedWindow=event.mode==='full'?'full':usable()?'':'frame';
+ if(!requestedWindow && dialog.open)dialog.close();
+ paintPhotos();void ensureArt();
+}
+async function command(action){
+ const row=roomRows.find(r=>r.id===selected),a=area(),stamp=scope;
+ if(!manage()||!row||!a||actionPending)return;
+ actionPending=true;$('.eg-result').textContent='';actions(row);
+ try{
+  const ack=await rpc('command_arcane_reveal',{p_campaign:centralCampaignId,p_source:row.source,p_picture:row.picture,p_action:action,p_command:crypto.randomUUID()});
+  if(scope!==stamp)return;
+  await window.refreshExplorerRoomPhotos(a);
+  if(scope!==stamp||area()?.id!==a.id)return;
+  const messages={share:ack?.session?'Delad och visad i helbild.':'Bilden är delad. Inget spelmöte pågår.',revoke:'Delningen är återkallad.',frame:'Visad i spelarnas bildram.',full:'Visad i helbild för spelarna.'};
+  $('.eg-result').textContent=messages[action];
+ }catch(error){if(scope===stamp)$('.eg-result').textContent=error.message||'Bildåtgärden misslyckades. Försök igen.';}
+ finally{if(scope===stamp){actionPending=false;paintSelected();}}
+}
+window.aleaExplorerGallery={sync,room,receive,enabled:()=>!root.hidden,closeViewer:()=>{if(dialog.open)dialog.close();},roomFailed(id){if(!root.hidden&&area()?.id===id){roomRows=[];pendingRoom=false;paintPhotos();}}};
 root.onclick=e=>{
  const button=e.target.closest('button');if(!button||button.disabled)return;
  const doWhat=button.dataset.do;
- if(button.dataset.id){selected=button.dataset.id;paintSelected();return;}
+ if(button.dataset.id){requestedWindow='';selected=button.dataset.id;$('.eg-result').textContent='';paintSelected();return;}
+ if(['share','revoke','frame','present'].includes(doWhat)){void command(doWhat==='present'?'full':doWhat);return;}
  const items=rows(),idx=items.findIndex(r=>r.id===selected);
  if(doWhat==='prev'||doWhat==='next'){
-  selected=items[(idx+(doWhat==='next'?1:-1)+items.length)%items.length].id;paintSelected();
+  requestedWindow='';selected=items[(idx+(doWhat==='next'?1:-1)+items.length)%items.length].id;paintSelected();
  }else if(doWhat==='full'||doWhat==='expand'){
-  if(!mainImage.hidden){fullImage.src=mainImage.src;fullImage.alt=mainImage.alt;dialog.showModal();}
+  openPicture();
  }else if(doWhat==='info'){$('.eg-info').hidden=!$('.eg-info').hidden;}
  else if(doWhat==='follow'){void goToActiveCampaignMap();}
  else if(doWhat==='free' && activeCampaignMap){adventureRequestedMap={campaign:centralCampaignId,id:activeCampaignMap.id};sync();picker.focus();}
@@ -160,13 +241,13 @@ window.addEventListener('alea:presented-images',()=>{if(!root.hidden){readShared
 // after returning to a tab and during long sessions if a signal was missed.
 let checkingHistory=false;
 async function recheckHistory(){
- if(!usable()||document.hidden||checkingHistory)return;
+ if(document.hidden||checkingHistory||(!usable()&&!presented))return;
  checkingHistory=true;
- try{await window.refreshExplorerPresentedImages?.();}finally{checkingHistory=false;}
+ try{await Promise.all([window.refreshExplorerPresentedImages?.(),recheckPresented()]);}finally{checkingHistory=false;}
 }
 document.addEventListener('visibilitychange',recheckHistory);
 window.setInterval(recheckHistory,30000);
-const lifecycle=new MutationObserver(()=>{sync();if(!usable()&&dialog.open)dialog.close();});
+const lifecycle=new MutationObserver(sync);
 for(const el of [page,work,holder,document.getElementById('loginScreen')])lifecycle.observe(el,{attributes:true,attributeFilter:['class']});
 window.setInterval(async()=>{
  const a=area();if(!usable()||document.hidden||busyRoom||!a?.location_id)return;
@@ -200,6 +281,7 @@ async function ensureArt(){
    if(!keys.includes(row.asset_key)||!row.alpha_preserved||!row.asset_path.startsWith('hermes/system-asset/'+row.asset_key+'/')||!/[0-9a-f]{64}\.webp$/.test(row.asset_path))continue;
    const src=ALEA_SUPABASE_CONFIG.endpoint('/storage/v1/object/public/alea-hermes-public/'+row.asset_path);
    const name=row.asset_key.slice(15);root.style.setProperty('--eg-'+name,'url("'+src+'")');
+   if(['FRAME_SECONDARY','BUTTON_NORMAL'].includes(name))dialog.style.setProperty('--eg-'+name,root.style.getPropertyValue('--eg-'+name));
    if(name==='FRAME_PRIMARY'){frameImage=new Image();frameImage.onload=drawFrame;frameImage.src=src;}
   }
   artReady=keys.every(k=>root.style.getPropertyValue('--eg-'+k.slice(15)));

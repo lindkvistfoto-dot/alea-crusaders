@@ -4,19 +4,14 @@
   'use strict';
 
   const originalRender = window.renderMapLocationPhotos;
-  const urls = new Map();
   let galleryGeneration = 0;
-  const encode = value => String(value ?? '').replace(/[&<>"']/g, char => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-  })[char]);
-
-  async function readNewLocationImages(campaignId, locationId) {
+  async function readNewLocationImages(campaignId, locationId, manager) {
     const links = await dbJson(
       'campaign_image_links?campaign_id=eq.' + encodeURIComponent(campaignId) +
-      '&player_visible=eq.true&object_type=eq.place&object_id=eq.' + encodeURIComponent(locationId) +
+      (manager ? '' : '&player_visible=eq.true') + '&object_type=eq.place&object_id=eq.' + encodeURIComponent(locationId) +
       '&select=id,image_id,is_primary,sort_order,caption,player_visible&order=sort_order.asc'
     );
-    const visible = (links || []).filter(link => link.player_visible === true);
+    const visible = (links || []).filter(link => manager || link.player_visible === true);
     if (!visible.length) return [];
     const ids = [...new Set(visible.map(link => link.image_id))];
     const images = await dbJson(
@@ -51,19 +46,14 @@
     return res.blob();
   }
 
-  async function imageUrl(image) {
-    const key = (image.storage_bucket || 'campaign-location-assets') + '/' + image.storage_path;
-    if (urls.has(key)) return urls.get(key);
-    const url = URL.createObjectURL(await readImageBlob(image));
-    urls.set(key, url);
-    return url;
-  }
+  window.readExplorerImageBlob=readImageBlob;
 
   window.refreshExplorerRoomPhotos = async function(area){
-    if(adventureCanManage() || area?.status!=='explored' || !area.location_id)return;
+    const manager=adventureCanManage();
+    if(!area?.location_id || (!manager && area.status!=='explored'))return;
     const token=mapLocationInfoToken;
-    const rows=await dbJson('campaign_location_assets?location_id=eq.'+encodeURIComponent(area.location_id)+'&player_visible=eq.true&asset_type=eq.image&select=id,title,storage_path,player_visible,sort_order&order=sort_order.asc');
-    if(token===mapLocationInfoToken && mapSelectedAreaId===area.id && !adventureCanManage())await window.renderMapLocationPhotos(rows);
+    const rows=await dbJson('campaign_location_assets?location_id=eq.'+encodeURIComponent(area.location_id)+(manager?'':'&player_visible=eq.true')+'&asset_type=eq.image&select=id,title,storage_path,player_visible,sort_order&order=sort_order.asc');
+    if(token===mapLocationInfoToken && mapSelectedAreaId===area.id && manager===adventureCanManage())await window.renderMapLocationPhotos(rows);
   };
 
   window.renderMapLocationPhotos = async function renderCampaignMapGallery(legacyAssets) {
@@ -74,118 +64,32 @@
     if (!selectedArea?.location_id || !centralCampaignId) {
       return originalRender?.((legacyAssets || []).filter(image => image.player_visible === true));
     }
-    const selectedId = selectedArea.id;
-    const stillCurrent = () =>
-      originalGallery.isConnected &&
-      document.getElementById('mapLocationGallery') === originalGallery &&
-      mapSelectedAreaId === selectedId &&
-      galleryGeneration === generation;
-    let linkedImages = [];
+    const selectedId = selectedArea.id, campaign = centralCampaignId, manager = adventureCanManage();
+    const stillCurrent = () => originalGallery.isConnected && mapSelectedAreaId===selectedId &&
+      generation===galleryGeneration && centralCampaignId===campaign && manager===adventureCanManage();
+    const legacy = (legacyAssets || []).filter(image => manager || image.player_visible === true)
+      .map(image => ({...image, storage_bucket:'campaign-location-assets', source:'legacy'}));
+    let linkedImages;
     try {
-      linkedImages = await readNewLocationImages(centralCampaignId, selectedArea.location_id);
+      linkedImages = await readNewLocationImages(campaign, selectedArea.location_id, manager);
     } catch (error) {
-      // Preserve the old map gallery if a migration/network/database issue occurs.
-      console.warn('Kunde inte läsa det nya kampanjbildbiblioteket:', error);
-      if (!stillCurrent()) return;
-      if (!adventureCanManage() && window.aleaExplorerGallery?.enabled()) {
-        window.aleaExplorerGallery.room(selectedId,(legacyAssets||[]).filter(image=>image.player_visible===true),readImageBlob);
-        return;
-      }
-      return originalRender?.((legacyAssets || []).filter(image=>image.player_visible===true));
+      console.warn('Kunde inte läsa länkade platsbilder:', error);
+      linkedImages = [];
     }
     if (!stillCurrent()) return;
-    const unique = new Set(linkedImages.map(image =>
-      (image.storage_bucket || 'campaign-location-assets') + '/' + image.storage_path
-    ));
-    const remaining = (legacyAssets || [])
-      .filter(image => image.player_visible === true)
-      .filter(image => {
-        const key = 'campaign-location-assets/' + image.storage_path;
-        if (unique.has(key)) return false;
-        unique.add(key);
-        return true;
-      })
-      .map(image => ({ ...image, storage_bucket: 'campaign-location-assets', source: 'legacy', primary: false }));
-    const combined = [...linkedImages, ...remaining];
-    if (!adventureCanManage() && window.aleaExplorerGallery?.enabled()) {
+    const key = image => image.storage_bucket + '/' + image.storage_path;
+    const byPath = new Map();
+    for (const image of [...linkedImages, ...legacy]) {
+      const existing = byPath.get(key(image));
+      if (existing) existing.player_visible ||= image.player_visible;
+      else byPath.set(key(image),image);
+    }
+    const combined = [...byPath.values()];
+    if (window.aleaExplorerGallery?.enabled()) {
       window.aleaExplorerGallery.room(selectedId, combined, readImageBlob);
       return;
     }
-    if (!combined.length) {
-      originalGallery.innerHTML =
-        '<div class="map-location-empty">Inga bilder är kopplade till den här platsen.</div>';
-      return;
-    }
-    const main = combined[0];
-    originalGallery.classList.add('campaign-map-image-gallery');
-    originalGallery.innerHTML =
-      '<figure class="campaign-map-image-primary"><div class="campaign-map-image-stage" id="mapCampaignPrimaryImage">Laddar bild…</div>' +
-      '<figcaption id="mapCampaignPrimaryCaption">' + encode(main.title) +
-      (main.description ? '<p>' + encode(main.description) + '</p>' : '') +
-      '</figcaption></figure>' +
-      (combined.length > 1
-        ? '<div class="campaign-map-image-thumbnails" aria-label="Fler bilder från platsen">' +
-          combined.map((item, index) =>
-            '<button type="button" class="campaign-map-image-thumb' + (index === 0 ? ' active' : '') +
-            '" data-image-index="' + index + '" aria-label="' + encode(item.title || 'Bild') + '">' +
-            '<span>Laddar…</span></button>'
-          ).join('') + '</div>'
-        : '');
-
-    // Load each image independently: the primary preview must not wait for all supporting files.
-    const loaded = Array(combined.length).fill(undefined);
-    let selectedIndex = 0;
-    const setMain = index => {
-      if (!stillCurrent()) return;
-      const image = combined[index];
-      const url = loaded[index];
-      const stage = originalGallery.querySelector('#mapCampaignPrimaryImage');
-      const caption = originalGallery.querySelector('#mapCampaignPrimaryCaption');
-      if (!stage || !caption) return;
-      stage.replaceChildren();
-      if (url === undefined) stage.textContent = 'Laddar bild…';
-      else if (url) {
-        const element = document.createElement('img');
-        element.src = url;
-        element.alt = image.title || 'Platsbild';
-        element.title = 'Öppna bilden i större format';
-        element.addEventListener('click', () => window.open(url, '_blank', 'noopener'));
-        stage.appendChild(element);
-      } else stage.textContent = 'Bilden kunde inte laddas.';
-      caption.textContent = image.title || 'Platsbild';
-      if (image.description) {
-        const detail = document.createElement('p');
-        detail.textContent = image.description;
-        caption.appendChild(detail);
-      }
-      originalGallery.querySelectorAll('[data-image-index]').forEach(button =>
-        button.classList.toggle('active', Number(button.dataset.imageIndex) === index));
-    };
-    originalGallery.querySelectorAll('[data-image-index]').forEach(button => {
-      const index = Number(button.dataset.imageIndex);
-      button.addEventListener('click', () => { selectedIndex = index; setMain(index); });
-    });
-    setMain(0);
-    combined.forEach((image, index) => {
-      void imageUrl(image).then(url => {
-        if (!stillCurrent()) return;
-        loaded[index] = url;
-        const button = originalGallery.querySelector('[data-image-index="' + index + '"]');
-        if (button) {
-          const preview = document.createElement('img');
-          preview.src = url;
-          preview.alt = image.title || 'Stödbild';
-          button.replaceChildren(preview);
-        }
-        if (selectedIndex === index) setMain(index);
-      }).catch(error => {
-        console.warn('Platsbild kunde inte laddas:', image.storage_path, error);
-        if (!stillCurrent()) return;
-        loaded[index] = null;
-        const button = originalGallery.querySelector('[data-image-index="' + index + '"]');
-        if (button) button.textContent = 'Bild saknas';
-        if (selectedIndex === index) setMain(index);
-      });
-    });
+    // Older app shells can still render their original location-asset gallery.
+    if (!window.aleaExplorerGallery) return originalRender?.(legacy.filter(image=>image.player_visible));
   };
 })();

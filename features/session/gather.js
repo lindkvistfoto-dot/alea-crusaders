@@ -1,7 +1,7 @@
 // Navigation is a live broadcast. Presence reports users (multiple tabs count once).
-export function createGather({identity, readSession, connect, publish, open, announce, changed, uuid}) {
+export function createGather({identity, readSession, connect, publish, open, reveal, announce, changed, uuid}) {
  let binding=null, session=null, lookup=null, received=new Set(), latest=null, delivery=null, joined=false;
- let members={}, opened='', report=null, submitting=false;
+ let members={}, opened='', report=null, submitting=false, revealVersion=0;
  const same=(a,b)=>a?.campaign===b?.campaign&&a?.user===b?.user&&a?.gm===b?.gm;
  const current=b=>binding===b&&same(b,identity());
  function state(){
@@ -10,7 +10,7 @@ export function createGather({identity, readSession, connect, publish, open, ann
    report:report&&{view:report.view,total:report.expected.size,opened:report.opened.size}};
  }
  function disconnect(){
-  const old=delivery;delivery=null;joined=false;latest=null;received=new Set();
+  const old=delivery;revealVersion++;delivery=null;joined=false;latest=null;received=new Set();
   members={};opened='';report=null;submitting=false;
   old?.close();
  }
@@ -55,9 +55,17 @@ export function createGather({identity, readSession, connect, publish, open, ann
    if(s){
     const channel=connect(s,b,{
      message:m=>void receive(m,b,s,channel),
+     reveal:m=>{
+      if(!current(b)||b.gm||delivery!==channel||session!==s||!joined||!m?.id||received.has(m.id))return;
+      received.add(m.id);
+      const version=++revealVersion;
+      const valid=()=>version===revealVersion && joined && current(b) && session===s && delivery===channel;
+      Promise.resolve(reveal?.(s,m,valid)).catch(error=>{if(valid())announce('Kunde inte visa platsbilden. '+error.message);});
+     },
      presence:rows=>{if(current(b)&&channel===delivery)presence(rows);},
      status:async ready=>{
       if(!current(b)||channel!==delivery)return;
+      if(!ready)revealVersion++;
       joined=ready;
       if(ready)await channel.track({player:!b.gm,opened});
       changed(state());

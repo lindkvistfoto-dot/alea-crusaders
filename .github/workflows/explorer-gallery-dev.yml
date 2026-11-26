@@ -1,4 +1,4 @@
-name: ARCANE GALLERY player preview
+name: ARCANE GALLERY – SL och spelare
 on:
   pull_request:
     branches: [development]
@@ -39,7 +39,7 @@ jobs:
           test -n "$preview"
           echo "Verified preview $preview for $SOURCE_SHA"
           echo "ALEA_VERIFIED_PREVIEW=$preview" >> "$GITHUB_ENV"
-      - name: Exercise two independent players on the same preview
+      - name: Exercise SL and two independent players on the same preview
         run: |
           mkdir -p /tmp/gallery-pictures
           python3 -m pip install --target /tmp/gallery-pillow Pillow==12.3.0
