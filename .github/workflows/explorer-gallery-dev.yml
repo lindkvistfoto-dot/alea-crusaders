@@ -1,0 +1,66 @@
+name: ARCANE GALLERY – SL och spelare
+on:
+  pull_request:
+    branches: [development]
+    paths:
+      - 'features/map/explorer-gallery.*'
+      - 'scripts/explorer-gallery-*.mjs'
+      - '.github/workflows/explorer-gallery-dev.yml'
+permissions:
+  contents: read
+jobs:
+  gallery:
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'feat/arcane-gallery-explorer-window'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci && npm install --no-save --package-lock=false playwright@1.56.1
+      - name: Resolve the immutable preview for this PR
+        env:
+          SOURCE_SHA: ${{ github.event.pull_request.head.sha }}
+          SOURCE_BRANCH: ${{ github.head_ref }}
+        run: |
+          set -euo pipefail
+          alias=$(echo "$SOURCE_BRANCH" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9-]+/-/g' | cut -c1-28)
+          for attempt in {1..35}; do
+            manifest=$(curl -fsS --max-time 8 "https://${alias}.alea-crusaders.pages.dev/deployment-manifest.json?sha=$SOURCE_SHA&attempt=$attempt" || true)
+            preview=$(jq -er --arg sha "$SOURCE_SHA" 'select(.source_sha == $sha) | .deployment_url' <<<"$manifest" 2>/dev/null || true)
+            [[ -n "$preview" ]] && break
+            sleep 5
+          done
+          test -n "$preview"
+          echo "Verified preview $preview for $SOURCE_SHA"
+          echo "ALEA_VERIFIED_PREVIEW=$preview" >> "$GITHUB_ENV"
+      - name: Exercise SL and two independent players on the same preview
+        run: |
+          mkdir -p /tmp/gallery-pictures
+          python3 -m pip install --target /tmp/gallery-pillow Pillow==12.3.0
+          PYTHONPATH=/tmp/gallery-pillow python3 - <<'PY'
+          from PIL import Image, ImageOps
+          for source, name in [('targans-gille-clean','exterior'),('innkeeper-hero','interior'),('alchemy-hero','tomb'),('innkeeper-hero','portrait')]:
+              image = Image.open('assets/'+source+'.jpg')
+              if name == 'portrait':
+                  image = ImageOps.fit(image, (220, 400))
+              else:
+                  image.thumbnail((950, 450))
+              image.save('/tmp/gallery-pictures/'+name+'.webp')
+          PY
+          node scripts/explorer-gallery-acceptance.mjs "$ALEA_VERIFIED_PREVIEW" tests/fixtures/explorer-gallery-art.json published /tmp/gallery-pictures visual-results/scenarios
+      - name: Open Skelettbyn in the ordinary DEV player preview
+        env:
+          ALEA_DEV_TEST_EMAIL: ${{ secrets.ALEA_DEV_TEST_EMAIL }}
+          ALEA_DEV_TEST_PASSWORD: ${{ secrets.ALEA_DEV_TEST_PASSWORD }}
+        run: node scripts/explorer-gallery-dev.mjs "$ALEA_VERIFIED_PREVIEW" visual-results
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: arcane-gallery-dev
+          path: visual-results/

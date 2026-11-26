@@ -17,6 +17,7 @@ export function mountGaladriel({
  }
  async function refreshFolder(){
   if(!isAuthenticated()||!getCampaign())return;
+  void frodoUi.refreshPresentedImages?.();
   // A player may keep the viewer open even after closing the material panel.
   const panelOpen=legolas.state.panelOpen;
   const displayed=legolas.state.viewerOpen?

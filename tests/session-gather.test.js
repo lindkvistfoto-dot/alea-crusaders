@@ -8,8 +8,9 @@ function meeting(){
   const identity={user,gm,campaign:'campaign'};
   let session='meeting',view='home',latest;
   const opened=vi.fn(async command=>{view=command.target;return true;});
+  const revealed=vi.fn();
   const api=createGather({
-   identity:()=>identity,readSession:async()=>session,open:opened,announce:vi.fn(),uuid:()=>String(++id),
+   identity:()=>identity,readSession:async()=>session,open:opened,reveal:revealed,announce:vi.fn(),uuid:()=>String(++id),
    changed:s=>{latest=s;},
    connect:(s,b,events)=>{
     const key=Symbol();
@@ -28,7 +29,7 @@ function meeting(){
     return id;
    }
   });
-  return {api,opened,latest:()=>latest,where:()=>view,leave:()=>{view='home';},session:s=>{session=s;}};
+  return {api,opened,revealed,latest:()=>latest,where:()=>view,leave:()=>{view='home';},session:s=>{session=s;}};
  }
  return {client,channels,messages};
 }
@@ -66,6 +67,24 @@ describe('Samla spelarna',()=>{
   a.session(null);b.opened.mockResolvedValue(false);
   await gm.api.send('image','bild');await vi.waitFor(()=>expect(b.opened).toHaveBeenCalledTimes(1));
   expect(a.opened).not.toHaveBeenCalled();expect(gm.latest().report.opened).toBe(0);
+ });
+ it('delivers a live reveal once and cancels pending decoding after disconnect or session change',async()=>{
+  const m=meeting(),gm=m.client('SL',true),a=m.client('Astrid');
+  await Promise.all([gm.api.refresh(),a.api.refresh()]);
+  const channels=[...m.channels.values()];
+  const client=channels.find(c=>c.user==='Astrid');
+  const event={id:'presentation',mode:'full',ref:'opaque'};
+  for(const c of channels)c.events.reveal(event);
+  client.events.reveal(event);
+  expect(gm.revealed).not.toHaveBeenCalled();
+  expect(a.revealed).toHaveBeenCalledTimes(1);
+  const [session,received,valid]=a.revealed.mock.calls[0];
+  expect(session).toBe('meeting');expect(received).toEqual(event);expect(valid()).toBe(true);
+  await client.events.status(false);expect(valid()).toBe(false);
+  await client.events.status(true);client.events.reveal(event);
+  expect(a.revealed).toHaveBeenCalledTimes(1);
+  a.session('other');await a.api.refresh();
+  client.events.reveal({...event,id:'late'});expect(a.revealed).toHaveBeenCalledTimes(1);
  });
  it('only gathers after the requested private image was successfully shared',async()=>{
   const m=meeting(),gm=m.client('SL',true);await gm.api.refresh();

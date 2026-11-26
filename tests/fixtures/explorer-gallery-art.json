@@ -1,0 +1,187 @@
+[
+  {
+    "asset_key": "ARCANE_GALLERY_BG_DECOR_01",
+    "asset_path": "hermes/system-asset/ARCANE_GALLERY_BG_DECOR_01/34adfce2ffe35d1e04e14d9014562ed5306b390496d42da2885e0275617d39b4.webp",
+    "alpha_preserved": true
+  },
+  {
+    "asset_key": "ARCANE_GALLERY_BG_DECOR_02",
+    "asset_path": "hermes/system-asset/ARCANE_GALLERY_BG_DECOR_02/93867e2cbd751a2f632f596f9be2b7261673b7256855330abf272037daee57ab.webp",
+    "alpha_preserved": true
+  },
+  {
+    "asset_key": "ARCANE_GALLERY_BG_DECOR_03",
+    "asset_path": "hermes/system-asset/ARCANE_GALLERY_BG_DECOR_03/545f75ba1d3d4232583f122b20a62dbab27e2f23f45b84c1c9eec1790765608a.webp",
+    "alpha_preserved": true
+  },
+  {
+    "asset_key": "ARCANE_GALLERY_BUTTON_ACTIVE",
+    "asset_path": "hermes/system-asset/ARCANE_GALLERY_BUTTON_ACTIVE/c19e987ffce7d789a6d748c65124661546f0732356c7ec8155c6bd574c272f7c.webp",
+    "alpha_preserved": true
+  },
+  {
+    "asset_key": "ARCANE_GALLERY_BUTTON_NORMAL",
+    "asset_path": "hermes/system-asset/ARCANE_GALLERY_BUTTON_NORMAL/2d6616c663aacd29a1de23c886f515d6d89d87f9d11458958d12a9cf2724cfc1.webp",
+    "alpha_preserved": true
+  },
+  {
+    "asset_key": "ARCANE_GALLERY_COMPASS",
+    "asset_path": "hermes/system-asset/ARCANE_GALLERY_COMPASS/f99a434436aa4ae45827e935d9586f19d9557ebc71d8bccddea0a52b8b25db2f.webp",
+    "alpha_preserved": true
+  },
+  {
+    "asset_key": "ARCANE_GALLERY_CORNER_BL",
+    "asset_path": "hermes/system-asset/ARCANE_GALLERY_CORNER_BL/7edb1336a1c4fab01a694c63666cdf795da8dbcd20c076ccafb2ee03312cb3b5.webp",
+    "alpha_preserved": true
+  },
+  {
+    "asset_key": "ARCANE_GALLERY_CORNER_BR",
+    "asset_path": "hermes/system-asset/ARCANE_GALLERY_CORNER_BR/12f6f42fa2c337dc23ac8a90dbe1916d7c27fd1c3f5d707cad5c60cf03a96d79.webp",
+    "alpha_preserved": true
+  },
+  {
+    "asset_key": "ARCANE_GALLERY_CORNER_TL",
+    "asset_path": "hermes/system-asset/ARCANE_GALLERY_CORNER_TL/6c3ce00684ce6f3ab98416371d3796197d61a00e130a5b434a197812a05c8cf3.webp",
+    "alpha_preserved": true
+  },
+  {
+    "asset_key": "ARCANE_GALLERY_CORNER_TR",
+    "asset_path": "hermes/system-asset/ARCANE_GALLERY_CORNER_TR/2b92fcdfd42dc87058f4cd4eda1684ef3a41b8512e5c18a5295c8dcf81ef5b27.webp",
+    "alpha_preserved": true
+  },
+  {
+    "asset_key": "ARCANE_GALLERY_COUNTER",
+    "asset_path": "hermes/system-asset/ARCANE_GALLERY_COUNTER/9eaebffff008e2d673f739f5e800eb31c2b0e3d230fe6062f81d95834ce88da0.webp",
+    "alpha_preserved": true
+  },
+  {
+    "asset_key": "ARCANE_GALLERY_DIVIDER_ACCENT",
+    "asset_path": "hermes/system-asset/ARCANE_GALLERY_DIVIDER_ACCENT/d0ce7d51e394a862143634203bad2a74a12c05791ad058f0e1a54c991b4babfa.webp",
+    "alpha_preserved": true
+  },
+  {
+    "asset_key": "ARCANE_GALLERY_DIVIDER_MAIN",
+    "asset_path": "hermes/system-asset/ARCANE_GALLERY_DIVIDER_MAIN/9748155a4ef80a3e4e9db9ae21871fa590970f775475af05e2729ffcc9a4a3c8.webp",
+    "alpha_preserved": true
+  },
+  {
+    "asset_key": "ARCANE_GALLERY_DROPDOWN_MAP",
+    "asset_path": "hermes/system-asset/ARCANE_GALLERY_DROPDOWN_MAP/4ed129dcf147675610bc38b523272a85f1bea3e8293031ad35b1e0f8f0151169.webp",
+    "alpha_preserved": true
+  },
+  {
+    "asset_key": "ARCANE_GALLERY_FRAME_PRIMARY",
+    "asset_path": "hermes/system-asset/ARCANE_GALLERY_FRAME_PRIMARY/7299af2ccb893aa0e7ee5c4b6f4eb200bb7ec0c6ad614d044f3f54c8136b97c3.webp",
+    "alpha_preserved": true
+  },
+  {
+    "asset_key": "ARCANE_GALLERY_FRAME_SECONDARY",
+    "asset_path": "hermes/system-asset/ARCANE_GALLERY_FRAME_SECONDARY/72217a6cdf518825c13c76d3d0b9e5897ebb2217ab0ae40004cd1d4064de02fd.webp",
+    "alpha_preserved": true
+  },
+  {
+    "asset_key": "ARCANE_GALLERY_HEADER_SECTION",
+    "asset_path": "hermes/system-asset/ARCANE_GALLERY_HEADER_SECTION/1129547715c12f1c64cc94ecc6360aa257ffe26d5882a2ba450f82eeda18be5a.webp",
+    "alpha_preserved": true
+  },
+  {
+    "asset_key": "ARCANE_GALLERY_HEADER_SUBTITLE",
+    "asset_path": "hermes/system-asset/ARCANE_GALLERY_HEADER_SUBTITLE/5d8c7168cefd3016eb27d51b8d9f207f51a1bb1df872f892f0884cfc0d487d6d.webp",
+    "alpha_preserved": true
+  },
+  {
+    "asset_key": "ARCANE_GALLERY_HEADER_TITLE",
+    "asset_path": "hermes/system-asset/ARCANE_GALLERY_HEADER_TITLE/41d0b70202cace316e8efb91e91a47ecb0a5f89f492329acffac3378efff1ce0.webp",
+    "alpha_preserved": true
+  },
+  {
+    "asset_key": "ARCANE_GALLERY_ICON_COMPASS",
+    "asset_path": "hermes/system-asset/ARCANE_GALLERY_ICON_COMPASS/b81ac9b4b893e6c9b7642bebf8853f2078dfab6b534e89f1579989d96d36f287.webp",
+    "alpha_preserved": true
+  },
+  {
+    "asset_key": "ARCANE_GALLERY_ICON_DROPDOWN",
+    "asset_path": "hermes/system-asset/ARCANE_GALLERY_ICON_DROPDOWN/a3be8efee3db0114dc6c77a687b4d21487cb2ccc3381689c5a3f22c3734304db.webp",
+    "alpha_preserved": true
+  },
+  {
+    "asset_key": "ARCANE_GALLERY_ICON_GROUP",
+    "asset_path": "hermes/system-asset/ARCANE_GALLERY_ICON_GROUP/407b2415dd5e349b59125eee3dc0a35c3a077ae1f3512f2a1609af1aca21ca16.webp",
+    "alpha_preserved": true
+  },
+  {
+    "asset_key": "ARCANE_GALLERY_ICON_IMAGE",
+    "asset_path": "hermes/system-asset/ARCANE_GALLERY_ICON_IMAGE/ccf867bc45e5baf11682d4dee1a7f0d8bb55375141392fd5d1d60ad80ad7225c.webp",
+    "alpha_preserved": true
+  },
+  {
+    "asset_key": "ARCANE_GALLERY_ICON_INFO",
+    "asset_path": "hermes/system-asset/ARCANE_GALLERY_ICON_INFO/c6632da445ce07032a6982a79e56508d7ccfeac4cb047bbf5157369e96456a98.webp",
+    "alpha_preserved": true
+  },
+  {
+    "asset_key": "ARCANE_GALLERY_ICON_MAP",
+    "asset_path": "hermes/system-asset/ARCANE_GALLERY_ICON_MAP/b4a96982657cf748e8d165ab39cd78f2feef4a3514829243b3708e76aaaf3e7c.webp",
+    "alpha_preserved": true
+  },
+  {
+    "asset_key": "ARCANE_GALLERY_NAV_FULLSCREEN",
+    "asset_path": "hermes/system-asset/ARCANE_GALLERY_NAV_FULLSCREEN/6f8504c772df18277ba7ed740d023b145f0dd01465900ea328601e841696566f.webp",
+    "alpha_preserved": true
+  },
+  {
+    "asset_key": "ARCANE_GALLERY_NAV_INFO",
+    "asset_path": "hermes/system-asset/ARCANE_GALLERY_NAV_INFO/8c78ccf571f22bf1253a21cb0f8b8f3337493fe0e560434a939896a680972aae.webp",
+    "alpha_preserved": true
+  },
+  {
+    "asset_key": "ARCANE_GALLERY_NAV_NEXT",
+    "asset_path": "hermes/system-asset/ARCANE_GALLERY_NAV_NEXT/1ea579dc14670b420b4926d80d7f5805e9a78caa619e0a6e1f3d0461d9510a21.webp",
+    "alpha_preserved": true
+  },
+  {
+    "asset_key": "ARCANE_GALLERY_NAV_PREV",
+    "asset_path": "hermes/system-asset/ARCANE_GALLERY_NAV_PREV/f427830945f7c429ca87bd4311f994af8dcce00efa152edcac4700a26f832429.webp",
+    "alpha_preserved": true
+  },
+  {
+    "asset_key": "ARCANE_GALLERY_ORNAMENT_LINE",
+    "asset_path": "hermes/system-asset/ARCANE_GALLERY_ORNAMENT_LINE/fa16aad2dadce702a22e8db6b860e23d8c2c8d235ac17a99b85324272934b1ac.webp",
+    "alpha_preserved": true
+  },
+  {
+    "asset_key": "ARCANE_GALLERY_PANEL_SURFACE",
+    "asset_path": "hermes/system-asset/ARCANE_GALLERY_PANEL_SURFACE/6912f39e062c1096405b8d5f9230144230af8842b0d080ebd259f8bc0c1bc270.webp",
+    "alpha_preserved": true
+  },
+  {
+    "asset_key": "ARCANE_GALLERY_STAR_LARGE",
+    "asset_path": "hermes/system-asset/ARCANE_GALLERY_STAR_LARGE/7e4e7b86bbd3682789d67a3ce917af71483005b6e67490fcb41e8bcab5c5ce65.webp",
+    "alpha_preserved": true
+  },
+  {
+    "asset_key": "ARCANE_GALLERY_STAR_SMALL",
+    "asset_path": "hermes/system-asset/ARCANE_GALLERY_STAR_SMALL/f5f7e0cfd9211da80da2ce10bac9acb5cb2fd358c5fe0afedf78f1467b911df4.webp",
+    "alpha_preserved": true
+  },
+  {
+    "asset_key": "ARCANE_GALLERY_STAR_TINY",
+    "asset_path": "hermes/system-asset/ARCANE_GALLERY_STAR_TINY/de07b2a42eeeef1f703b508181181454af71d284e3303b88f1d2d96eda703a16.webp",
+    "alpha_preserved": true
+  },
+  {
+    "asset_key": "ARCANE_GALLERY_THUMB_ACTIVE",
+    "asset_path": "hermes/system-asset/ARCANE_GALLERY_THUMB_ACTIVE/0eb722b9bcd4b7c9a1deb461fe43df8b3db959bdb7db631d25a53a43e6afe4e3.webp",
+    "alpha_preserved": true
+  },
+  {
+    "asset_key": "ARCANE_GALLERY_THUMB_HOVER",
+    "asset_path": "hermes/system-asset/ARCANE_GALLERY_THUMB_HOVER/5694b2acd857af5cf946f7149da70b3d59b26fcfc715c0632ddf749f19713dd6.webp",
+    "alpha_preserved": true
+  },
+  {
+    "asset_key": "ARCANE_GALLERY_THUMB_NORMAL",
+    "asset_path": "hermes/system-asset/ARCANE_GALLERY_THUMB_NORMAL/1855e60a3856901aa2809f18d7e74610f5bb8083759087cd3c414a2a17633cd7.webp",
+    "alpha_preserved": true
+  }
+]

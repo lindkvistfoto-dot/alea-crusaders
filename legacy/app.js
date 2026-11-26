@@ -122,8 +122,8 @@ async function enterApp(){
    if(params.get('view')==='trophy-room')window.openTrophyRoom?.();
    if(params.get('view')==='adventure'){
     const mapId=params.get('map');
-    if(mapId&&campaignMaps.some(map=>map.id===mapId&&(adventureCanManage()||map.player_visible)))
-     adventureRequestedMap=!adventureCanManage()&&mapId===campaignActiveMapId?null:{campaign:centralCampaignId,id:mapId};
+    if(mapId&&adventureCanManage()&&campaignMaps.some(map=>map.id===mapId))
+     adventureRequestedMap={campaign:centralCampaignId,id:mapId};
     await openMap();
    }
    if(params.get('view')==='combat')await openCombat();
@@ -3444,8 +3444,9 @@ async function toggleAdventurePreview(){
  if(!adventurePlayerPreview){adventurePreviousMap=previous;adventurePreviousCamera={...mapView};}
  adventurePlayerPreview=!adventurePlayerPreview;
  const desired=adventurePlayerPreview?previous:adventurePreviousMap;
- adventureRequestedMap={campaign:centralCampaignId,id:desired};
+ adventureRequestedMap=adventurePlayerPreview&&desired===campaignActiveMapId?null:{campaign:centralCampaignId,id:desired};
  clearAdventureMap();
+ if(!adventurePlayerPreview)await loadCampaignMaps(false);
  await viewCampaignMap(desired,false);
  if(activeCampaignMap?.id===previous&&campaignMapAreas.some(a=>a.id===area))await openMapLocationInfoByArea(area);
  if(!adventurePlayerPreview&&activeCampaignMap?.id===adventurePreviousMap&&adventurePreviousCamera){
@@ -3486,7 +3487,8 @@ async function loadCampaignMaps(loadViewed=true){
  const version=adventureReadVersion;
  if(!centralCampaignId){campaignMaps=[];campaignActiveMapId=null;setCampaignMapData(null,[]);return}
  await loadCampaignMapRole();
- const mapsQuery='campaign_maps?campaign_id=eq.'+encodeURIComponent(centralCampaignId)+'&select=id,campaign_id,site_id,name,image_path,width,height,player_visible,first_activated_at,last_activated_at,sort_order';
+ const playerRead=!adventureCanManage();
+ const mapsQuery='campaign_maps?campaign_id=eq.'+encodeURIComponent(centralCampaignId)+(playerRead?'&player_visible=eq.true':'')+'&select=id,campaign_id,site_id,name,'+(playerRead?'':'image_path,')+'width,height,player_visible,first_activated_at,last_activated_at,sort_order';
  const order='&order=sort_order.asc,name.asc';
  let maps;
  try{maps=await dbJson(mapsQuery+',pixels_per_meter'+order)}
@@ -3507,6 +3509,7 @@ async function loadCampaignMaps(loadViewed=true){
  }
 }
 function renderMapLibraryControls(){
+ globalThis.aleaExplorerGallery?.sync();
  let picker=$('mapPicker'),currentBtn=$('mapCurrentBtn'),setCurrentBtn=$('mapSetCurrentBtn'),badge=$('mapCurrentBadge'),visibilityToggle=$('mapVisibilityToggle');
  if(picker){
   let viewable=adventureCanManage()?campaignMaps:campaignMaps.filter(m=>m.player_visible);
@@ -3756,8 +3759,9 @@ async function loadCampaignMapAreas(mapId,forEditor=false){
  let stateMap=new Map((states||[]).map(s=>[s.location_id,s.status])),nameMap=new Map((locations||[]).map(l=>[l.id,(l.location_key?l.location_key+'. ':'')+(l.name||'Plats')]));
  return rows.map(a=>{let valid=isUuid(a.location_id);return {...a,location_id:valid?a.location_id:null,_invalid_location_ref:(!valid&&a.location_id)?String(a.location_id):'',status:valid?(stateMap.get(a.location_id)||'unknown'):'unknown',name:valid?(nameMap.get(a.location_id)||'Okänd plats'):'Ej kopplad'}});
 }
-async function selectAdventureMap(id){
- adventureRequestedMap=!adventureCanManage()&&id===campaignActiveMapId?null:{campaign:centralCampaignId,id};
+async function selectAdventureMap(id,{free=false}={}){
+ if(!adventureCanManage()&&!campaignMaps.some(m=>m.id===id&&m.player_visible))return;
+ adventureRequestedMap=!free&&!adventureCanManage()&&id===campaignActiveMapId?null:{campaign:centralCampaignId,id};
  return viewCampaignMap(id);
 }
 function requestedAdventureMap(maps){
@@ -4275,6 +4279,7 @@ async function setMapLocationStatus(locationId,status){
  }catch(e){alert('Kunde inte ändra platsstatus: '+e.message)}
 }
 async function openMap(){
+ if($('mapPage').classList.contains('hidden')&&!adventureCanManage())adventureRequestedMap=null;
  mapReturn=!$('combatPage').classList.contains('hidden')?'combat':(!$('dicePage').classList.contains('hidden')?'dice':(!$('view').classList.contains('hidden')?'view':(!$('admin').classList.contains('hidden')?'admin':'home')));
  ['home','view','admin','dicePage','combatPage'].forEach(id=>$(id).classList.add('hidden'));
  $('mapPage').classList.remove('hidden');$('back').classList.add('hidden');$('editBtn').classList.add('hidden');$('cancelEditBtn').classList.add('hidden');
@@ -4405,7 +4410,7 @@ function mapPointerUp(e){
  mapPointerAreaId=null;
 }
 function closeMapLocationInfo(){
- mapSelectedAreaId=null;mapLocationInfoToken++;
+ mapSelectedAreaId=null;mapLocationInfoToken++;globalThis.aleaExplorerGallery?.sync();
  let gallery=$('mapLocationGallery');if(gallery){gallery.classList.remove('campaign-map-image-gallery');gallery.innerHTML='<div class="map-location-empty">Välj en plats på kartan för att visa dess delade bilder.</div>'}
  let imagesName=$('mapLocationImagesName');if(imagesName)imagesName.textContent='Välj en plats på kartan';
  let p=$('mapLocationPanel');if(p){p.classList.add('empty');p.innerHTML='<div class="map-location-empty">Klicka på en synlig plats på kartan för att visa information.</div>'}
@@ -4462,7 +4467,7 @@ async function openMapLocationInfoByArea(areaId,keepToken){
  let a=campaignMapAreas.find(function(x){return x.id===areaId});if(!a)return;
  if(!adventureCanManage()&&a.status!=='explored')return;
  const token=++mapLocationInfoToken;
- mapSelectedAreaId=a.id;renderMapPanel();
+ mapSelectedAreaId=a.id;globalThis.aleaExplorerGallery?.sync();renderMapPanel();
  let imagesName=$('mapLocationImagesName');if(imagesName)imagesName.textContent=a.name||'Plats';
  let gallery=$('mapLocationGallery');if(gallery){gallery.classList.remove('campaign-map-image-gallery');gallery.innerHTML='<div class="map-location-loading">Laddar delade bilder…</div>'}
  let p=$('mapLocationPanel');if(!p)return;
@@ -4477,7 +4482,7 @@ async function openMapLocationInfoByArea(areaId,keepToken){
  try{
   let queries=[
    dbJson('campaign_location_player_texts?location_id=eq.'+encodeURIComponent(a.location_id)+(adventureCanManage()?'':'&player_visible=eq.true')+'&select=player_description,player_visible&limit=1'),
-   dbJson('campaign_location_assets?location_id=eq.'+encodeURIComponent(a.location_id)+'&player_visible=eq.true&select=id,asset_type,title,description,storage_path,player_visible,sort_order&order=sort_order.asc')
+   dbJson('campaign_location_assets?location_id=eq.'+encodeURIComponent(a.location_id)+(adventureCanManage()?'':'&player_visible=eq.true')+'&select=id,asset_type,title,description,storage_path,player_visible,sort_order&order=sort_order.asc')
   ];
   if(adventureCanManage())queries.push(dbJson('campaign_location_gm_notes?location_id=eq.'+encodeURIComponent(a.location_id)+'&select=gm_description,hidden_discoveries&limit=1'));
   let rows=await Promise.all(queries);if(token!==mapLocationInfoToken)return;
@@ -4489,6 +4494,7 @@ async function openMapLocationInfoByArea(areaId,keepToken){
   await renderMapLocationPhotos(assets);
  }catch(e){
   if(token!==mapLocationInfoToken)return;
+  globalThis.aleaExplorerGallery?.roomFailed(a.id);
   p.innerHTML='<div class="map-location-head"><div><h3>'+escAttr(a.name||'Plats')+'</h3></div><button class="map-location-close" onclick="closeMapLocationInfo()">×</button></div><div class="map-location-empty">Kunde inte läsa platsinformationen: '+escAttr(e.message||'okänt fel')+'</div>';
   window.aleaAdventureFigures?.mountRoomObjects?.(p,a);
  }

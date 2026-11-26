@@ -138,6 +138,7 @@ async function scenario(mobile) {
       await page.waitForFunction(()=>window.aleaAdventureFigures);
       await page.evaluate(async ({manager,map,room,hero})=>{
         window.dbJson=window.panelFixtureRead;
+        supabaseProfile={id:hero.character_id,display_name:manager?'Spelledare':'Spelare',is_admin:manager};
         centralCampaignId=map.campaign_id;centralCampaignRole=manager?'gm':'player';campaignMaps=[map];
         chars=[{id:'astrid',_dbId:hero.character_id,name:hero.name,isNpc:false,identity:{namn:hero.name},live:{}}];
         window.locationAssetStorageFetch=async key=>{
