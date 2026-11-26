@@ -40,19 +40,31 @@
       .sort((a, b) => Number(b.primary) - Number(a.primary) || a.sort_order - b.sort_order);
   }
 
-  async function imageUrl(image) {
+  async function readImageBlob(image) {
     const bucket = image.storage_bucket || 'campaign-location-assets';
-    const key = bucket + '/' + image.storage_path;
-    if (urls.has(key)) return urls.get(key);
+
     const res = await locationAssetStorageFetch(
       'object/' + encodeURIComponent(bucket) + '/' + encodeStoragePath(image.storage_path),
       { method: 'GET' }
     );
     if (!res.ok) throw Error('Kunde inte läsa bilden (' + res.status + ')');
-    const url = URL.createObjectURL(await res.blob());
+    return res.blob();
+  }
+
+  async function imageUrl(image) {
+    const key = (image.storage_bucket || 'campaign-location-assets') + '/' + image.storage_path;
+    if (urls.has(key)) return urls.get(key);
+    const url = URL.createObjectURL(await readImageBlob(image));
     urls.set(key, url);
     return url;
   }
+
+  window.refreshExplorerRoomPhotos = async function(area){
+    if(adventureCanManage() || area?.status!=='explored' || !area.location_id)return;
+    const token=mapLocationInfoToken;
+    const rows=await dbJson('campaign_location_assets?location_id=eq.'+encodeURIComponent(area.location_id)+'&player_visible=eq.true&asset_type=eq.image&select=id,title,storage_path,player_visible,sort_order&order=sort_order.asc');
+    if(token===mapLocationInfoToken && mapSelectedAreaId===area.id && !adventureCanManage())await window.renderMapLocationPhotos(rows);
+  };
 
   window.renderMapLocationPhotos = async function renderCampaignMapGallery(legacyAssets) {
     const generation = ++galleryGeneration;
@@ -74,8 +86,12 @@
     } catch (error) {
       // Preserve the old map gallery if a migration/network/database issue occurs.
       console.warn('Kunde inte läsa det nya kampanjbildbiblioteket:', error);
-      if (stillCurrent()) return originalRender?.((legacyAssets || []).filter(image=>image.player_visible===true));
-      return;
+      if (!stillCurrent()) return;
+      if (!adventureCanManage() && window.aleaExplorerGallery?.enabled()) {
+        window.aleaExplorerGallery.room(selectedId,(legacyAssets||[]).filter(image=>image.player_visible===true),readImageBlob);
+        return;
+      }
+      return originalRender?.((legacyAssets || []).filter(image=>image.player_visible===true));
     }
     if (!stillCurrent()) return;
     const unique = new Set(linkedImages.map(image =>
@@ -91,6 +107,10 @@
       })
       .map(image => ({ ...image, storage_bucket: 'campaign-location-assets', source: 'legacy', primary: false }));
     const combined = [...linkedImages, ...remaining];
+    if (!adventureCanManage() && window.aleaExplorerGallery?.enabled()) {
+      window.aleaExplorerGallery.room(selectedId, combined, readImageBlob);
+      return;
+    }
     if (!combined.length) {
       originalGallery.innerHTML =
         '<div class="map-location-empty">Inga bilder är kopplade till den här platsen.</div>';

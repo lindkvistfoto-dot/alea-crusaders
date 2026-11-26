@@ -221,6 +221,7 @@ export function createArcaneGallery({legolas,request,getCampaign,isLoggedIn,isGM
    if(!valid(n,c))return;
    const lookup=new Map(materials.filter(x=>x.campaign_id===c&&x.asset_kind==='image').map(x=>[x.id,x]));
    state.rows=ids.map(id=>lookup.get(id)).filter(Boolean);
+   win().dispatchEvent?.(new Event('alea:presented-images'));
    const next=arcaneGalleryChooseSelection(state.rows,state.selected,state.live,state.displayedLive);
    state.displayedLive=state.live;
    if(!next){

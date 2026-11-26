@@ -363,5 +363,13 @@ export function mountFrodo({
   visibleId:()=>gallery.state.visible,
   closeViewer:()=>{if(legolas.state.viewerOpen)legolas.closeViewer({restoreFocus:false});}
  };
- return {frodo,mount,refresh,showRow,showQueue,step,render,gatherGallery};
+ function presentedImages(){
+  const state=gallery.state;
+  if(!authenticated()||state.campaign!==scope())return {rows:[],live:'',revision:-1};
+  return {live:state.live,revision:state.revision,rows:state.rows.map(row=>({
+   id:'material:'+row.id,title:row.title,version:row.storage_bucket+'/'+row.storage_path,
+   read:()=>{if(state.campaign!==scope()||!state.rows.includes(row))throw Error('Bilden är inte längre delad.');return legolas.readMedia(row,false);}
+  }))};
+ }
+ return {frodo,mount,refresh,showRow,showQueue,step,render,gatherGallery,presentedImages};
 }
