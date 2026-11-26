@@ -15,7 +15,8 @@ const maps=['Skelettbyn','Katakomberna','Kryptan'].map(name=>({id:randomUUID(),c
 const room={id:randomUUID(),location_id:randomUUID(),name:'01. Kyrkan',status:'explored',shape_type:'rect',shape_data:{x:40,y:40,width:400,height:300}};
 const concealed=randomUUID(),clients=[],reads=[],errors=[];
 const photos=pictures.map((p,i)=>({id:randomUUID(),title:titles[i],asset_type:'image',player_visible:true,storage_path:p+'.webp',sort_order:i}));
-let count=0,current=maps[0].id;
+const presentation={id:randomUUID(),campaign_id:campaign,title:'SL visar nu',asset_kind:'image',storage_bucket:'campaign-materials',storage_path:campaign+'/tomb.webp',archived_at:null};
+let presenting=false,count=0,current=maps[0].id;
 const browser=await chromium.launch({...(process.env.CHROMIUM_PATH?{executablePath:process.env.CHROMIUM_PATH}:{channel:'chrome'}),args:['--enable-unsafe-swiftshader','--no-sandbox']});
 await fs.mkdir(output,{recursive:true});
 async function client(label) {
@@ -47,6 +48,9 @@ async function client(label) {
   await p.exposeFunction('galleryTestRequest',async(key,opts={})=>{
     reads.push(key);
     assert.ok(!opts.method || opts.method==='GET' || key.startsWith('rpc/read_'),'Mutation '+key);
+    if(key.startsWith('campaign_material_presentations?'))return presenting?[{campaign_id:campaign,material_id:presentation.id,revision:1}]:[];
+    if(key.startsWith('campaign_material_presentation_history?'))return presenting?[{material_id:presentation.id,revision:1}]:[];
+    if(key.startsWith('campaign_materials?'))return presenting&&key.includes(presentation.id)?[presentation]:[];
     if(key.startsWith('campaign_members?'))return [{role:'player'}];
     if(key.startsWith('campaign_maps?')){assert.ok(key.includes('player_visible=eq.true')&&!key.includes('image_path'));return maps;}
     if(key.startsWith('campaign_map_settings?'))return [{active_map_id:current}];
@@ -67,7 +71,7 @@ async function client(label) {
       window.loadCampaignPlaceData=window.loadCampaignContentData=async()=>{};
       window.readAdventureRaster=async(map,previous)=>previous?null:{url:URL.createObjectURL(await (await fetch('/gallery-test/exterior.webp')).blob()),tag:map.id};
       window.locationAssetStorageFetch=key=>fetch('/gallery-test/'+key.split('/').at(-1));
-      window.aleaPresentedImages=()=>window.galleryTestFeed||{rows:[],live:'',revision:0};
+      window.mapStorageFetch=key=>fetch('/gallery-test/'+key.split('/').at(-1));
       document.querySelectorAll('#loginScreen,#landing').forEach(el=>el.classList.add('hidden'));
       document.querySelectorAll('header,main').forEach(el=>el.classList.remove('hidden'));
       document.querySelectorAll('main > section').forEach(el=>el.classList.add('hidden'));
@@ -113,13 +117,8 @@ try {
   count=4;await selected(a,titles[3]);
   assert.equal(await a.root.locator('.eg-stage img').evaluate(i=>getComputedStyle(i).objectFit),'contain');
   assert.ok(await a.root.locator('.eg-thumbs').evaluate(el=>el.scrollWidth>el.clientWidth));
-  for(const c of clients){
-    await c.p.evaluate(()=>{
-      window.galleryTestFeed={revision:3,live:'shown',rows:[{id:'material:shown',title:'SL visar nu',version:'v1',read:async()=>(await fetch('/gallery-test/tomb.webp')).blob()}]};
-      window.dispatchEvent(new Event('alea:presented-images'));
-    });
-    await selected(c,'SL visar nu');
-  }
+  presenting=true;
+  for(const c of clients)await selected(c,'SL visar nu');
   await a.root.locator('.eg-thumbs button').first().click();await selected(a,titles[0]);await selected(b,'SL visar nu');
   await a.root.locator('select').selectOption(maps[1].id);await mapIs(a,maps[1].id);await mapIs(b,maps[0].id);
   assert.equal(await a.root.locator('[data-do=free]').getAttribute('aria-pressed'),'true');

@@ -42,10 +42,17 @@ jobs:
       - name: Exercise two independent players on the same preview
         run: |
           mkdir -p /tmp/gallery-pictures
-          convert assets/targans-gille-clean.jpg -resize 950x450 /tmp/gallery-pictures/exterior.webp
-          convert assets/innkeeper-hero.jpg -resize 650x370 /tmp/gallery-pictures/interior.webp
-          convert assets/alchemy-hero.jpg -resize 650x370 /tmp/gallery-pictures/tomb.webp
-          convert assets/innkeeper-hero.jpg -gravity Center -crop 220x400+0+0 +repage /tmp/gallery-pictures/portrait.webp
+          python3 -m pip install --target /tmp/gallery-pillow Pillow==12.3.0
+          PYTHONPATH=/tmp/gallery-pillow python3 - <<'PY'
+          from PIL import Image, ImageOps
+          for source, name in [('targans-gille-clean','exterior'),('innkeeper-hero','interior'),('alchemy-hero','tomb'),('innkeeper-hero','portrait')]:
+              image = Image.open('assets/'+source+'.jpg')
+              if name == 'portrait':
+                  image = ImageOps.fit(image, (220, 400))
+              else:
+                  image.thumbnail((950, 450))
+              image.save('/tmp/gallery-pictures/'+name+'.webp')
+          PY
           node scripts/explorer-gallery-acceptance.mjs "$ALEA_VERIFIED_PREVIEW" tests/fixtures/explorer-gallery-art.json published /tmp/gallery-pictures visual-results/scenarios
       - name: Open Skelettbyn in the ordinary DEV player preview
         env:
