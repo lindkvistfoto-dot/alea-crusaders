@@ -371,5 +371,8 @@ export function mountFrodo({
    read:()=>{if(state.campaign!==scope()||!state.rows.includes(row))throw Error('Bilden är inte längre delad.');return legolas.readMedia(row,false);}
   }))};
  }
- return {frodo,mount,refresh,showRow,showQueue,step,render,gatherGallery,presentedImages};
+ function refreshPresentedImages(){
+  if(win().aleaExplorerGallery?.enabled())return gallery.refresh();
+ }
+ return {frodo,mount,refresh,showRow,showQueue,step,render,gatherGallery,presentedImages,refreshPresentedImages};
 }

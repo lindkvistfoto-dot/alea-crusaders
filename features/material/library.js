@@ -33,6 +33,7 @@ const frodoUi=mountFrodo({
 });
 window.aleaGatherGallery=frodoUi.gatherGallery;
 window.aleaPresentedImages=frodoUi.presentedImages;
+window.refreshExplorerPresentedImages=frodoUi.refreshPresentedImages;
 frodoUi.mount();
 const samUi=mountSam({
  legolas,

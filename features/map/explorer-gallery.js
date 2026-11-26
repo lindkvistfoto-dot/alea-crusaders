@@ -5,7 +5,7 @@ const holder=root.closest('aside');
 const work=holder.closest('.mapworkarea');
 const artNames=['FRAME_PRIMARY','FRAME_SECONDARY','HEADER_TITLE','HEADER_SUBTITLE','PANEL_SURFACE',
  'THUMB_NORMAL','THUMB_HOVER','THUMB_ACTIVE','NAV_PREV','NAV_NEXT','NAV_FULLSCREEN','NAV_INFO','COUNTER',
- 'DIVIDER_MAIN','COMPASS','BUTTON_NORMAL','BUTTON_ACTIVE','DROPDOWN_MAP','BG_DECOR_01','BG_DECOR_03','ICON_MAP','ICON_GROUP','ICON_COMPASS','ICON_IMAGE'];
+ 'DIVIDER_MAIN','COMPASS','BUTTON_NORMAL','BUTTON_ACTIVE','DROPDOWN_MAP','BG_DECOR_01','BG_DECOR_03','ICON_MAP','ICON_GROUP','ICON_IMAGE'];
 const btn=(action,label,body='')=>'<button type="button" data-do="'+action+'" aria-label="'+label+'">'+body+'</button>';
 const icon=key=>'<i class="eg-icon" data-art="'+key+'" aria-hidden="true"></i>';
 root.innerHTML='<canvas class="eg-frame" aria-hidden="true"></canvas><div class="eg-heading"><h3></h3><p></p></div>'+
@@ -14,7 +14,7 @@ root.innerHTML='<canvas class="eg-frame" aria-hidden="true"></canvas><div class=
  '<section class="eg-location"><h4>'+icon('ICON_IMAGE')+'Platsens bilder</h4><div class="eg-thumbs"></div><p class="eg-no-room"></p></section>'+
  '<div class="eg-divider" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div><section class="eg-nav"><h4>'+icon('ICON_MAP')+'Karta / Struktur'+btn('info','Om kartvisning')+'</h4>'+
  '<p class="eg-info" hidden>Följ gruppens karta eller studera en delad karta på egen hand. Spelledaren kan samla gruppen igen.</p>'+
- '<div class="eg-modes">'+btn('follow','Följer gruppen',icon('ICON_GROUP')+'<span>Följer gruppen</span>')+btn('free','Fri kartvisning',icon('ICON_COMPASS')+'<span>Fri kartvisning</span>')+'</div>'+
+ '<div class="eg-modes">'+btn('follow','Följer gruppen',icon('ICON_GROUP')+'<span>Följer gruppen</span>')+btn('free','Fri kartvisning',icon('COMPASS')+'<span>Fri kartvisning</span>')+'</div>'+
  '<label class="eg-picker"><span></span><select aria-label="Välj delad karta eller struktur"></select></label></section>';
 const $=s=>root.querySelector(s);
 const control=id=>$('[data-do="'+id+'"]');
@@ -156,6 +156,16 @@ root.onclick=e=>{
 };
 picker.onchange=()=>{void selectAdventureMap(picker.value,{free:true});};
 window.addEventListener('alea:presented-images',()=>{if(!root.hidden){readShared();paintPhotos();}});
+// Folder changes are signalled by Galadriel. Recheck the authorized history
+// after returning to a tab and during long sessions if a signal was missed.
+let checkingHistory=false;
+async function recheckHistory(){
+ if(!usable()||document.hidden||checkingHistory)return;
+ checkingHistory=true;
+ try{await window.refreshExplorerPresentedImages?.();}finally{checkingHistory=false;}
+}
+document.addEventListener('visibilitychange',recheckHistory);
+window.setInterval(recheckHistory,30000);
 const lifecycle=new MutationObserver(()=>{sync();if(!usable()&&dialog.open)dialog.close();});
 for(const el of [page,work,holder,document.getElementById('loginScreen')])lifecycle.observe(el,{attributes:true,attributeFilter:['class']});
 window.setInterval(async()=>{

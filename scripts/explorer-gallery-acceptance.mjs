@@ -16,7 +16,7 @@ const room={id:randomUUID(),location_id:randomUUID(),name:'01. Kyrkan',status:'e
 const concealed=randomUUID(),clients=[],reads=[],errors=[];
 const photos=pictures.map((p,i)=>({id:randomUUID(),title:titles[i],asset_type:'image',player_visible:true,storage_path:p+'.webp',sort_order:i}));
 const presentation={id:randomUUID(),campaign_id:campaign,title:'SL visar nu',asset_kind:'image',storage_bucket:'campaign-materials',storage_path:campaign+'/tomb.webp',archived_at:null};
-let presenting=false,count=0,current=maps[0].id;
+let presenting=false,archived=false,count=0,current=maps[0].id;
 const browser=await chromium.launch({...(process.env.CHROMIUM_PATH?{executablePath:process.env.CHROMIUM_PATH}:{channel:'chrome'}),args:['--enable-unsafe-swiftshader','--no-sandbox']});
 await fs.mkdir(output,{recursive:true});
 async function client(label) {
@@ -50,7 +50,7 @@ async function client(label) {
     assert.ok(!opts.method || opts.method==='GET' || key.startsWith('rpc/read_'),'Mutation '+key);
     if(key.startsWith('campaign_material_presentations?'))return presenting?[{campaign_id:campaign,material_id:presentation.id,revision:1}]:[];
     if(key.startsWith('campaign_material_presentation_history?'))return presenting?[{material_id:presentation.id,revision:1}]:[];
-    if(key.startsWith('campaign_materials?'))return presenting&&key.includes(presentation.id)?[presentation]:[];
+    if(key.startsWith('campaign_materials?'))return presenting&&!archived&&key.includes(presentation.id)?[presentation]:[];
     if(key.startsWith('campaign_members?'))return [{role:'player'}];
     if(key.startsWith('campaign_maps?')){assert.ok(key.includes('player_visible=eq.true')&&!key.includes('image_path'));return maps;}
     if(key.startsWith('campaign_map_settings?'))return [{active_map_id:current}];
@@ -83,7 +83,17 @@ async function client(label) {
   await login();
   const c={p,login,root:p.locator('#explorerGallery')};clients.push(c);return c;
 }
-const selected=(c,title)=>c.p.waitForFunction(s=>{const i=document.querySelector('#explorerGallery [data-do=full] img');return !i.hidden&&i.naturalWidth&&i.alt===s},title);
+const selected=async(c,title)=>{
+  try{
+    await c.p.waitForFunction(s=>{const i=document.querySelector('#explorerGallery [data-do=full] img');return !i.hidden&&i.naturalWidth&&i.alt===s},title,{timeout:25000});
+  }catch(error){
+    console.error('Expected image',title,await c.p.evaluate(()=>({
+      shown:document.querySelector('#explorerGallery .eg-stage img')?.alt,empty:document.querySelector('#explorerGallery .eg-empty')?.textContent,
+      visibility:document.visibilityState,presented:window.aleaPresentedImages?.()?.rows.map(r=>r.title),frodo:document.querySelector('#frodoNotice')?.textContent
+    })),reads.filter(key=>key.startsWith('campaign_material')).slice(-6),errors);
+    throw error;
+  }
+};
 const mapIs=(c,id)=>c.p.waitForFunction(id=>activeCampaignMap?.id===id,id);
 const openRoom=c=>c.p.evaluate(id=>openMapLocationInfoByArea(id),room.id);
 const click=(c,key)=>c.root.locator('[data-do='+key+']').click();
@@ -107,6 +117,7 @@ try {
     assert.equal(await a.p.locator('.explorer-image-viewer[open]').count(),0);
   }
   await a.p.waitForFunction(()=>document.querySelector('#explorerGallery canvas').width===document.querySelector('#explorerGallery').clientWidth);
+  await a.root.locator('.eg-thumbs button').first().click();
   await a.p.mouse.move(0,0);
   for(const [device,width,height] of [['desktop',1440,960],['tablet',820,1180],['mobil',390,844]]){
     await a.p.setViewportSize({width,height});await a.root.scrollIntoViewIfNeeded();
@@ -118,7 +129,13 @@ try {
   assert.equal(await a.root.locator('.eg-stage img').evaluate(i=>getComputedStyle(i).objectFit),'contain');
   assert.ok(await a.root.locator('.eg-thumbs').evaluate(el=>el.scrollWidth>el.clientWidth));
   presenting=true;
-  for(const c of clients)await selected(c,'SL visar nu');
+  // Deliver a foreground reconciliation to each browser, just as a player
+  // returning to a Chrome tab gets the latest published Frodo revision.
+  for(const c of clients){
+    await c.p.bringToFront();
+    await c.p.evaluate(()=>document.dispatchEvent(new Event('visibilitychange')));
+    await selected(c,'SL visar nu');
+  }
   await a.root.locator('.eg-thumbs button').first().click();await selected(a,titles[0]);await selected(b,'SL visar nu');
   await a.root.locator('select').selectOption(maps[1].id);await mapIs(a,maps[1].id);await mapIs(b,maps[0].id);
   assert.equal(await a.root.locator('[data-do=free]').getAttribute('aria-pressed'),'true');
@@ -136,6 +153,11 @@ try {
   await a.root.locator('select').selectOption(maps[1].id);await mapIs(a,maps[1].id);
   await a.p.evaluate(()=>logoutUser());await a.p.locator('#loginScreen').waitFor();
   await a.login();await mapIs(a,current);
+  await selected(a,'SL visar nu');
+  await click(a,'expand');
+  archived=true;
+  await a.p.evaluate(()=>document.dispatchEvent(new Event('visibilitychange')));
+  await a.p.waitForFunction(()=>!document.querySelector('.explorer-image-viewer').open && document.querySelector('#explorerGallery output').textContent==='0 / 0');
   await a.p.evaluate(id=>selectAdventureMap(id,{free:true}),concealed);await mapIs(a,current);
   assert.ok(!reads.some(q=>q.includes(concealed)||q.startsWith('campaign_location_gm_notes?')));
   assert.ok(await a.root.locator('.eg-frame').evaluate(c=>c.width>0));

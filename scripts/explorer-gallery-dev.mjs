@@ -41,6 +41,8 @@ try {
   await gallery.locator('[data-do=expand]').click();
   await page.locator('dialog.explorer-image-viewer[open] img').evaluate(img=>img.decode());
   await page.keyboard.press('Escape');
+  await gallery.locator('[data-do=info]').click();
+  await gallery.locator('[data-do=info]').click();
   await page.setViewportSize({width:390,height:844});
   await gallery.scrollIntoViewIfNeeded();
   await page.screenshot({path:output+'/dev-mobile.png'});
