@@ -4,7 +4,7 @@ on:
     branches: [development]
     paths:
       - 'features/map/explorer-gallery.*'
-      - 'scripts/explorer-gallery-dev.mjs'
+      - 'scripts/explorer-gallery-*.mjs'
       - '.github/workflows/explorer-gallery-dev.yml'
 permissions:
   contents: read
@@ -39,6 +39,14 @@ jobs:
           test -n "$preview"
           echo "Verified preview $preview for $SOURCE_SHA"
           echo "ALEA_VERIFIED_PREVIEW=$preview" >> "$GITHUB_ENV"
+      - name: Exercise two independent players on the same preview
+        run: |
+          mkdir -p /tmp/gallery-pictures
+          convert assets/targans-gille-clean.jpg -resize 950x450 /tmp/gallery-pictures/exterior.webp
+          convert assets/innkeeper-hero.jpg -resize 650x370 /tmp/gallery-pictures/interior.webp
+          convert assets/alchemy-hero.jpg -resize 650x370 /tmp/gallery-pictures/tomb.webp
+          convert assets/innkeeper-hero.jpg -gravity Center -crop 220x400+0+0 +repage /tmp/gallery-pictures/portrait.webp
+          node scripts/explorer-gallery-acceptance.mjs "$ALEA_VERIFIED_PREVIEW" tests/fixtures/explorer-gallery-art.json published /tmp/gallery-pictures visual-results/scenarios
       - name: Open Skelettbyn in the ordinary DEV player preview
         env:
           ALEA_DEV_TEST_EMAIL: ${{ secrets.ALEA_DEV_TEST_EMAIL }}

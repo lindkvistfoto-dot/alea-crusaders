@@ -3,7 +3,7 @@
 #explorerGallery[hidden],#explorerGallery [hidden]{display:none!important}
 #mapPage .explorer-gallery-panel #mapLocationImagesPanel>:not(#explorerGallery){display:none}
 #explorerGallery{position:relative;isolation:isolate;box-sizing:border-box;container-type:inline-size;width:100%;min-width:0;padding:0 5.6% 5%;color:#f5dfac;background:#17130e;font-family:Georgia,'Times New Roman',serif;color-scheme:dark;line-height:1.2}
-#explorerGallery::before{content:'';position:absolute;inset:1.8% 1.5%;z-index:-1;background:linear-gradient(#140f0b40,#130e0ab0),var(--eg-BG_DECOR_01) center/cover}
+#explorerGallery::before{content:'';position:absolute;inset:2% 3% auto;height:21%;z-index:-1;background:linear-gradient(#140f0b45,#17130e08 55%,#17130e),var(--eg-BG_DECOR_01) center 28%/106% auto no-repeat}
 #explorerGallery .eg-frame{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:2}
 #explorerGallery *{box-sizing:border-box}
 #explorerGallery button{font-family:inherit;cursor:pointer;box-shadow:none;color:inherit;margin:0}
@@ -25,7 +25,7 @@
 #explorerGallery [data-do=next]{top:50%;right:0;transform:translateY(-50%);background-image:var(--eg-NAV_NEXT)!important}
 #explorerGallery [data-do=expand]{top:6%;right:5%;background-image:var(--eg-NAV_FULLSCREEN)!important}
 #explorerGallery .eg-stage button:disabled:not([data-do=full]){opacity:.35}
-#explorerGallery output{position:absolute;bottom:-.8cqw;left:50%;transform:translateX(-50%);min-width:19%;text-align:center;padding:1.1cqw 3cqw;z-index:2;background:var(--eg-COUNTER) center/100% 100% no-repeat;font:700 clamp(12px,3.5cqw,21px)/1.1 Georgia,serif}
+#explorerGallery output{position:absolute;bottom:-.8cqw;left:50%;transform:translateX(-50%);min-width:19%;text-align:center;padding:1.1cqw 3cqw;z-index:2;border:0 solid transparent;border-image:var(--eg-COUNTER) 0 64 fill / 0 4.5cqw;font:700 clamp(12px,3.5cqw,21px)/1.1 Georgia,serif}
 #explorerGallery .eg-location,#explorerGallery .eg-nav{position:relative;margin-top:2.7cqw;padding:2.1cqw 2.7cqw 2.7cqw;border:solid transparent;border-width:0;border-image:var(--eg-PANEL_SURFACE) 22 24 fill / 1.9cqw 2.1cqw}
 #explorerGallery h4{display:flex;align-items:center;gap:1.6cqw;margin:0 0 1.7cqw;color:#f7e2b4;font:700 clamp(14px,4.1cqw,24px)/1.12 Georgia,serif;text-shadow:0 1px 2px #050403}
 #explorerGallery .eg-icon{display:inline-block;width:5.6cqw;height:5.8cqw;flex:none;background:center/contain no-repeat}
@@ -40,11 +40,17 @@
 #explorerGallery .eg-thumbs button:hover::after,#explorerGallery .eg-thumbs button:focus-visible::after{border-image-source:var(--eg-THUMB_HOVER)}
 #explorerGallery .eg-thumbs button[aria-pressed=true]::after{border-image-source:var(--eg-THUMB_ACTIVE)}
 #explorerGallery .eg-no-room,#explorerGallery .eg-info{font-size:clamp(12px,3.4cqw,18px);margin:.3em 0;color:#d8c5a6}
-#explorerGallery .eg-divider{height:2.6cqw;background:var(--eg-DIVIDER_MAIN) center/100% 100% no-repeat}
+#explorerGallery .eg-divider{display:grid;grid-template-columns:2cqw 1fr 7cqw 1fr 2cqw;height:2.5cqw}
+/* HERMES guides: keep the 28 px finials and the 98 px central ornament rigid. */
+#explorerGallery .eg-divider i{background:var(--eg-DIVIDER_MAIN) left center / 2550% 100% no-repeat}
+#explorerGallery .eg-divider i:nth-child(2){background-size:255% 100%;background-position:6.45% center}
+#explorerGallery .eg-divider i:nth-child(3){background-size:728.57% 100%;background-position:50% center}
+#explorerGallery .eg-divider i:nth-child(4){background-size:255% 100%;background-position:93.55% center}
+#explorerGallery .eg-divider i:last-child{background-position:right center}
 #explorerGallery .eg-nav{margin:0;padding-bottom:3cqw}
 #explorerGallery [data-do=info]{margin-left:auto;width:24px;height:24px;background:var(--eg-NAV_INFO) center/contain no-repeat;border:0;padding:0}
 #explorerGallery .eg-modes{display:grid;grid-template-columns:1fr 1fr;gap:1%;margin:.3em 0 .55em}
-#explorerGallery .eg-modes button{display:flex;align-items:center;justify-content:center;gap:1.2cqw;min-height:32px;padding:1.6cqw .5cqw;border:0 solid transparent;border-image:var(--eg-BUTTON_NORMAL) 22 24 fill / 2cqw;background:none;font-weight:600;font-size:clamp(11px,3.25cqw,20px);line-height:1.15}
+#explorerGallery .eg-modes button{display:flex;align-items:center;justify-content:center;gap:1.2cqw;min-height:32px;padding:1.6cqw .5cqw;border:0 solid transparent;border-image:var(--eg-BUTTON_NORMAL) 22 24 fill / 2cqw;background:none;font-weight:600;font-size:clamp(12px,3.25cqw,20px);line-height:1.15}
 #explorerGallery .eg-modes [aria-pressed=true]{border-image-source:var(--eg-BUTTON_ACTIVE);color:#fff0ca}
 #explorerGallery .eg-modes i{width:4.6cqw;height:4.6cqw}
 #explorerGallery .eg-picker{display:flex;position:relative;align-items:center;min-height:max(33px,8.2cqw);padding:1.2cqw 8.7% 1.2cqw 15%;border:0 solid transparent;border-image:var(--eg-DROPDOWN_MAP) 0 91 0 139 fill / 0 8.7% 0 13.4%;font:600 clamp(12px,3.6cqw,21px)/1.2 Georgia,serif;color:#fff1d4}

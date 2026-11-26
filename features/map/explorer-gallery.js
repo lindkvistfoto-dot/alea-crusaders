@@ -8,11 +8,11 @@ const artNames=['FRAME_PRIMARY','FRAME_SECONDARY','HEADER_TITLE','HEADER_SUBTITL
  'DIVIDER_MAIN','COMPASS','BUTTON_NORMAL','BUTTON_ACTIVE','DROPDOWN_MAP','BG_DECOR_01','BG_DECOR_03','ICON_MAP','ICON_GROUP','ICON_COMPASS','ICON_IMAGE'];
 const btn=(action,label,body='')=>'<button type="button" data-do="'+action+'" aria-label="'+label+'">'+body+'</button>';
 const icon=key=>'<i class="eg-icon" data-art="'+key+'" aria-hidden="true"></i>';
-root.innerHTML='<canvas class="eg-frame" aria-hidden="true"></canvas><header class="eg-heading"><h3></h3><p></p></header>'+
+root.innerHTML='<canvas class="eg-frame" aria-hidden="true"></canvas><div class="eg-heading"><h3></h3><p></p></div>'+
  '<div class="eg-stage">'+btn('full','Öppna bilden i helbild','<img alt="" hidden><span class="eg-empty"></span>')+
  btn('prev','Föregående bild')+btn('next','Nästa bild')+btn('expand','Visa helbild')+'<output aria-live="polite"></output></div>'+
  '<section class="eg-location"><h4>'+icon('ICON_IMAGE')+'Platsens bilder</h4><div class="eg-thumbs"></div><p class="eg-no-room"></p></section>'+
- '<div class="eg-divider" aria-hidden="true"></div><section class="eg-nav"><h4>'+icon('ICON_MAP')+'Karta / Struktur'+btn('info','Om kartvisning')+'</h4>'+
+ '<div class="eg-divider" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div><section class="eg-nav"><h4>'+icon('ICON_MAP')+'Karta / Struktur'+btn('info','Om kartvisning')+'</h4>'+
  '<p class="eg-info" hidden>Följ gruppens karta eller studera en delad karta på egen hand. Spelledaren kan samla gruppen igen.</p>'+
  '<div class="eg-modes">'+btn('follow','Följer gruppen',icon('ICON_GROUP')+'<span>Följer gruppen</span>')+btn('free','Fri kartvisning',icon('ICON_COMPASS')+'<span>Fri kartvisning</span>')+'</div>'+
  '<label class="eg-picker"><span></span><select aria-label="Välj delad karta eller struktur"></select></label></section>';

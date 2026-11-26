@@ -123,7 +123,7 @@ async function enterApp(){
    if(params.get('view')==='adventure'){
     const mapId=params.get('map');
     if(mapId&&adventureCanManage()&&campaignMaps.some(map=>map.id===mapId))
-     adventureRequestedMap=!adventureCanManage()&&mapId===campaignActiveMapId?null:{campaign:centralCampaignId,id:mapId};
+     adventureRequestedMap={campaign:centralCampaignId,id:mapId};
     await openMap();
    }
    if(params.get('view')==='combat')await openCombat();
