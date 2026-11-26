@@ -143,7 +143,10 @@ try {
   count=1;
   for(const c of clients){await selected(c,titles[0]);assert.equal(await c.root.locator('output').textContent(),'1 / 1');}
   count=3;
-  for(const c of clients)await selected(c,titles[2]);
+  for(const c of clients){
+    await c.root.locator('.eg-thumbs button').nth(2).waitFor();await selected(c,titles[0]);
+  }
+  await b.root.locator('.eg-thumbs button').nth(2).click();await selected(b,titles[2]);
   await a.root.locator('.eg-thumbs button').first().click();await selected(a,titles[0]);await selected(b,titles[2]);
   await click(a,'next');await selected(a,titles[1]);await click(a,'prev');await selected(a,titles[0]);
   for(const button of ['expand','full']){
@@ -159,7 +162,7 @@ try {
     const bounds=await a.p.evaluate(()=>{const g=document.querySelector('#explorerGallery');return [document.documentElement.scrollWidth,innerWidth,g.clientWidth,g.clientHeight]});
     assert.ok(bounds[0]<=bounds[1]+1 && bounds[2]>160 && bounds[3]>200,device+JSON.stringify(bounds));
   }
-  count=4;await selected(a,titles[3]);
+  count=4;await a.root.locator('.eg-thumbs button').nth(3).click({timeout:20000});await selected(a,titles[3]);
   assert.equal(await a.root.locator('.eg-stage img').evaluate(i=>getComputedStyle(i).objectFit),'contain');
   assert.ok(await a.root.locator('.eg-location > .eg-thumbs').evaluate(el=>el.scrollWidth>el.clientWidth));
   presenting=true;
@@ -209,6 +212,7 @@ try {
   await click(gm,'expand');await gm.p.locator('.explorer-image-viewer[open]').waitFor();await gm.p.keyboard.press('Escape');
   for(const player of [a,b]){await selected(player,titles[0]);assert.equal(await player.p.locator('dialog[open]').count(),0);}
   assert.ok(!seenFiles.get('Spelare A').includes('interior.webp')&&!seenFiles.get('Spelare B').includes('interior.webp'));
+  await gm.root.locator('.eg-thumbs button').nth(1).click();await gm.p.mouse.move(0,0);
   await gm.root.screenshot({path:path.join(output,'story-sl.png')});
   await click(gm,'share');
   for(const player of [a,b]){
@@ -220,6 +224,7 @@ try {
   assert.equal(await a.p.locator('dialog[open]').count(),0);assert.equal(await b.p.locator('dialog[open]').count(),1);
   await a.root.screenshot({path:path.join(output,'story-spelare.png')});
   await gm.p.waitForFunction(()=>document.querySelector('#explorerGallery .eg-status').textContent==='Delad med spelarna');
+  await gm.root.screenshot({path:path.join(output,'story-sl-delad.png')});
   const first=[...envelopes.values()][0].event;
   await a.p.evaluate(evt=>window.deliverGalleryPacket(evt),first);await a.p.waitForTimeout(100);
   assert.equal(await a.p.locator('dialog[open]').count(),0);

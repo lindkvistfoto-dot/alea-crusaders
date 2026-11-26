@@ -11,7 +11,7 @@ const icon=key=>'<i class="eg-icon" data-art="'+key+'" aria-hidden="true"></i>';
 root.innerHTML='<canvas class="eg-frame" aria-hidden="true"></canvas><div class="eg-heading"><h3></h3><p></p></div>'+
  '<div class="eg-stage">'+btn('full','Öppna bilden i helbild','<img alt="" hidden><span class="eg-empty"></span>')+
  btn('prev','Föregående bild')+btn('next','Nästa bild')+btn('expand','Visa helbild')+'<output aria-live="polite"></output></div>'+
- '<section class="eg-location"><h4>'+icon('ICON_IMAGE')+'Platsens bilder</h4><div class="eg-thumbs"></div><p class="eg-no-room"></p><div class="eg-presented" hidden><small>Visas av SL</small><div class="eg-thumbs"></div></div><div class="eg-actions" hidden><p class="eg-status"></p><div>'+btn('share','Dela och visa i helbild','Dela och visa')+btn('frame','Visa i spelarnas bildram','Visa i bildram')+btn('present','Visa i helbild för spelarna','Visa i helbild')+btn('revoke','Återkalla delning','Återkalla')+'</div><p class="eg-result" role="status"></p></div></section>'+
+ '<section class="eg-location"><h4>'+icon('ICON_IMAGE')+'Platsens bilder</h4><div class="eg-thumbs"></div><p class="eg-no-room"></p><div class="eg-presented" hidden><small>Visas av SL</small><div class="eg-thumbs"></div></div><div class="eg-actions" hidden><p class="eg-status"></p><div>'+btn('share','Dela och visa i helbild','Dela och visa i helbild')+btn('frame','Visa i spelarnas bildram','Visa i bildram')+btn('present','Visa i helbild för spelarna','Visa i helbild')+btn('revoke','Återkalla delning','Återkalla')+'</div><p class="eg-result" role="status"></p></div></section>'+
  '<div class="eg-divider" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div><section class="eg-nav"><h4>'+icon('ICON_MAP')+'Karta / Struktur'+btn('info','Om kartvisning')+'</h4>'+
  '<p class="eg-info" hidden>Följ gruppens karta eller studera en delad karta på egen hand. Spelledaren kan samla gruppen igen.</p>'+
  '<div class="eg-modes">'+btn('follow','Följer gruppen',icon('ICON_GROUP')+'<span>Följer gruppen</span>')+btn('free','Fri kartvisning',icon('COMPASS')+'<span>Fri kartvisning</span>')+'</div>'+
@@ -30,7 +30,7 @@ dialog.onclose=()=>{if(dialog.open)return;fullImage.removeAttribute('src');dialo
 let scope='',roomKey='',roomRows=[],shared=[],selected='',shown='',liveToken='',newRoom=false,pendingRoom=false;
 let menuKey='',thumbKey='',busyRoom=false,artLoading=false,artReady=false,artRetry=0,frameImage;
 const media=new Map();
-let presented=null, actionPending=false, requestedWindow='', externalKey='';
+let presented=null, actionPending=false, requestedWindow='', windowValid=null, externalKey='';
 const extra=()=>presented&&!roomRows.some(r=>r.id===presented.id)?presented:null;
 const rows=()=>[...roomRows,...(extra()?[presented]:[]),...shared];
 const manage=()=>adventureCanManage() && !!activeUser();
@@ -43,7 +43,7 @@ function forget(id,entry){
 function release(){
  for(const [id,entry] of media)forget(id,entry);
  if(dialog.open)dialog.close();
- presented=null;requestedWindow='';externalKey='';actionPending=false;$('.eg-result').textContent='';
+ presented=null;requestedWindow='';windowValid=null;externalKey='';actionPending=false;$('.eg-result').textContent='';
  roomRows=[];shared=[];selected='';shown='';roomKey='';liveToken='';thumbKey='';menuKey='';pendingRoom=false;
  $('.eg-presented .eg-thumbs').replaceChildren();$('.eg-presented').hidden=true;$('.eg-actions').hidden=true;
  fullImage.removeAttribute('src');fullImage.alt='';strip.replaceChildren();mainImage.removeAttribute('src');mainImage.alt='';mainImage.hidden=true;
@@ -76,6 +76,10 @@ function actions(row){
   button.hidden=action==='share'?row.visible:!row.visible;button.disabled=actionPending;
  }
 }
+function openRequested(){
+ if(requestedWindow&&(!windowValid||windowValid()))openPicture(requestedWindow==='frame');
+ requestedWindow='';windowValid=null;
+}
 function paintSelected(){
  const all=rows(),r=all.find(x=>x.id===selected);
  const index=all.indexOf(r);actions(r);
@@ -89,7 +93,7 @@ function paintSelected(){
   control('full').disabled=control('expand').disabled=true;return;
  }
  const current=r.id+'|'+(r.version||'');
- if(shown===current){if(requestedWindow && !mainImage.hidden){openPicture(requestedWindow==='frame');requestedWindow='';}return;}
+ if(shown===current){if(requestedWindow && !mainImage.hidden)openRequested();return;}
  shown=current;mainImage.hidden=true;mainImage.removeAttribute('src');empty.hidden=false;empty.textContent='Hämtar bilden …';
  control('full').disabled=control('expand').disabled=true;
  if(dialog.open)dialog.close();
@@ -99,7 +103,7 @@ function paintSelected(){
   try{await mainImage.decode();}catch{if(shown===current){empty.textContent='Bilden kunde inte öppnas.';shown='';}return;}
   if(shown!==current||mainImage.getAttribute('src')!==url)return;
   mainImage.hidden=false;empty.hidden=true;control('full').disabled=control('expand').disabled=false;
-  if(requestedWindow){openPicture(requestedWindow==='frame');requestedWindow='';}
+  if(requestedWindow)openRequested();
  });
 }
 function paintPhotos(){
@@ -168,8 +172,9 @@ function sync(){
 function room(id,images,read){
  sync();if(root.hidden||area()?.id!==id)return;
  const incoming=images.filter(r=>manage()||r.player_visible===true).map(r=>pictureRow(r,read));
- const prev=new Set(roomRows.map(r=>r.id));const added=incoming.filter(r=>!prev.has(r.id));
- if((newRoom||(!pendingRoom&&!manage()&&!presented))&&added.length)selected=(newRoom?incoming[0]:added.at(-1)).id;
+ // Availability refreshes must preserve a player's choice. Only a live reveal
+ // can take over an existing selection, including after a reconnect.
+ if(newRoom && incoming.length)selected=incoming[0].id;
  newRoom=false;pendingRoom=false;roomRows=incoming;paintPhotos();
 }
 function pictureRow(row,read=window.readExplorerImageBlob){
@@ -202,7 +207,7 @@ async function receive(session,event,valid){
  if(!ok())return;
  if(!picture?.player_visible){await recheckPresented();return;}
  presented=pictureRow(picture);selected=presented.id;newRoom=false;
- requestedWindow=event.mode==='full'?'full':usable()?'':'frame';
+ windowValid=ok;requestedWindow=event.mode==='full'?'full':usable()?'':'frame';
  if(!requestedWindow && dialog.open)dialog.close();
  paintPhotos();void ensureArt();
 }
@@ -215,7 +220,7 @@ async function command(action){
   if(scope!==stamp)return;
   await window.refreshExplorerRoomPhotos(a);
   if(scope!==stamp||area()?.id!==a.id)return;
-  const messages={share:ack?.session?'Delad och visad i helbild.':'Bilden är delad. Inget spelmöte pågår.',revoke:'Delningen är återkallad.',frame:'Visad i spelarnas bildram.',full:'Visad i helbild för spelarna.'};
+  const messages={share:ack?.session&&ack.mode==='full'?'Delad. Helbild skickad till spelmötet.':'Bilden är delad.',revoke:'Delningen är återkallad.',frame:'Visning i bildram skickad till spelmötet.',full:'Helbild skickad till spelmötet.'};
   $('.eg-result').textContent=messages[action];
  }catch(error){if(scope===stamp)$('.eg-result').textContent=error.message||'Bildåtgärden misslyckades. Försök igen.';}
  finally{if(scope===stamp){actionPending=false;paintSelected();}}
