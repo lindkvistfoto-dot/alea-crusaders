@@ -31,6 +31,8 @@ try {
     return new Set([...members.map(member=>member.user_id),activeUser().id]).size;
   });
   assert.equal(count,expected,'One lamp for each person in the campaign');
+  assert.equal(await rail.locator('.member .lamp:visible').count(),expected);
+  assert.ok(await rail.locator('.member .name').evaluateAll(names=>names.every(el=>/^\S+$/.test(el.textContent))));
   for (const [button,section] of [['landingCharactersNavBtn','home'],['mapNavBtn','mapPage'],['diceNavBtn','dicePage']]) {
     await page.locator('#'+button).evaluate(b=>b.click());
     await page.locator('#'+section).waitFor();
@@ -79,7 +81,7 @@ try {
     await settle();
     assert.equal(await grip.getAttribute('aria-expanded'),'true');
     assert.ok(await rail.evaluate(el=>el===window.acceptancePartyRail));
-    assert.equal(await rail.locator('.lamp:visible').count(),0);
+    assert.equal(await rail.locator('.member .lamp:visible').count(),expected);
     await page.screenshot({path:'rail-results/mobile-'+width+'-open.png',mask:[page.locator('#sessionUser:visible'),rail.locator('.name')]});
   }
   await page.locator('#mapNavBtn').evaluate(button=>button.click());

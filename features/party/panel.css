@@ -63,6 +63,7 @@
     --rail: 3px;
     --wing: 190px;
     --row: 47px;
+    --portrait-left: 13px;
     --top: 58px;
     --bottom: 46px;
   }
@@ -86,7 +87,17 @@
   }
   .panel { left: var(--rail); right: calc(-1 * var(--wing) * 8 / 353); }
   .panel-heading { top: 28px; font-size: 19px; }
-  .details { left: 13px; gap: 8px; }
+  .details { left: var(--portrait-left); gap: 8px; }
+  /* The same presence jewel sits on the portrait rim when the mobile panel opens. */
+  .drawer:is([data-open=true], .dragging) .lamp {
+    display: grid;
+    left: calc(var(--portrait-left) + var(--row) * .79 - 18px);
+    bottom: 0;
+    width: 24px;
+    height: 24px;
+  }
+  .lamp img { width: 16px; }
+  .lamp[role=img] { pointer-events: none; }
   .member:has(.mail:not([hidden])) .details { padding-right: calc(var(--mail-width) + 8px); }
   .mail { z-index: 5; }
   .drawer[data-open=false] .count,

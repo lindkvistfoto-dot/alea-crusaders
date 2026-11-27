@@ -1,14 +1,14 @@
-import {createPartyPanel,loadArt} from '../../features/party/panel.js';
+import {createPartyPanel,loadArt,partyFirstName} from '../../features/party/panel.js';
 const sizes = document.querySelector('#sizes');
 const notice = document.querySelector('#notice');
 const colours = ['GREEN', 'YELLOW', 'RED'];
 const statuses = ['På plats', 'Annan vy', 'Frånkopplad'];
 const people = [
-  ['SL', 'sl', 0, 0], ['Astrid', 'astrid', 0, 2], ['Lyra', 'lyra', 1, 0],
-  ['Evalin', 'evalin', 0, 1], ['Torin', '', 2, 0], ['Embla', '', 1, 1],
+  ['SL', 'sl', 0, 0], ['Astrid Eldhjärta', 'astrid', 0, 2], ['Lyra Gråväv', 'lyra', 1, 0],
+  ['Evalin Hugger från Caddo', 'evalin', 0, 1], ['Torin', '', 2, 0], ['Embla', '', 1, 1],
   ['Vidar', '', 0, 0], ['Sigrid', '', 0, 0],
 ].map(([name, portrait, status, unread]) => ({
-  name, portrait:portrait ? (portrait==='sl' ? '../../features/party/sl.webp' : 'scene/'+portrait+'.webp') : '',
+  name:partyFirstName(name), portrait:portrait ? (portrait==='sl' ? '../../features/party/sl.webp' : 'scene/'+portrait+'.webp') : '',
   status, unread, colour:colours[status], statusLabel:statuses[status],
 }));
 let count = 4;

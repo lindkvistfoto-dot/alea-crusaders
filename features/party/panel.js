@@ -11,6 +11,10 @@ function picture(src) {
   return img;
 }
 
+export function partyFirstName(name) {
+  return name?.trim().split(/\s+/, 1)[0] || 'Namnlös';
+}
+
 export function loadArt(components, target) {
   const art = {};
   for (const {key,url} of components) {

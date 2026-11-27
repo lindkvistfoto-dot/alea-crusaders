@@ -90,6 +90,16 @@ async function testViewport(browser, device, width, height) {
     assert.equal(await page.locator('.member').count(), count);
     await page.evaluate(() => { window.testRail = document.querySelector('.rail'); });
     const open = await inspect(page);
+    assert.equal(await page.locator('.lamp:visible').count(),count);
+    if (count===4) assert.deepEqual(await page.locator('.member .name').allTextContents(),['SL','Astrid','Lyra','Evalin']);
+    if (mobile) {
+      assert.ok(await page.locator('.member').evaluateAll(rows=>rows.every(row=>{
+        const bounds=selector=>row.querySelector(selector).getBoundingClientRect();
+        const face=bounds('.face'), lamp=bounds('.lamp img'), name=bounds('.name');
+        return lamp.left>=face.left && lamp.left<face.right && lamp.top>=face.y+face.height/2 &&
+          lamp.right<=name.x && lamp.width>=14;
+      })));
+    }
     const originalLetter = await page.locator('.mail').first().elementHandle();
     await checkDockAndLetters(page, true);
     if ([4,8].includes(count)) await page.screenshot({path:path.join(output, device+'-'+count+'-oppen.png')});
@@ -116,11 +126,9 @@ async function testViewport(browser, device, width, height) {
   }
   await page.getByRole('button', {name:'4',exact:true}).click();
   const lamp = page.locator('.lamp').first();
-  if (!mobile) {
-    const initial = await lamp.getAttribute('aria-label');
-    await lamp.click();
-    assert.notEqual(await lamp.getAttribute('aria-label'), initial);
-  }
+  const initial = await lamp.getAttribute('aria-label');
+  await lamp.click();
+  assert.notEqual(await lamp.getAttribute('aria-label'), initial);
   await page.locator('#send').click();
   const envelope = page.locator('.member').first().locator('.mail');
   assert(await envelope.isVisible());
