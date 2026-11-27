@@ -1,5 +1,5 @@
 import components from './components.json';
-import {createPartyPanel,loadArt,partyFirstName} from './panel.js';
+import {createPartyPanel,loadArt,partyFirstName,partyProfileName} from './panel.js';
 import styles from './panel.css?inline';
 import dockStyles from './login-panel.css?inline';
 import storyteller from './sl.webp';
@@ -58,10 +58,12 @@ function start() {
     const next=members.map(({user_id,role})=>{
       if (role==='gm') return {owner:user_id,name:'SL',portrait:storyteller};
       const character=characters.find(c=>c.ownerId===user_id);
-      const name=character ? window.aleaPartyCharacters.name(character) :
-        profiles.find(p=>p.id===user_id)?.display_name || (user_id===scope.user?(supabaseProfile?.display_name || 'Du'):'Spelare');
+      const profileName=profiles.find(p=>p.id===user_id)?.display_name ||
+        (user_id===scope.user ? supabaseProfile?.display_name : '');
+      const name=character ? partyFirstName(window.aleaPartyCharacters.name(character)) :
+        partyProfileName(profileName, user_id===scope.user ? 'Du' : 'Spelare');
       return {
-        owner:user_id, character, name:partyFirstName(name),
+        owner:user_id, character, name,
         portrait:character?window.aleaPartyCharacters.portrait(character):''
       };
     });

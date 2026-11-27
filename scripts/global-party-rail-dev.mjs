@@ -33,6 +33,8 @@ try {
   assert.equal(count,expected,'One lamp for each person in the campaign');
   assert.equal(await rail.locator('.member .lamp:visible').count(),expected);
   assert.ok(await rail.locator('.member .name').evaluateAll(names=>names.every(el=>/^\S+$/.test(el.textContent))));
+  const profileNames=await rail.locator('.member:has(span.face .initial) .name').allTextContents();
+  assert.ok(profileNames.every(name=>!/[\s.@_+]/u.test(name)),'Unassigned campaign members show a first name, including accounts with dotted login names');
   for (const [button,section] of [['landingCharactersNavBtn','home'],['mapNavBtn','mapPage'],['diceNavBtn','dicePage']]) {
     await page.locator('#'+button).evaluate(b=>b.click());
     await page.locator('#'+section).waitFor();

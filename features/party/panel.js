@@ -15,6 +15,12 @@ export function partyFirstName(name) {
   return name?.trim().split(/\s+/, 1)[0] || 'Namnlös';
 }
 
+// Some profiles use the account handle as their display name until a character is assigned.
+export function partyProfileName(displayName, fallback) {
+  const given = displayName?.trim().split(/[\s.@_+]/u, 1)[0];
+  return given ? given.charAt(0).toLocaleUpperCase('sv-SE') + given.slice(1) : fallback;
+}
+
 export function loadArt(components, target) {
   const art = {};
   for (const {key,url} of components) {
