@@ -1,0 +1,170 @@
+[
+  {
+    "key": "ARCANE_PARTY_RAIL_TOP",
+    "width": 120,
+    "height": 197,
+    "use": "Spelarlistans topp",
+    "url": "https://wkiuyklzzroavclnsxna.supabase.co/storage/v1/object/public/alea-hermes-public/hermes/system-asset/ARCANE_PARTY_RAIL_TOP/d2b97b9cb633d884ec81797982cfc8e3422536b467c0b1884d3081fafc4bf793.webp"
+  },
+  {
+    "key": "ARCANE_PARTY_RAIL_MIDDLE",
+    "width": 120,
+    "height": 38,
+    "use": "Repeterbar spelarlist",
+    "url": "https://wkiuyklzzroavclnsxna.supabase.co/storage/v1/object/public/alea-hermes-public/hermes/system-asset/ARCANE_PARTY_RAIL_MIDDLE/f1c216202a3cd35b59a73295756ecf3230f3f382fc809df8e9b021230ee52873.webp"
+  },
+  {
+    "key": "ARCANE_PARTY_RAIL_BOTTOM",
+    "width": 120,
+    "height": 172,
+    "use": "Spelarlistans fot",
+    "url": "https://wkiuyklzzroavclnsxna.supabase.co/storage/v1/object/public/alea-hermes-public/hermes/system-asset/ARCANE_PARTY_RAIL_BOTTOM/19bdf494a2004b4334e7948fadb3d17004944f322799c59267b097c195be22a2.webp"
+  },
+  {
+    "key": "ARCANE_PARTY_LAMP_GREEN",
+    "width": 66,
+    "height": 66,
+    "use": "På plats",
+    "url": "https://wkiuyklzzroavclnsxna.supabase.co/storage/v1/object/public/alea-hermes-public/hermes/system-asset/ARCANE_PARTY_LAMP_GREEN/ac78d7288076fddff7da9755f6f8339dd0f137a8f6837e895dcb1d2b4b12c4f6.webp"
+  },
+  {
+    "key": "ARCANE_PARTY_LAMP_YELLOW",
+    "width": 66,
+    "height": 66,
+    "use": "Annan vy",
+    "url": "https://wkiuyklzzroavclnsxna.supabase.co/storage/v1/object/public/alea-hermes-public/hermes/system-asset/ARCANE_PARTY_LAMP_YELLOW/741bc6644ff3a1c5e327e3c1c14cac6588d0ef8131f460b9fd9cb91fd52f6923.webp"
+  },
+  {
+    "key": "ARCANE_PARTY_LAMP_RED",
+    "width": 66,
+    "height": 66,
+    "use": "Frånkopplad",
+    "url": "https://wkiuyklzzroavclnsxna.supabase.co/storage/v1/object/public/alea-hermes-public/hermes/system-asset/ARCANE_PARTY_LAMP_RED/f235a5105c7c7b1d94fe3ac143460dcd8a1f0d29ab5e94ab501876050f72a42b.webp"
+  },
+  {
+    "key": "ARCANE_PARTY_ENVELOPE",
+    "width": 109,
+    "height": 76,
+    "use": "Oläst brev",
+    "url": "https://wkiuyklzzroavclnsxna.supabase.co/storage/v1/object/public/alea-hermes-public/hermes/system-asset/ARCANE_PARTY_ENVELOPE/2d05c6cef07cbf1d97c8db9de565c704722de1def296b72c4acebac76b332607.webp"
+  },
+  {
+    "key": "ARCANE_PARTY_MESSAGE_COUNTER",
+    "width": 52,
+    "height": 53,
+    "use": "Bricka för dynamiskt antal",
+    "url": "https://wkiuyklzzroavclnsxna.supabase.co/storage/v1/object/public/alea-hermes-public/hermes/system-asset/ARCANE_PARTY_MESSAGE_COUNTER/7e35891407bff114cb27e7ef4dadd41234386a61af8ff6ffd8cce65de738231f.webp"
+  },
+  {
+    "key": "ARCANE_PARTY_DRAWER_HANDLE",
+    "width": 63,
+    "height": 540,
+    "use": "Draghandtag",
+    "url": "https://wkiuyklzzroavclnsxna.supabase.co/storage/v1/object/public/alea-hermes-public/hermes/system-asset/ARCANE_PARTY_DRAWER_HANDLE/dd03e71ab6938196f7ab1e7cbe38d808dd8e609345b5360e72d7dc91e0b301ff.webp"
+  },
+  {
+    "key": "ARCANE_PARTY_ARROW_LEFT",
+    "width": 52,
+    "height": 105,
+    "use": "Fäll ut",
+    "url": "https://wkiuyklzzroavclnsxna.supabase.co/storage/v1/object/public/alea-hermes-public/hermes/system-asset/ARCANE_PARTY_ARROW_LEFT/466b66954b52d7474e68131ea04e35fe866bbd800ce339709bae8cb2b2dd1bfb.webp"
+  },
+  {
+    "key": "ARCANE_PARTY_ARROW_RIGHT",
+    "width": 52,
+    "height": 105,
+    "use": "Fäll in",
+    "url": "https://wkiuyklzzroavclnsxna.supabase.co/storage/v1/object/public/alea-hermes-public/hermes/system-asset/ARCANE_PARTY_ARROW_RIGHT/fe48867e09bf90273ad8de30cff76247e15e822d998eff0bbd31aa115e518034.webp"
+  },
+  {
+    "key": "ARCANE_PARTY_PORTRAIT_FRAME",
+    "width": 160,
+    "height": 161,
+    "use": "Öppen porträttram",
+    "url": "https://wkiuyklzzroavclnsxna.supabase.co/storage/v1/object/public/alea-hermes-public/hermes/system-asset/ARCANE_PARTY_PORTRAIT_FRAME/7cd0c150f98185b22fe91d6eb29fadd35baf3d97cce902f74428a6308c4ece91.webp"
+  },
+  {
+    "key": "ARCANE_PARTY_PANEL_TOP",
+    "width": 361,
+    "height": 144,
+    "use": "Panelens överstycke",
+    "url": "https://wkiuyklzzroavclnsxna.supabase.co/storage/v1/object/public/alea-hermes-public/hermes/system-asset/ARCANE_PARTY_PANEL_TOP/5c052775e0ebd7c1944e0a56390c6eb9522082aa804a39f415375c59e6636e81.webp"
+  },
+  {
+    "key": "ARCANE_PARTY_PANEL_MIDDLE",
+    "width": 361,
+    "height": 72,
+    "use": "Repeterbara panelsidor",
+    "url": "https://wkiuyklzzroavclnsxna.supabase.co/storage/v1/object/public/alea-hermes-public/hermes/system-asset/ARCANE_PARTY_PANEL_MIDDLE/80b33031935b24902a398906c43182615eedae3ba023a3f41b66d5656946cd36.webp"
+  },
+  {
+    "key": "ARCANE_PARTY_PANEL_BOTTOM",
+    "width": 361,
+    "height": 140,
+    "use": "Panelens understycke",
+    "url": "https://wkiuyklzzroavclnsxna.supabase.co/storage/v1/object/public/alea-hermes-public/hermes/system-asset/ARCANE_PARTY_PANEL_BOTTOM/1f35099c91c8d451a86ffd088ceab5798fa37f110c993b3775d914d4beb7df3a.webp"
+  },
+  {
+    "key": "ARCANE_PARTY_PANEL_BACKGROUND",
+    "width": 240,
+    "height": 148,
+    "use": "Repeterbart läder",
+    "url": "https://wkiuyklzzroavclnsxna.supabase.co/storage/v1/object/public/alea-hermes-public/hermes/system-asset/ARCANE_PARTY_PANEL_BACKGROUND/ee7a6c1d473a7624e00147d3c2c33f4d5c1a9e6aa2bd6af5a8f7e1c6a5cb96b5.webp"
+  },
+  {
+    "key": "ARCANE_PARTY_PANEL_DIVIDER",
+    "width": 182,
+    "height": 17,
+    "use": "Avdelare mellan deltagare",
+    "url": "https://wkiuyklzzroavclnsxna.supabase.co/storage/v1/object/public/alea-hermes-public/hermes/system-asset/ARCANE_PARTY_PANEL_DIVIDER/52fe05ef7f6fd1b1692cda91b1a159fdb3f6b226238b5c66aec3124aaef483ce.webp"
+  },
+  {
+    "key": "ARCANE_PARTY_PANEL_COMPASS",
+    "width": 139,
+    "height": 116,
+    "use": "Panelens kompass",
+    "url": "https://wkiuyklzzroavclnsxna.supabase.co/storage/v1/object/public/alea-hermes-public/hermes/system-asset/ARCANE_PARTY_PANEL_COMPASS/adf5f373106d1ff232e0fe0ca963c8bd185dfea95b9bdb9606ba9dcf147ce438.webp"
+  },
+  {
+    "key": "ARCANE_PARTY_BORDER_TOP_LEFT",
+    "width": 129,
+    "height": 109,
+    "use": "Övre vänstra hörn",
+    "url": "https://wkiuyklzzroavclnsxna.supabase.co/storage/v1/object/public/alea-hermes-public/hermes/system-asset/ARCANE_PARTY_BORDER_TOP_LEFT/c89f9a4320b5b7f898451ba23e182a41647e9e6d1130fb8ca5d857307188dcbb.webp"
+  },
+  {
+    "key": "ARCANE_PARTY_BORDER_TOP_RIGHT",
+    "width": 133,
+    "height": 115,
+    "use": "Övre högra hörn",
+    "url": "https://wkiuyklzzroavclnsxna.supabase.co/storage/v1/object/public/alea-hermes-public/hermes/system-asset/ARCANE_PARTY_BORDER_TOP_RIGHT/7dbcbb31ccf79180dd38ced585f7365c54e03db27b3861f3df6d29154b167275.webp"
+  },
+  {
+    "key": "ARCANE_PARTY_BORDER_BOTTOM_LEFT",
+    "width": 140,
+    "height": 73,
+    "use": "Nedre vänstra hörn",
+    "url": "https://wkiuyklzzroavclnsxna.supabase.co/storage/v1/object/public/alea-hermes-public/hermes/system-asset/ARCANE_PARTY_BORDER_BOTTOM_LEFT/2e0492c007fde6378c1a159c727c2b52aee1a802f8ba88df618b868a1844539a.webp"
+  },
+  {
+    "key": "ARCANE_PARTY_BORDER_BOTTOM_RIGHT",
+    "width": 140,
+    "height": 73,
+    "use": "Nedre högra hörn",
+    "url": "https://wkiuyklzzroavclnsxna.supabase.co/storage/v1/object/public/alea-hermes-public/hermes/system-asset/ARCANE_PARTY_BORDER_BOTTOM_RIGHT/905c6cadb942b8c874419658eea7e33d2a1a9a9309513004ca2f61cbe8781a18.webp"
+  },
+  {
+    "key": "ARCANE_PARTY_BORDER_HORIZONTAL",
+    "width": 300,
+    "height": 55,
+    "use": "Vågrät kantbård",
+    "url": "https://wkiuyklzzroavclnsxna.supabase.co/storage/v1/object/public/alea-hermes-public/hermes/system-asset/ARCANE_PARTY_BORDER_HORIZONTAL/7f00ef214172c48ed06b8fc08eec50cdeaf59af8f150a3d3bce6aa8f62bfa03e.webp"
+  },
+  {
+    "key": "ARCANE_PARTY_BORDER_VERTICAL",
+    "width": 55,
+    "height": 300,
+    "use": "Lodrät kantbård",
+    "url": "https://wkiuyklzzroavclnsxna.supabase.co/storage/v1/object/public/alea-hermes-public/hermes/system-asset/ARCANE_PARTY_BORDER_VERTICAL/a80d4fc54f4a9cdcf2d1b68a4195ca72605eba82915e2d8dd3b8b2977de9c461.webp"
+  }
+]

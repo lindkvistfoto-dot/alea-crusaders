@@ -67,6 +67,9 @@ export default defineConfig({
     copyStaticTree("alea-copy-legacy", "legacy", "legacy"),
     copyStaticTree("alea-copy-features", "features", "features"),
     copyStaticTree("alea-copy-preview", "preview", "preview"),
+    ...(isDevelopmentBuild || (cloudflareBranch && cloudflareBranch !== "main")
+      ? [copyStaticTree("alea-copy-party-panel-preview", "dev-tests/party-panel", "preview/party-panel")]
+      : []),
     ...developmentOnlyBuildPlugins,
     ...cloudflareDeploymentManifestPlugins,
     ...liveBuildIsolationPlugins,
