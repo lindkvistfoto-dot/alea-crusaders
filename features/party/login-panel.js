@@ -1,6 +1,8 @@
 import components from './components.json';
 import {createPartyPanel,loadArt} from './panel.js';
 import styles from './panel.css?inline';
+import dockStyles from './login-panel.css?inline';
+import './login-layout.css';
 import storyteller from './sl.webp';
 import {connectPartyPresence} from './presence.js';
 
@@ -16,7 +18,7 @@ function start() {
     host.setAttribute('aria-label','Spelarlista');
     const shadow=host.attachShadow({mode:'open'});
     const sheet=document.createElement('style');
-    sheet.textContent=styles+'\n:host{position:fixed;z-index:119;right:0;top:clamp(58px,10dvh,100px);bottom:0;width:min(100vw,340px);pointer-events:none}.skin{pointer-events:auto}.drawer[data-open=false] .panel{pointer-events:none}';
+    sheet.textContent=styles+'\n'+dockStyles;
     const mountPoint=document.createElement('div');
     shadow.append(sheet,mountPoint);
     panel=createPartyPanel(mountPoint,loadArt(components,host),{
@@ -36,8 +38,7 @@ function start() {
     people.forEach((p,i)=>{
       const locations=live?.pages.get(p.owner);
       let colour=null, label='Hämtar närvaro';
-      if (!p.owner) label='Ingen spelare kopplad';
-      else if (!navigator.onLine) label='Anslutning saknas';
+      if (!navigator.onLine) label='Anslutning saknas';
       else if (p.owner===scope.user) {colour='GREEN';label='Du är inloggad';}
       else if (locations) {
         colour=locations.includes(page)?'GREEN':locations.length?'YELLOW':'RED';
@@ -52,25 +53,19 @@ function start() {
     const known=scope.campaign && centralReady;
     const profiles=known ? campaignPlayerProfiles : [];
     const characters=known ? (window.aleaPartyCharacters?.list() || []) : [];
-    const next=[];
-    const addCharacter=c=>next.push({
-      name:window.aleaPartyCharacters.name(c), portrait:window.aleaPartyCharacters.portrait(c),
-      owner:roster.some(m=>m.user_id===c.ownerId)?c.ownerId:null, character:c
-    });
     const members=roster.slice().sort((a,b)=>Number(b.role==='gm')-Number(a.role==='gm'));
     if (!members.some(m=>m.user_id===scope.user)) members.push({user_id:scope.user});
-    for (const {user_id,role} of members) {
-      const owned=characters.filter(c=>c.ownerId===user_id);
-      if (role==='gm' || !owned.length) next.push({
-        owner:user_id,
-        name:role==='gm'?'SL':profiles.find(p=>p.id===user_id)?.display_name ||
+    // Presence belongs to a person. Their first player character supplies the portrait.
+    const next=members.map(({user_id,role})=>{
+      if (role==='gm') return {owner:user_id,name:'SL',portrait:storyteller};
+      const character=characters.find(c=>c.ownerId===user_id);
+      return {
+        owner:user_id, character,
+        name:character?window.aleaPartyCharacters.name(character):profiles.find(p=>p.id===user_id)?.display_name ||
           (user_id===scope.user?(supabaseProfile?.display_name || 'Du'):'Spelare'),
-        portrait:role==='gm'?storyteller:''
-      });
-      owned.forEach(addCharacter);
-    }
-    // Keep previously available unassigned player-character sheets accessible.
-    characters.filter(c=>!members.some(m=>m.user_id===c.ownerId)).forEach(addCharacter);
+        portrait:character?window.aleaPartyCharacters.portrait(character):''
+      };
+    });
     if (next.length!==people.length || next.some((p,i)=>['name','portrait','owner','character'].some(k=>people[i][k]!==p[k]))) {
       people=next; rows=panel.setPeople(people);
     }

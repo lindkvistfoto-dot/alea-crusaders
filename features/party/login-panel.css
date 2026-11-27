@@ -1,0 +1,31 @@
+:host {
+  position: fixed;
+  z-index: 119;
+  inset: clamp(58px, 10dvh, 100px) 0 0 auto;
+  width: min(100vw, 340px);
+  pointer-events: none;
+}
+.skin { pointer-events: auto; }
+.drawer[data-open=false] .panel { pointer-events: none; }
+
+@media (max-width: 700px) {
+  :host { top: var(--alea-header-bottom, 72px); }
+  .viewport {
+    --rail: 28px;
+    --wing: 156px;
+    --row: 36px;
+    --top: 48px;
+    --bottom: 62px;
+  }
+  .drawer { margin-block: 4px 8px; }
+  .panel-heading { top: 25px; font-size: 17px; }
+  .details { gap: 6px; }
+  .name { font-size: 15px; }
+  .windrose { width: 18px; height: 17px; margin-left: 3px; }
+  /* The whole folded strip is a touch target, including the status lights. */
+  .drawer[data-open=false] #grip { top: 0; bottom: 0; height: auto; }
+  #grip { bottom: calc(var(--rail) * 172 / 120 - 1px); height: 32px; }
+  #grip img { width: 12px; height: 22px; }
+  .drawer[data-open=false] #grip img { position: absolute; bottom: calc(var(--rail) * 172 / 120 + 4px); }
+  .drawer[data-open=false] #grip::before { bottom: calc(var(--rail) * 172 / 120 + 4px); height: 22px; }
+}

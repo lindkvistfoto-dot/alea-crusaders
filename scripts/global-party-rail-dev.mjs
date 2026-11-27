@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { mkdir } from 'node:fs/promises';
 import { chromium } from 'playwright';
 
 const origin=process.argv[2];
@@ -25,6 +26,11 @@ try {
   assert.equal(await rail.locator('button.lamp,.mail:visible').count(),0);
   const count=await rail.locator('.member').count();
   assert.ok(count>1);
+  const expected=await page.evaluate(async()=>{
+    const members=await dbJson('campaign_members?campaign_id=eq.'+encodeURIComponent(centralCampaignId)+'&select=user_id');
+    return new Set([...members.map(member=>member.user_id),activeUser().id]).size;
+  });
+  assert.equal(count,expected,'One lamp for each person in the campaign');
   for (const [button,section] of [['landingCharactersNavBtn','home'],['mapNavBtn','mapPage'],['diceNavBtn','dicePage']]) {
     await page.locator('#'+button).evaluate(b=>b.click());
     await page.locator('#'+section).waitFor();
@@ -32,11 +38,48 @@ try {
     assert.equal(await rail.locator('#grip').getAttribute('aria-expanded'),'true');
     assert.equal(await page.locator('.arcane-character-rail:visible').count(),0);
   }
-  await page.setViewportSize({width:390,height:844});
-  await rail.locator('#grip').click();
-  assert.equal(await rail.locator('#grip').getAttribute('aria-expanded'),'false');
-  await rail.locator('#grip').click();
-  assert.equal(await rail.locator('#grip').getAttribute('aria-expanded'),'true');
+  await page.locator('#landingCharactersNavBtn').evaluate(button=>button.click());
+  const card=page.locator('#home .charcard').first();
+  const remove=card.locator('.char-delete');
+  const grip=rail.locator('#grip');
+  const drawer=rail.locator('.drawer');
+  const settle=()=>drawer.evaluate(async el=>{
+    await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+    await Promise.all(el.getAnimations({subtree:true}).map(anim=>anim.finished.catch(()=>{})));
+  });
+  await mkdir('rail-results',{recursive:true});
+  for (const width of [360,390]) {
+    await page.setViewportSize({width,height:800});
+    await grip.click();
+    await settle();
+    assert.equal(await grip.getAttribute('aria-expanded'),'false');
+    const folded=await rail.locator('.rail').boundingBox();
+    const cardBox=await card.boundingBox();
+    assert.ok(folded.width<=28 && folded.height<=112+36*expected);
+    assert.ok(cardBox.x+cardBox.width<=folded.x,'The folded rail has its own space beside the card');
+    const header=await page.locator('header.alea-app-header').boundingBox();
+    assert.ok(folded.y>=header.y+header.height-1,'The rail starts below page navigation');
+    await remove.click({trial:true});
+    assert.ok(await remove.evaluate(button=>{
+      const r=button.getBoundingClientRect();
+      return button.contains(document.elementFromPoint(r.right-3,r.y+r.height/2));
+    }));
+    await page.screenshot({path:'rail-results/mobile-'+width+'-closed.png',mask:[page.locator('#sessionUser:visible')]});
+      await grip.click({position:{x:12,y:12}});
+    await settle();
+    assert.equal(await grip.getAttribute('aria-expanded'),'true');
+    assert.ok(await rail.evaluate(el=>el===window.acceptancePartyRail));
+    await page.screenshot({path:'rail-results/mobile-'+width+'-open.png',mask:[page.locator('#sessionUser:visible'),rail.locator('.name')]});
+  }
+  await page.locator('#mapNavBtn').evaluate(button=>button.click());
+  const map=page.locator('#mapPage');
+  await map.waitFor();
+  const before=await map.boundingBox();
+  await grip.click();
+  await settle();
+  const after=await map.boundingBox();
+  assert.equal(after.width,before.width);
+  assert.equal(after.x,before.x);
   await page.reload({waitUntil:'domcontentloaded'});
   await rail.locator('#grip').waitFor({timeout:60000});
   await page.evaluate(()=>logoutUser());

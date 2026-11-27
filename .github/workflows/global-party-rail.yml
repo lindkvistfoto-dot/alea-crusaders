@@ -44,3 +44,9 @@ jobs:
           ALEA_DEV_TEST_EMAIL: ${{ secrets.ALEA_DEV_TEST_EMAIL }}
           ALEA_DEV_TEST_PASSWORD: ${{ secrets.ALEA_DEV_TEST_PASSWORD }}
         run: node scripts/global-party-rail-dev.mjs "$ALEA_VERIFIED_PREVIEW"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: global-party-rail-mobile
+          path: rail-results/
+          if-no-files-found: ignore

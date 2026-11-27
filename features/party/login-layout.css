@@ -1,0 +1,7 @@
+/* Keep ordinary page controls beside the mobile rail. The map and combat
+   retain their original canvas sizes when the drawer opens and closes. */
+@media (max-width: 700px) {
+  body:has(> #partyRail) main > section:not(#mapPage, #combatPage) {
+    margin-inline-end: 28px;
+  }
+}
