@@ -57,7 +57,7 @@ async function testViewport(browser, device, width, height) {
   await page.goto(preview);
   await page.waitForSelector('.member');
   await page.evaluate(async () => {
-    const assets = await (await fetch('components.json')).json();
+    const assets = await (await fetch('../../features/party/components.json')).json();
     if (assets.length !== 24) throw Error('Komponentregistret ska innehålla 24 bilder.');
     await Promise.all(assets.map(async asset => {
       const image = new Image();
