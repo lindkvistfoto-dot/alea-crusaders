@@ -23,6 +23,32 @@ async function inspect(page) {
   });
 }
 
+async function checkDockAndLetters(page, open) {
+  const result = await page.evaluate(isOpen => {
+    const edge = document.querySelector('.map').getBoundingClientRect().right;
+    const side = document.querySelector(isOpen ? '.panel' : '.rail').getBoundingClientRect();
+    // Right edge of the opaque bronze on the straight middle sections of the source PNGs.
+    const inset = isOpen ? 8 / 361 : 8 / 120;
+    const rail = document.querySelector('.rail').getBoundingClientRect();
+    const letters = [...document.querySelectorAll('.mail:not([hidden])')].map(mail => {
+      const row = mail.closest('.member');
+      const box = mail.getBoundingClientRect();
+      const name = row.querySelector('.name').getBoundingClientRect();
+      const face = row.querySelector('.face').getBoundingClientRect();
+      const x = isOpen ? box.left + box.width / 2 : box.left + 5;
+      const y = box.top + box.height / 2;
+      return {
+        positioned: isOpen ? box.left > Math.max(face.right, name.right) && box.right <= edge
+                           : box.left < rail.left && box.right > rail.left,
+        reachable: mail.contains(document.elementFromPoint(x, y)),
+      };
+    });
+    return {gap: edge - (side.right - side.width * inset), letters};
+  }, open);
+  assert(result.gap <= 1 && result.gap > -3, 'Bronze edge must meet the map border: ' + result.gap);
+  for (const letter of result.letters) assert(letter.positioned && letter.reachable, JSON.stringify(letter));
+}
+
 async function testViewport(browser, device, width, height) {
   const mobile = device === 'mobil';
   const page = await browser.newPage({viewport: {width, height}, hasTouch: mobile, isMobile: mobile});
@@ -48,6 +74,8 @@ async function testViewport(browser, device, width, height) {
     assert.equal(await page.locator('.member').count(), count);
     await page.evaluate(() => { window.testRail = document.querySelector('.rail'); });
     const open = await inspect(page);
+    const originalLetter = await page.locator('.mail').first().elementHandle();
+    await checkDockAndLetters(page, true);
     if ([4,8].includes(count)) await page.screenshot({path:path.join(output, device+'-'+count+'-oppen.png')});
     await grip.click();
     await page.waitForTimeout(420);
@@ -55,6 +83,9 @@ async function testViewport(browser, device, width, height) {
     assert.equal(await grip.getAttribute('aria-expanded'), 'false');
     assert.deepEqual(closed.map, open.map);
     assert(closed.sameRail);
+    await checkDockAndLetters(page, false);
+    assert(await originalLetter.evaluate(mail => mail === document.querySelector('.mail')));
+    await originalLetter.dispose();
     const travel = mobile ? 179 : 220;
     for (let i=0; i<count; i++) {
       assert.deepEqual(closed.lamps[i].slice(1), open.lamps[i].slice(1));

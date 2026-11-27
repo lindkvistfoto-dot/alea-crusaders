@@ -35,8 +35,8 @@ function setOpen(open) {
   // Keep off-screen portrait art behind the rail throughout the animation.
   document.querySelector('.panel-heading').setAttribute('aria-hidden', String(!open));
 }
-function letter(person, side, update, lamp) {
-  const button = element('button', 'mail ' + side);
+function letter(person, update, lamp) {
+  const button = element('button', 'mail');
   button.type = 'button';
   const envelope = element('span', 'letter');
   const badge = element('span', 'count');
@@ -65,14 +65,14 @@ function member(person) {
   }
   const name = element('span', 'name');
   name.textContent = person.name;
-  const outer = letter(person, 'outside', refresh, lamp);
+  const mail = letter(person, refresh, lamp);
   function refresh() {
     lamp.firstChild.src = art['LAMP_' + colours[person.status]];
     lamp.title = person.name + ' · ' + statuses[person.status] + ' · Ändra status';
     lamp.setAttribute('aria-label', lamp.title);
-    outer.hidden = person.unread === 0;
-    outer.querySelector('.count').textContent = person.unread > 99 ? '99+' : person.unread;
-    outer.setAttribute('aria-label', person.name + ', ' + person.unread + ' olästa brev. Markera som lästa');
+    mail.hidden = person.unread === 0;
+    mail.querySelector('.count').textContent = person.unread > 99 ? '99+' : person.unread;
+    mail.setAttribute('aria-label', person.name + ', ' + person.unread + ' olästa brev. Markera som lästa');
   }
   lamp.onclick = () => {
     person.status = (person.status + 1) % colours.length;
@@ -80,7 +80,7 @@ function member(person) {
     notice.textContent = person.name + ' · ' + statuses[person.status];
   };
   detail.append(frame,name);
-  row.append(outer,lamp,detail);
+  row.append(mail,lamp,detail);
   refresh();
   return {row,refresh};
 }
@@ -137,13 +137,14 @@ async function start() {
     if (Math.abs(delta) < 5 && !consumed) return;
     consumed = true;
     drawer.classList.add('dragging');
-    drawer.style.setProperty('--offset', Math.min(drag.wing,Math.max(0,drag.offset+delta))+'px');
+    const offset = Math.min(drag.wing, Math.max(0, drag.offset + delta));
+    drawer.style.setProperty('--opening', String(1 - offset / drag.wing));
   };
   function finish(event, cancel) {
     if (drag?.id !== event.pointerId) return;
     if (consumed && !cancel) setOpen(drag.offset + event.clientX - drag.start < drag.wing/2);
     drawer.classList.remove('dragging');
-    drawer.style.removeProperty('--offset');
+    drawer.style.removeProperty('--opening');
     grip.releasePointerCapture(event.pointerId);
     drag = null;
     if (cancel) consumed = false;
