@@ -1,0 +1,52 @@
+name: Global party rail DEV acceptance
+on:
+  pull_request:
+    branches: [development]
+    paths:
+      - 'features/party/**'
+      - 'scripts/global-party-rail-dev.mjs'
+      - '.github/workflows/global-party-rail.yml'
+permissions:
+  contents: read
+jobs:
+  authenticated-rail:
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'feat/global-party-rail'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci && npm install --no-save --package-lock=false playwright@1.56.1
+      - name: Resolve the immutable preview for this PR
+        env:
+          SOURCE_SHA: ${{ github.event.pull_request.head.sha }}
+          SOURCE_BRANCH: ${{ github.head_ref }}
+        run: |
+          set -euo pipefail
+          alias=$(echo "$SOURCE_BRANCH" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9-]+/-/g' | cut -c1-28)
+          for attempt in {1..35}; do
+            manifest=$(curl -fsS --max-time 8 "https://${alias}.alea-crusaders.pages.dev/deployment-manifest.json?sha=$SOURCE_SHA&attempt=$attempt" || true)
+            preview=$(jq -er --arg sha "$SOURCE_SHA" 'select(.source_sha == $sha) | .deployment_url' <<<"$manifest" 2>/dev/null || true)
+            [[ -n "$preview" ]] && break
+            sleep 5
+          done
+          test -n "$preview"
+          echo "Verified preview $preview for $SOURCE_SHA"
+          echo "ALEA_VERIFIED_PREVIEW=$preview" >> "$GITHUB_ENV"
+      - name: Check login, navigation, presence and logout
+        env:
+          ALEA_DEV_TEST_EMAIL: ${{ secrets.ALEA_DEV_TEST_EMAIL }}
+          ALEA_DEV_TEST_PASSWORD: ${{ secrets.ALEA_DEV_TEST_PASSWORD }}
+        run: node scripts/global-party-rail-dev.mjs "$ALEA_VERIFIED_PREVIEW"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: global-party-rail-mobile
+          path: rail-results/
+          if-no-files-found: ignore

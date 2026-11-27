@@ -67,6 +67,14 @@
  }
  function restoreCurrent(){if(!rollOwnerId)return;if(typeof current!=='undefined')current=previousCurrent;previousCurrent=null;rollOwnerId=null}
  function init(){makeRoot();const app=document.querySelector('main'),body=document.getElementById('combatBody');if(app){observer=new MutationObserver(()=>requestAnimationFrame(refresh));observer.observe(app,{attributes:true,attributeFilter:['class'],subtree:true})}if(body)new MutationObserver(()=>requestAnimationFrame(refresh)).observe(body,{childList:true,subtree:true});window.addEventListener('resize',refresh);refresh()}
- window.aleaCharacterDrawerRefresh=refresh;
+ function refreshCampaign(){refresh();window.aleaPartyRail?.refresh()}
+ window.aleaCharacterDrawerRefresh=refreshCampaign;
+ window.aleaPartyCharacters={
+  list:campaignCharacters, name:charName, portrait,
+  open(c){
+   if(isNonHomePageVisible()&&window.matchMedia('(min-width: 901px)').matches)toggleCharacter(charId(c));
+   else if(c.id){window.openCharacters?.();window.openChar?.(c.id)}
+  }
+ };
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();

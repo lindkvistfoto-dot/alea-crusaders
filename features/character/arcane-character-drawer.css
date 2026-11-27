@@ -1,6 +1,6 @@
 :root{--arcane-drawer-z:120}
 .arcane-character-rail{position:fixed;z-index:var(--arcane-drawer-z);right:8px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:8px;max-height:min(76vh,720px);overflow:auto;padding:8px 6px;border:1px solid rgba(191,151,88,.36);border-radius:22px;background:rgba(18,18,21,.76);backdrop-filter:blur(12px);box-shadow:0 8px 28px #0008;scrollbar-width:thin}
-.arcane-character-rail[hidden],.arcane-character-drawer[hidden]{display:none}
+body:has(> #partyRail) .arcane-character-rail,.arcane-character-rail[hidden],.arcane-character-drawer[hidden]{display:none}
 .arcane-character-portrait{width:48px;height:48px;flex:0 0 48px;padding:2px;border:1px solid rgba(228,220,199,.28);border-radius:50%;overflow:hidden;background:#171717;color:#e8dfcc;cursor:pointer;transition:border-color .18s,transform .18s,box-shadow .18s}
 .arcane-character-portrait:hover{transform:scale(1.06);border-color:#c99c5b}
 .arcane-character-portrait[aria-pressed=true]{border:2px solid #b88743;box-shadow:0 0 0 2px rgba(184,135,67,.2),0 0 14px #b8874355}

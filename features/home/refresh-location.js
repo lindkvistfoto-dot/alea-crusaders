@@ -139,5 +139,5 @@
   void restore();
   return true;
  }
- window.aleaRefreshLocation={restore,restoreEarly,save,clear,reveal,characterOpened,tabChanged};
+ window.aleaRefreshLocation={activePage,restore,restoreEarly,save,clear,reveal,characterOpened,tabChanged};
 })();

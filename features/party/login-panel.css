@@ -1,0 +1,13 @@
+:host {
+  position: fixed;
+  z-index: 119;
+  inset: clamp(58px, 10dvh, 100px) 0 0 auto;
+  width: min(100vw, 340px);
+  pointer-events: none;
+}
+.skin { pointer-events: auto; }
+.drawer[data-open=false] .panel { pointer-events: none; }
+
+@media (max-width: 700px), (pointer: coarse) and (max-height: 540px) and (max-width: 1000px) {
+  :host { top: var(--alea-header-bottom, 72px); }
+}
