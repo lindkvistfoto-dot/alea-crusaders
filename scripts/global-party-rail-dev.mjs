@@ -6,7 +6,7 @@ const origin=process.argv[2];
 assert.match(origin,/^https:\/\/[a-z0-9-]+\.alea-crusaders\.pages\.dev\/?$/);
 const browser=await chromium.launch({channel:'chrome'});
 try {
-  const page=await browser.newPage({viewport:{width:1440,height:960}});
+  const page=await browser.newPage({hasTouch:true,viewport:{width:1440,height:960}});
   await page.goto(origin,{waitUntil:'domcontentloaded'});
   assert.equal(await page.evaluate(()=>ALEA_SUPABASE_CONFIG.url),'https://wkiuyklzzroavclnsxna.supabase.co');
   const rail=page.locator('#partyRail');
@@ -55,7 +55,9 @@ try {
     assert.equal(await grip.getAttribute('aria-expanded'),'false');
     const folded=await rail.locator('.rail').boundingBox();
     const cardBox=await card.boundingBox();
-    assert.ok(folded.width<=28 && folded.height<=112+36*expected);
+    assert.equal(folded.width,3);
+    assert.equal(folded.x+folded.width,width);
+    assert.equal(await rail.locator('.lamp:visible,.rail i:visible,.mail:visible,#grip img:visible').count(),0);
     assert.ok(cardBox.x+cardBox.width<=folded.x,'The folded rail has its own space beside the card');
     const header=await page.locator('header.alea-app-header').boundingBox();
     assert.ok(folded.y>=header.y+header.height-1,'The rail starts below page navigation');
@@ -65,10 +67,19 @@ try {
       return button.contains(document.elementFromPoint(r.right-3,r.y+r.height/2));
     }));
     await page.screenshot({path:'rail-results/mobile-'+width+'-closed.png',mask:[page.locator('#sessionUser:visible')]});
-      await grip.click({position:{x:12,y:12}});
+    const touch=await page.context().newCDPSession(page);
+    const y=Math.round(folded.y+folded.height/2);
+    const start=width-12;
+    await touch.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:start,y}]});
+    for (const travel of [8,20,35,55]) {
+      await touch.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:start-travel,y}]});
+    }
+    await touch.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+    await touch.detach();
     await settle();
     assert.equal(await grip.getAttribute('aria-expanded'),'true');
     assert.ok(await rail.evaluate(el=>el===window.acceptancePartyRail));
+    assert.equal(await rail.locator('.lamp:visible').count(),0);
     await page.screenshot({path:'rail-results/mobile-'+width+'-open.png',mask:[page.locator('#sessionUser:visible'),rail.locator('.name')]});
   }
   await page.locator('#mapNavBtn').evaluate(button=>button.click());

@@ -2,7 +2,6 @@ import components from './components.json';
 import {createPartyPanel,loadArt} from './panel.js';
 import styles from './panel.css?inline';
 import dockStyles from './login-panel.css?inline';
-import './login-layout.css';
 import storyteller from './sl.webp';
 import {connectPartyPresence} from './presence.js';
 

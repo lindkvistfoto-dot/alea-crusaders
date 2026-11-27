@@ -26,6 +26,7 @@ export function createPartyPanel(mount, art, {opened=false, onStatus, onRead, on
       <div class="skin rail" aria-hidden="true"><i></i><i></i><i></i></div>
       <div class="skin panel" aria-hidden="true"><i></i><i></i><i></i></div>
       <div class="panel-heading">Följet</div>
+      <button class="edge-close" type="button" aria-label="Stäng spelarlistan">×</button>
       <div id="members"></div>
       <button id="grip" type="button" aria-controls="members" aria-expanded="false" aria-label="Fäll in spelarlistan" title="Dra eller klicka för att fälla in"><img alt=""></button>
       <div class="windrose" aria-hidden="true"></div>
@@ -43,6 +44,18 @@ export function createPartyPanel(mount, art, {opened=false, onStatus, onRead, on
     // Keep off-screen portrait art behind the rail throughout the animation.
     mount.querySelector('.panel-heading').setAttribute('aria-hidden', String(!open));
   }
+
+  function dismiss() {
+    setOpen(false);
+    grip.focus({preventScroll:true});
+  }
+  mount.querySelector('.edge-close').onclick = dismiss;
+  drawer.addEventListener('keydown',event=>{
+    if (event.key==='Escape' && drawer.dataset.open==='true') {
+      event.stopPropagation();
+      dismiss();
+    }
+  });
 
   function createRow(person) {
     const row = element('div', 'member');
@@ -77,12 +90,21 @@ export function createPartyPanel(mount, art, {opened=false, onStatus, onRead, on
       lamp.classList.toggle('unknown', !person.colour);
       lamp.title = person.name + ' · ' + person.statusLabel + (onStatus ? ' · Ändra status' : '');
       lamp.setAttribute('aria-label', lamp.title);
-      mail.hidden = !person.unread;
-      badge.textContent = person.unread > 99 ? '99+' : person.unread;
-      mail.setAttribute('aria-label', person.name + ', ' + person.unread + ' olästa brev. Markera som lästa');
+      const unread = person.unread || 0;
+      mail.hidden = !unread;
+      badge.textContent = unread > 99 ? '99+' : unread;
+      mail.setAttribute('aria-label', person.name + ', ' + unread + ' olästa brev');
     }
     if (onStatus) lamp.onclick = () => { onStatus(person); refresh(); };
-    mail.onclick = () => { onRead?.(person); refresh(); lamp.focus({preventScroll:true}); };
+    mail.onclick = () => {
+      if (drawer.dataset.open==='false' && getComputedStyle(lamp).display==='none') {
+        setOpen(true);
+        return;
+      }
+      onRead?.(person);
+      refresh();
+      (lamp.offsetWidth ? lamp : grip).focus({preventScroll:true});
+    };
     row.append(mail,lamp,detail);
     refresh();
     return {row,refresh};
@@ -119,7 +141,12 @@ export function createPartyPanel(mount, art, {opened=false, onStatus, onRead, on
   };
   function finish(event, cancel) {
     if (drag?.id !== event.pointerId) return;
-    if (consumed && !cancel) setOpen(drag.offset + event.clientX - drag.start < drag.wing/2);
+    if (consumed && !cancel) {
+      const delta = event.clientX - drag.start;
+      const mobile = mount.querySelector('.edge-close').offsetWidth > 0;
+      const open = mobile && Math.abs(delta) >= 40 ? delta < 0 : drag.offset + delta < drag.wing/2;
+      setOpen(open);
+    }
     drawer.classList.remove('dragging');
     drawer.style.removeProperty('--opening');
     grip.releasePointerCapture(event.pointerId);

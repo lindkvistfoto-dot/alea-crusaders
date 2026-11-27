@@ -56,3 +56,56 @@
 .mail[hidden]{display:none}
 
 .drawer[data-open=false]:not(.dragging) :is(.panel,.panel-heading,.windrose,.details){visibility:hidden;transition:visibility 0s .34s}
+
+.edge-close { display: none; }
+@media (max-width: 700px), (pointer: coarse) and (max-height: 540px) and (max-width: 1000px) {
+  .viewport {
+    --rail: 3px;
+    --wing: 190px;
+    --row: 47px;
+    --top: 58px;
+    --bottom: 46px;
+  }
+  .drawer {
+    --mail-width: 38px;
+    --mail-tuck: 8px;
+    --mail-inset: 12px;
+    left: 0;
+    margin-block: 4px 6px;
+    filter: none;
+  }
+  .rail { background: linear-gradient(to right, #715236, #c4a374, #806344); }
+  .rail i, .lamp, #grip img, #grip::before { display: none; }
+  /* Only the 3px edge is painted. The transparent grip also accepts a swipe. */
+  #grip {
+    inset: 0 auto 0 calc(var(--rail) - 18px);
+    width: 18px;
+    height: auto;
+    background: transparent;
+    border-radius: 0;
+  }
+  .panel { left: var(--rail); right: calc(-1 * var(--wing) * 8 / 353); }
+  .panel-heading { top: 28px; font-size: 19px; }
+  .details { left: 13px; gap: 8px; }
+  .member:has(.mail:not([hidden])) .details { padding-right: calc(var(--mail-width) + 8px); }
+  .mail { z-index: 5; }
+  .drawer[data-open=false] .count,
+  .drawer[data-open=false] .member:has(.mail:not([hidden])) ~ .member .mail { display: none; }
+  .edge-close {
+    position: absolute;
+    top: 13px;
+    right: 6px;
+    z-index: 3;
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border: 0;
+    padding: 0;
+    color: #efdfbd;
+    background: transparent;
+    font-size: 23px;
+    pointer-events: auto;
+  }
+  .drawer[data-open=false] .edge-close { visibility: hidden; }
+}

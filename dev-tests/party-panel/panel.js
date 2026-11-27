@@ -18,8 +18,10 @@ async function start() {
   const response = await fetch('../../features/party/components.json');
   if (!response.ok) throw Error('Bildregistret kunde inte läsas.');
   const art = loadArt(await response.json(), document.documentElement);
+  const mobile=matchMedia('(max-width:700px), (pointer:coarse) and (max-height:540px) and (max-width:1000px)').matches;
+  if (mobile) people.forEach(person=>{person.unread=0;});
   const panel = createPartyPanel(document.querySelector('#partyMount'), art, {
-    opened:true,
+    opened:!mobile,
     onStatus(person) {
       person.status = (person.status + 1) % colours.length;
       person.colour = colours[person.status];
