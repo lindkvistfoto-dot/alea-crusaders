@@ -15,13 +15,15 @@ try {
   await page.locator('#loginEmail').fill(process.env.ALEA_DEV_TEST_EMAIL);
   await page.locator('#loginPassword').fill(process.env.ALEA_DEV_TEST_PASSWORD);
   await page.locator('#loginForm').evaluate(form=>form.requestSubmit());
-  await rail.locator('.lamp').first().waitFor({timeout:60000});
+  await rail.locator('#grip').waitFor({timeout:60000});
+  await mkdir('rail-results',{recursive:true});
   assert.equal(await rail.locator('#grip').getAttribute('aria-expanded'),'false');
   await rail.evaluate(el=>window.acceptancePartyRail=el);
+  await page.screenshot({path:'rail-results/desktop-closed.png',mask:[page.locator('#sessionUser:visible')]});
   await rail.locator('#grip').click();
   await page.waitForFunction(()=>{
     const lamps=document.querySelector('#partyRail').shadowRoot.querySelectorAll('.lamp');
-    return [...lamps].some(l=>/På samma sida|På en annan sida|Ej ansluten/.test(l.title));
+    return [...lamps].some(l=>/På samma sida|På en annan sida|Ej ansluten/.test(l.getAttribute('aria-label')));
   },null,{timeout:60000});
   assert.equal(await rail.locator('button.lamp,.mail:visible').count(),0);
   const count=await rail.locator('.member').count();
@@ -32,15 +34,24 @@ try {
   });
   assert.equal(count,expected,'One lamp for each person in the campaign');
   assert.equal(await rail.locator('.member .lamp:visible').count(),expected);
-  assert.ok(await rail.locator('.member .name').evaluateAll(names=>names.every(el=>/^\S+$/.test(el.textContent))));
-  const profileNames=await rail.locator('.member:has(span.face .initial) .name').allTextContents();
-  assert.ok(profileNames.every(name=>!/[\s.@_+]/u.test(name)),'Unassigned campaign members show a first name, including accounts with dotted login names');
+  assert.equal(await rail.locator('.name,.panel-heading,.rail,.edge-close,.windrose').count(),0);
+  assert.ok(await rail.locator('.face').evaluateAll(faces=>faces.every(el=>el.getAttribute('aria-label'))));
+  await Promise.all((await rail.locator('.face img').all()).map(img=>img.evaluate(el=>el.decode())));
+  await page.screenshot({path:'rail-results/desktop-open.png',mask:[page.locator('#sessionUser:visible')]});
   for (const [button,section] of [['landingCharactersNavBtn','home'],['mapNavBtn','mapPage'],['diceNavBtn','dicePage']]) {
     await page.locator('#'+button).evaluate(b=>b.click());
     await page.locator('#'+section).waitFor();
     assert.ok(await rail.evaluate(el=>el===window.acceptancePartyRail));
     assert.equal(await rail.locator('#grip').getAttribute('aria-expanded'),'true');
     assert.equal(await page.locator('.arcane-character-rail:visible').count(),0);
+    if (section==='dicePage') {
+      const portrait=rail.locator('button.face').first();
+      await portrait.click();
+      await page.locator('.arcane-character-drawer.is-open').waitFor();
+      await page.keyboard.press('Escape');
+      await page.locator('.arcane-character-drawer.is-open').waitFor({state:'hidden'});
+      assert.ok(await portrait.evaluate(el=>el===el.getRootNode().activeElement));
+    }
   }
   await page.locator('#landingCharactersNavBtn').evaluate(button=>button.click());
   const card=page.locator('#home .charcard').first();
@@ -51,17 +62,18 @@ try {
     await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
     await Promise.all(el.getAnimations({subtree:true}).map(anim=>anim.finished.catch(()=>{})));
   });
-  await mkdir('rail-results',{recursive:true});
   for (const width of [360,390]) {
     await page.setViewportSize({width,height:800});
     await grip.click();
     await settle();
     assert.equal(await grip.getAttribute('aria-expanded'),'false');
-    const folded=await rail.locator('.rail').boundingBox();
+    const folded=await drawer.boundingBox();
     const cardBox=await card.boundingBox();
-    assert.equal(folded.width,3);
-    assert.equal(folded.x+folded.width,width);
-    assert.equal(await rail.locator('.lamp:visible,.rail i:visible,.mail:visible,#grip img:visible').count(),0);
+    const border=await drawer.evaluate(el=>parseFloat(getComputedStyle(el).borderLeftWidth));
+    assert.equal(border,3);
+    assert.equal(folded.x,width-border);
+    assert.ok(await rail.locator('.face,.lamp').evaluateAll(nodes=>nodes.every(el=>el.getBoundingClientRect().left>=innerWidth)));
+    assert.equal(await rail.locator('.mail:visible').count(),0);
     assert.ok(cardBox.x+cardBox.width<=folded.x,'The folded rail has its own space beside the card');
     const header=await page.locator('header.alea-app-header').boundingBox();
     assert.ok(folded.y>=header.y+header.height-1,'The rail starts below page navigation');
@@ -84,7 +96,7 @@ try {
     assert.equal(await grip.getAttribute('aria-expanded'),'true');
     assert.ok(await rail.evaluate(el=>el===window.acceptancePartyRail));
     assert.equal(await rail.locator('.member .lamp:visible').count(),expected);
-    await page.screenshot({path:'rail-results/mobile-'+width+'-open.png',mask:[page.locator('#sessionUser:visible'),rail.locator('.name')]});
+    await page.screenshot({path:'rail-results/mobile-'+width+'-open.png',mask:[page.locator('#sessionUser:visible')]});
   }
   await page.locator('#mapNavBtn').evaluate(button=>button.click());
   const map=page.locator('#mapPage');

@@ -1,6 +1,6 @@
 @import url("../../features/party/panel.css");
 *{box-sizing:border-box}
-:root{font-family:Georgia,'Times New Roman',serif;color:#efdfbd;background:#0c1011;--gold:#c8a26b;--rail:52px;--wing:220px;--row:64px;--top:79px;--bottom:97px}
+:root{font-family:Georgia,'Times New Roman',serif;color:#efdfbd;background:#0c1011;--gold:#c8a26b}
 body{margin:0;background:radial-gradient(ellipse at 70% 0%,#29251e 0%,#131617 48%,#0c1011 90%);min-height:100svh}
 main{width:min(100%,1460px);margin:auto;padding:clamp(12px,2vw,30px)}
 header,footer{display:flex;align-items:center;justify-content:space-between;gap:12px}
@@ -17,7 +17,7 @@ fieldset [aria-pressed=true]{background:#4b3824;border-color:#ce9f5a;color:#fff2
 footer{margin-top:12px}footer ul{display:flex;flex-wrap:wrap;gap:6px 16px;padding:0;margin:0;list-style:none}
 footer li,#send{font:13px/1.3 system-ui,sans-serif}footer li{display:flex;align-items:center;gap:5px;color:#d0c3a9}footer li img{width:16px;height:16px}
 #notice{display:block;min-height:1.2em;margin-top:5px;font:12px system-ui;color:#c2b39c}
-@media(max-width:600px){:root{--rail:43px;--wing:179px;--row:52px;--top:67px;--bottom:82px}header{margin-bottom:10px}fieldset button{padding:6px 9px}.game,legend{font-size:9px}.stage{height:calc(100svh - 166px);min-height:280px}.scene-label{left:8px;bottom:8px}footer ul{gap:4px 9px}footer li,#send{font-size:11px}#send{padding:8px;white-space:nowrap}}
+@media(max-width:600px){header{margin-bottom:10px}fieldset button{padding:6px 9px}.game,legend{font-size:9px}.stage{height:calc(100svh - 166px);min-height:280px}.scene-label{left:8px;bottom:8px}footer ul{gap:4px 9px}footer li,#send{font-size:11px}#send{padding:8px;white-space:nowrap}}
 
 @media (max-width:700px), (pointer:coarse) and (max-height:540px) and (max-width:1000px) {
   footer ul { display: none; }

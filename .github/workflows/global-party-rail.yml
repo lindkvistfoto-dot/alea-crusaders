@@ -5,12 +5,14 @@ on:
     paths:
       - 'features/party/**'
       - 'scripts/global-party-rail-dev.mjs'
+      - 'scripts/party-panel-acceptance.cjs'
+      - 'dev-tests/party-panel/**'
       - '.github/workflows/global-party-rail.yml'
 permissions:
   contents: read
 jobs:
   authenticated-rail:
-    if: github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'feat/global-party-rail'
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'feat/silent-companions'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -39,6 +41,8 @@ jobs:
           test -n "$preview"
           echo "Verified preview $preview for $SOURCE_SHA"
           echo "ALEA_VERIFIED_PREVIEW=$preview" >> "$GITHUB_ENV"
+      - name: Verify the panel geometry, presence lamps and unread messages
+        run: node scripts/party-panel-acceptance.cjs "$ALEA_VERIFIED_PREVIEW/preview/party-panel/" rail-results/demo
       - name: Check login, navigation, presence and logout
         env:
           ALEA_DEV_TEST_EMAIL: ${{ secrets.ALEA_DEV_TEST_EMAIL }}
@@ -47,6 +51,6 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: global-party-rail-mobile
+          name: silent-companions
           path: rail-results/
           if-no-files-found: ignore

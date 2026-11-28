@@ -3,6 +3,7 @@
  'use strict';
  const labels=['Grundegenskaper','Färdigheter','Magi','Utrustning'];
  let railMarkup=null;
+ let partyPortraitTrigger=null;
  let selectedId=null,activePage=0,root,rail,drawer,content,previousCurrent=null,rollOwnerId=null,focusPortraitId=null,observer,npcFlags=new Map(),npcFlagsCampaign=null,npcFlagsPromise=null;
  const esc=value=>typeof escAttr==='function'?escAttr(String(value??'')):String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const campaignCharacters=()=>typeof chars!=='undefined'&&Array.isArray(chars)?chars.filter(c=>{if(!c)return false;const id=charId(c);if(typeof c.isNpc==='boolean')return !c.isNpc;if(npcFlagsCampaign===centralCampaignId&&npcFlags.has(id))return npcFlags.get(id)!==true;return c.ownerId!=='SLP'}):[];
@@ -39,7 +40,10 @@
   if(drawer.classList.contains('is-open'))renderDrawer();
  }
  function toggleCharacter(id){if(selectedId===id&&drawer.classList.contains('is-open')){close();return}if(rollOwnerId&&rollOwnerId!==id){if(document.getElementById('skillRollMenu')&&!document.getElementById('skillRollMenu').classList.contains('hidden'))window.closeSkillRollMenu?.();if(document.getElementById('spellRollMenu')&&!document.getElementById('spellRollMenu').classList.contains('hidden'))window.closeSpellRollMenu?.();restoreCurrent()}selectedId=id;renderDrawer();drawer.classList.add('is-open');drawer.setAttribute('aria-hidden','false');refresh()}
- function close(){if(!drawer)return;focusPortraitId=selectedId;drawer.classList.remove('is-open');drawer.setAttribute('aria-hidden','true');selectedId=null;if(document.getElementById('skillRollMenu')&&!document.getElementById('skillRollMenu').classList.contains('hidden'))window.closeSkillRollMenu?.();if(document.getElementById('spellRollMenu')&&!document.getElementById('spellRollMenu').classList.contains('hidden'))window.closeSpellRollMenu?.();restoreCurrent();refresh()}
+ function close(){if(!drawer)return;focusPortraitId=selectedId;drawer.classList.remove('is-open');drawer.setAttribute('aria-hidden','true');selectedId=null;if(document.getElementById('skillRollMenu')&&!document.getElementById('skillRollMenu').classList.contains('hidden'))window.closeSkillRollMenu?.();if(document.getElementById('spellRollMenu')&&!document.getElementById('spellRollMenu').classList.contains('hidden'))window.closeSpellRollMenu?.();restoreCurrent();refresh()
+  if(partyPortraitTrigger?.isConnected)partyPortraitTrigger.focus({preventScroll:true});
+  partyPortraitTrigger=null;
+ }
  function setPage(n){activePage=(n+labels.length)%labels.length;renderDrawer()}
  function section(title,inside){return '<section class="arcane-drawer-section"><h3>'+esc(title)+'</h3>'+inside+'</section>'}
  function stat(label,value){return '<div class="arcane-drawer-stat"><span>'+esc(label)+'</span><b>'+esc(value===null||value===undefined||value===''?'—':value)+'</b></div>'}
@@ -71,9 +75,12 @@
  window.aleaCharacterDrawerRefresh=refreshCampaign;
  window.aleaPartyCharacters={
   list:campaignCharacters, name:charName, portrait,
-  open(c){
-   if(isNonHomePageVisible()&&window.matchMedia('(min-width: 901px)').matches)toggleCharacter(charId(c));
-   else if(c.id){window.openCharacters?.();window.openChar?.(c.id)}
+  open(c,trigger){
+   if(isNonHomePageVisible()&&window.matchMedia('(min-width: 901px)').matches){
+    partyPortraitTrigger=trigger;
+    toggleCharacter(charId(c));
+    if(drawer.classList.contains('is-open'))drawer.querySelector('.arcane-character-drawer-close').focus({preventScroll:true});
+   }else if(c.id){window.openCharacters?.();window.openChar?.(c.id)}
   }
  };
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
