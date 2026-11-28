@@ -9,3 +9,12 @@
 @media (max-width: 700px), (pointer: coarse) and (max-height: 540px) and (max-width: 1000px) {
   :host { top: var(--alea-header-bottom, 72px); }
 }
+
+@media (max-width:900px), (pointer:coarse) and (max-height:540px) and (max-width:1000px) {
+  :host { width:100%; top:var(--alea-header-bottom,72px); }
+  :host(.party-full) {
+    --party-top:max(env(safe-area-inset-top),var(--party-vtop,0px),min(var(--alea-header-bottom,72px),calc(var(--party-vbottom,100dvh) - 240px)));
+    top:var(--party-top); bottom:auto;
+    height:calc(var(--party-vbottom,100dvh) - var(--party-top));
+  }
+}

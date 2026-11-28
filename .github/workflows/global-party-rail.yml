@@ -12,7 +12,7 @@ permissions:
   contents: read
 jobs:
   authenticated-rail:
-    if: github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'feat/silent-companions'
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'feat/party-panel-three-states'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -51,6 +51,6 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: silent-companions
+          name: three-states
           path: rail-results/
           if-no-files-found: ignore

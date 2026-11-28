@@ -3,7 +3,8 @@
  'use strict';
  const labels=['Grundegenskaper','Färdigheter','Magi','Utrustning'];
  let railMarkup=null;
- let partyPortraitTrigger=null;
+ let partyPortraitTrigger=null, partyView=null;
+ const mayAct=c=>typeof canEditCharacter==="function" && canEditCharacter(c);
  let selectedId=null,activePage=0,root,rail,drawer,content,previousCurrent=null,rollOwnerId=null,focusPortraitId=null,observer,npcFlags=new Map(),npcFlagsCampaign=null,npcFlagsPromise=null;
  const esc=value=>typeof escAttr==='function'?escAttr(String(value??'')):String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const campaignCharacters=()=>typeof chars!=='undefined'&&Array.isArray(chars)?chars.filter(c=>{if(!c)return false;const id=charId(c);if(typeof c.isNpc==='boolean')return !c.isNpc;if(npcFlagsCampaign===centralCampaignId&&npcFlags.has(id))return npcFlags.get(id)!==true;return c.ownerId!=='SLP'}):[];
@@ -21,18 +22,19 @@
    focusPortraitId=button.dataset.character;toggleCharacter(button.dataset.character);
   });
   root.querySelector('.arcane-character-drawer-close').addEventListener('click',close);
-  root.querySelectorAll('.arcane-drawer-arrow').forEach(b=>b.addEventListener('click',()=>setPage(activePage+Number(b.dataset.dir))));
+  root.querySelectorAll('.arcane-drawer-arrow').forEach(b=>b.addEventListener('click',()=>partyView?partyView.step(Number(b.dataset.dir)):setPage(activePage+Number(b.dataset.dir))));
   root.querySelector('.arcane-drawer-overlay').addEventListener('click',close);
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&drawer.classList.contains('is-open'))close()});
   let start=null;
-  content.addEventListener('touchstart',e=>{const t=e.changedTouches[0];start={x:t.clientX,y:t.clientY}},{passive:true});
-  content.addEventListener('touchend',e=>{if(!start)return;const t=e.changedTouches[0],dx=t.clientX-start.x,dy=t.clientY-start.y;start=null;if(Math.abs(dx)>70&&Math.abs(dx)>Math.abs(dy))setPage(activePage+(dx<0?1:-1))},{passive:true});
+  drawer.addEventListener('touchstart',e=>{if(e.target.closest('input,textarea')||!e.target.closest('.arcane-drawer-content,.desktop-party-details'))return;const t=e.changedTouches[0];start={x:t.clientX,y:t.clientY}},{passive:true});
+  drawer.addEventListener('touchend',e=>{if(!start)return;const t=e.changedTouches[0],dx=t.clientX-start.x,dy=t.clientY-start.y;start=null;if(Math.abs(dx)>70&&Math.abs(dx)>Math.abs(dy)){if(partyView)partyView.step(dx<0?1:-1);else setPage(activePage+(dx<0?1:-1))}},{passive:true});
   const watchModal=id=>{const el=document.getElementById(id);if(!el)return;new MutationObserver(()=>{if(el.classList.contains('hidden'))setTimeout(()=>{if(!document.getElementById('dicePage')?.classList.contains('hidden'))return;restoreCurrent()},0)}).observe(el,{attributes:true,attributeFilter:['class']})};
   watchModal('skillRollMenu');watchModal('spellRollMenu');
  }
  function isNonHomePageVisible(){const app=document.querySelector('main'),landing=document.getElementById('landing'),login=document.getElementById('loginScreen');return !!app&&!app.classList.contains('hidden')&&!!landing&&landing.classList.contains('hidden')&&(!login||login.classList.contains('hidden'))}
  async function loadNpcFlags(){const campaignId=typeof centralCampaignId!=='undefined'?centralCampaignId:null;if(!campaignId||typeof dbJson!=='function'||npcFlagsCampaign===campaignId)return;if(npcFlagsPromise)return npcFlagsPromise;npcFlagsPromise=(async()=>{try{const rows=await dbJson('characters?campaign_id=eq.'+encodeURIComponent(campaignId)+'&select=id,is_npc');npcFlags=new Map((Array.isArray(rows)?rows:[]).map(r=>[String(r.id),r.is_npc===true]));npcFlagsCampaign=campaignId}catch(e){npcFlagsCampaign=campaignId}finally{npcFlagsPromise=null;requestAnimationFrame(refresh)}})();return npcFlagsPromise}
- function refresh(){makeRoot();const visible=isNonHomePageVisible()&&window.matchMedia('(min-width: 901px)').matches;rail.hidden=!visible;if(!visible){if(drawer.classList.contains('is-open'))close();return}loadNpcFlags();
+ function refresh(){makeRoot();const visible=isNonHomePageVisible()&&window.matchMedia('(min-width: 901px)').matches;rail.hidden=!visible;if(partyView && window.matchMedia('(min-width: 901px)').matches && !document.querySelector('main').classList.contains('hidden'))return;
+  if(!visible){if(drawer.classList.contains('is-open'))close();return}loadNpcFlags();
   const list=campaignCharacters();if(!list.some(c=>charId(c)===selectedId))selectedId=null;
   const markup=list.map(c=>'<button type="button" class="arcane-character-portrait" data-character="'+esc(charId(c))+'" aria-label="Visa '+esc(charName(c))+'" aria-pressed="'+(charId(c)===selectedId)+'" title="'+esc(charName(c))+'">'+imageOrFallback(portrait(c),c,'arcane-character-portrait')+'</button>').join('');
   if(markup!==railMarkup){rail.innerHTML=markup;railMarkup=markup;}
@@ -40,7 +42,9 @@
   if(drawer.classList.contains('is-open'))renderDrawer();
  }
  function toggleCharacter(id){if(selectedId===id&&drawer.classList.contains('is-open')){close();return}if(rollOwnerId&&rollOwnerId!==id){if(document.getElementById('skillRollMenu')&&!document.getElementById('skillRollMenu').classList.contains('hidden'))window.closeSkillRollMenu?.();if(document.getElementById('spellRollMenu')&&!document.getElementById('spellRollMenu').classList.contains('hidden'))window.closeSpellRollMenu?.();restoreCurrent()}selectedId=id;renderDrawer();drawer.classList.add('is-open');drawer.setAttribute('aria-hidden','false');refresh()}
- function close(){if(!drawer)return;focusPortraitId=selectedId;drawer.classList.remove('is-open');drawer.setAttribute('aria-hidden','true');selectedId=null;if(document.getElementById('skillRollMenu')&&!document.getElementById('skillRollMenu').classList.contains('hidden'))window.closeSkillRollMenu?.();if(document.getElementById('spellRollMenu')&&!document.getElementById('spellRollMenu').classList.contains('hidden'))window.closeSpellRollMenu?.();restoreCurrent();refresh()
+ function close(){if(!drawer)return;
+  if(partyView){partyView.dispose();partyView=null;drawer.querySelector('.desktop-party-details')?.remove();drawer.classList.remove('party-person-open');}
+  focusPortraitId=selectedId;drawer.classList.remove('is-open');drawer.setAttribute('aria-hidden','true');selectedId=null;if(document.getElementById('skillRollMenu')&&!document.getElementById('skillRollMenu').classList.contains('hidden'))window.closeSkillRollMenu?.();if(document.getElementById('spellRollMenu')&&!document.getElementById('spellRollMenu').classList.contains('hidden'))window.closeSpellRollMenu?.();restoreCurrent();refresh()
   if(partyPortraitTrigger?.isConnected)partyPortraitTrigger.focus({preventScroll:true});
   partyPortraitTrigger=null;
  }
@@ -51,9 +55,9 @@
  function pageAttributes(c){const base=c.base||{},derived=c.derived||{},live=c.live||{};const attrs=Object.entries(base).map(([k,v])=>stat(k,v&&typeof v==='object'?(v.v??'—'):'—')).join('');
   const relevant=Object.entries(derived).filter(([k,v])=>v!==''&&v!=null).map(([k,v])=>stat(k,typeof v==='object'?(v.dice?`${v.dice}T${v.sides}`:'Ingen'):v)).join('');
   return section('Grundegenskaper','<div class="arcane-drawer-grid">'+(attrs||'<div class="arcane-drawer-empty">Inga grundegenskaper registrerade.</div>')+'</div>')+section('Aktuella värden','<div class="arcane-drawer-grid">'+stat('Kroppspoäng',`${live.KP??0} / ${live.KPmax??0}`)+stat('Psykisk kraft',`${live.PSY??0} / ${live.PSYmax??0}`)+stat('Hjältepoäng',live.heroPoints??0)+stat('Rykte',live.reputation??0)+'</div>')+(relevant?section('Härledda värden','<div class="arcane-drawer-grid">'+relevant+'</div>'):'')}
- function skillPage(c){const skills=Array.isArray(c.skills)?c.skills:[];const html=skills.map((sk,i)=>{const rule=typeof findRuleSkill==='function'?findRuleSkill(sk):null;const info=typeof skillRollTarget==='function'?skillRollTarget(sk,rule):null;const name=rule?.name||sk.name||'Färdighet';const button=info?'<button type="button" class="arcane-drawer-roll" data-roll="skill" data-index="'+i+'" aria-label="Slå '+esc(name)+'">🎲</button>':'';return row(name,'FV '+(info?.target??sk.fv??'—')+' · ERF '+(sk.erf??0),button)}).join('');return section('Färdigheter',html||'<div class="arcane-drawer-empty">Inga färdigheter registrerade.</div>')}
+ function skillPage(c){const skills=Array.isArray(c.skills)?c.skills:[];const html=skills.map((sk,i)=>{const rule=typeof findRuleSkill==='function'?findRuleSkill(sk):null;const info=typeof skillRollTarget==='function'?skillRollTarget(sk,rule):null;const name=rule?.name||sk.name||'Färdighet';const button=info&&mayAct(c)?'<button type="button" class="arcane-drawer-roll" data-roll="skill" data-index="'+i+'" aria-label="Slå '+esc(name)+'">🎲</button>':'';return row(name,'FV '+(info?.target??sk.fv??'—')+' · ERF '+(sk.erf??0),button)}).join('');return section('Färdigheter',html||'<div class="arcane-drawer-empty">Inga färdigheter registrerade.</div>')}
  function magicPage(c){const spells=Array.isArray(c.spells)?c.spells:[],schools=Array.isArray(c.magicSchools)?c.magicSchools:[],familiaris=Array.isArray(c.familiaris)?c.familiaris:[];
-  const spellRows=spells.map((sp,i)=>{const rule=typeof findRuleSpell==='function'?findRuleSpell(sp):null;const canRoll=!!rule&&Number(sp.fv)>0&&Number(c.live?.PSY)>0;const btn=canRoll?'<button type="button" class="arcane-drawer-roll" data-roll="spell" data-index="'+i+'" aria-label="Slå '+esc(sp.name||'Besvärjelse')+'">🎲</button>':'';return row(rule?.name||sp.name||'Besvärjelse','FV '+(sp.fv??'—')+' · ERF '+(sp.erf??0)+(rule?'':' · saknas i besvärjelseregistret'),btn)}).join('');
+  const spellRows=spells.map((sp,i)=>{const rule=typeof findRuleSpell==='function'?findRuleSpell(sp):null;const canRoll=!!rule&&Number(sp.fv)>0&&Number(c.live?.PSY)>0;const btn=canRoll&&mayAct(c)?'<button type="button" class="arcane-drawer-roll" data-roll="spell" data-index="'+i+'" aria-label="Slå '+esc(sp.name||'Besvärjelse')+'">🎲</button>':'';return row(rule?.name||sp.name||'Besvärjelse','FV '+(sp.fv??'—')+' · ERF '+(sp.erf??0)+(rule?'':' · saknas i besvärjelseregistret'),btn)}).join('');
   const schoolRows=schools.map(x=>row(x.name||'Magiskola','')).join(''),famRows=familiaris.map(x=>row(x.name||x.species||'Familiaris','')).join('');
   return section('Besvärjelser',spellRows||'<div class="arcane-drawer-empty">Inga besvärjelser registrerade.</div>')+(schoolRows?section('Magiskolor',schoolRows):'')+(famRows?section('Spiritus Familiaris',famRows):'')+section('Resurser','<div class="arcane-drawer-grid">'+stat('PSY',`${c.live?.PSY??0} / ${c.live?.PSYmax??0}`)+stat('Magiskolor',schools.length)+'</div>')}
  function itemLabel(ref,c){if(!ref)return null;const item=typeof equipItemByRef==='function'?equipItemByRef(c,ref):null;if(!item)return null;const name=item.name||'Namnlös';const stats=[];if(ref.kind==='weapon'){if(item.damage)stats.push('Skada '+item.damage);if(item.fv!=null)stats.push('FV '+item.fv);if(item.hands)stats.push(item.hands+' hand'+(Number(item.hands)===1?'':'er'))}else if(ref.kind==='armor'){if(item.abs!=null)stats.push('ABS '+item.abs);if(item.bep!=null)stats.push('BEP '+item.bep)}else if(ref.kind==='shield'){if(item.fv!=null)stats.push('FV '+item.fv);if(item.bep!=null)stats.push('BEP '+item.bep)}return {name,meta:stats.join(' · ')}}
@@ -65,7 +69,7 @@
   const pages=[pageAttributes(c),skillPage(c),magicPage(c),equipmentPage(c)];content.innerHTML=pages.map((html,i)=>'<section class="arcane-drawer-page '+(i===activePage?'is-active':'')+'" role="tabpanel" id="arcaneDrawerPage'+i+'" aria-labelledby="arcaneDrawerTab'+i+'">'+html+'</section>').join('');root.querySelector('.arcane-drawer-page-count').textContent=(activePage+1)+' / '+labels.length+' · '+labels[activePage];
   content.querySelectorAll('[data-roll]').forEach(b=>b.addEventListener('click',()=>startRoll(c,b.dataset.roll,Number(b.dataset.index))));
  }
- function startRoll(c,type,index){if(rollOwnerId&&rollOwnerId!==charId(c)){restoreCurrent()}if(!rollOwnerId){previousCurrent=typeof current==='undefined'?null:current;rollOwnerId=charId(c)}current=c;
+ function startRoll(c,type,index){if(!mayAct(c))return;if(rollOwnerId&&rollOwnerId!==charId(c)){restoreCurrent()}if(!rollOwnerId){previousCurrent=typeof current==='undefined'?null:current;rollOwnerId=charId(c)}current=c;
   if(type==='skill'&&typeof openSkillRollMenu==='function')openSkillRollMenu(index);
   if(type==='spell'&&typeof openSpellRollMenu==='function')openSpellRollMenu(index)
  }
@@ -74,7 +78,27 @@
  function refreshCampaign(){refresh();window.aleaPartyRail?.refresh()}
  window.aleaCharacterDrawerRefresh=refreshCampaign;
  window.aleaPartyCharacters={
-  list:campaignCharacters, name:charName, portrait,
+  list:campaignCharacters, name:charName, portrait, labels, mayAct, roll:startRoll,
+  renderPage(c,i){return [pageAttributes,skillPage,magicPage,equipmentPage][i](c)},
+  manage(c,i){if(!mayAct(c))return;window.openCharacters?.();window.openChar?.(c.id);window.setTab?.(['grund','skills','magic','equipment'][i]);},
+  showParty(person,trigger,messages,createView){
+   makeRoot();
+   if(partyView && partyPortraitTrigger===trigger && !messages){close();return}
+   partyPortraitTrigger=trigger;
+   if(!partyView){
+    const host=document.createElement('div');host.className='desktop-party-details';
+    drawer.insertBefore(host,drawer.querySelector('footer'));
+    partyView=createView(host,(i,pages)=>{drawer.querySelector('.arcane-drawer-page-count').textContent=pages.length?(i+1)+' / '+pages.length+' · '+pages[i]:''});
+    drawer.classList.add('party-person-open','is-open');drawer.setAttribute('aria-hidden','false');
+    drawer.querySelector('.arcane-character-drawer-close').focus({preventScroll:true});
+   }
+   const head=drawer.querySelector('header');
+   head.querySelector('.arcane-drawer-portrait').innerHTML=imageOrFallback(person.portrait,person.character,'arcane-drawer-head');
+   head.querySelector('h2').textContent=person.name;
+   head.querySelector('p').textContent=[person.character?.identity?.ras,person.character?.identity?.yrke].filter(Boolean).join(' · ');
+   partyView.select(person,messages);partyView.setVisible(true);
+  },
+  closeParty(){if(partyView)close();},
   open(c,trigger){
    if(isNonHomePageVisible()&&window.matchMedia('(min-width: 901px)').matches){
     partyPortraitTrigger=trigger;

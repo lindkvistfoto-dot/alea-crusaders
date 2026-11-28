@@ -82,7 +82,7 @@
   width: calc(18px + var(--rim) + 2px); cursor: ew-resize; touch-action: pan-y;
 }
 .drawer.dragging, .drawer.dragging .mail { transition: none; }
-@media (max-width:700px), (pointer:coarse) and (max-height:540px) and (max-width:1000px) {
+@media (max-width:900px), (pointer:coarse) and (max-height:540px) and (max-width:1000px) {
   .viewport { --face: 44px; --pad: 5px; --letter: 21px; }
   .lamp img { width: 11px; height: 11px; }
   .drawer[data-open=false] .member:has(.mail:not([hidden])) ~ .member .mail { display: none; }
@@ -90,3 +90,47 @@
 @media (prefers-reduced-motion:reduce) {
   .drawer, .mail { transition: none; }
 }
+
+.drawer { transform: translateX(var(--offset,calc((1 - var(--opening)) * (100% - var(--rim))))); }
+.party-details { display:none; }
+@media (max-width:900px), (pointer:coarse) and (max-height:540px) and (max-width:1000px) {
+  .three-states {
+    --column: calc(var(--rim) + 2 * var(--pad) + var(--face) + 1px);
+    --shown: var(--rim);
+    width: min(100%, 680px);
+    display: grid;
+    grid-template-columns: var(--face) minmax(0,1fr);
+    column-gap: calc(var(--pad) * 2);
+    transform: translateX(var(--offset,calc(100% - var(--shown))));
+  }
+  .three-states[data-state="1"] { --shown:var(--column); }
+  .three-states[data-state="2"] {
+    --shown:100%; height:calc(100% - 10px);
+    padding-bottom:max(var(--pad),env(safe-area-inset-bottom));
+  }
+  .three-states #members { align-content:start; min-height:0; }
+  .three-states[data-state="2"] #members {
+    overflow:hidden auto; overscroll-behavior:contain; scrollbar-width:none;
+    margin:0 -4px; padding:0 4px 5px;
+  }
+  .three-states .party-details {
+    display:flex; flex-direction:column; min-width:0; min-height:0;
+    overflow:hidden; color:#ede1ce; user-select:text;
+  }
+  .three-states:not([data-state="2"]) .party-details { height:0; visibility:hidden; }
+  .three-states[data-state="2"] .face[aria-pressed="true"] { box-shadow:0 0 0 2px #aa9167; }
+}
+@media (max-width:900px), (pointer:coarse) and (max-height:540px) and (max-width:1000px) {
+  .three-states { width:min(calc(100% - 10px - env(safe-area-inset-left)),680px); }
+  .three-states[data-state="2"] .party-details { padding-right:env(safe-area-inset-right); }
+}
+@media (max-width:900px), (pointer:coarse) and (max-height:540px) and (max-width:1000px) {
+  .viewport:has(.three-states) { overflow:clip; }
+  .three-states { max-height:calc(100% - 10px); }
+  .three-states[data-state="0"] #members { position:relative; z-index:2; pointer-events:none; transform:translateY(var(--peek-shift,0px)); }
+  .three-states[data-state="0"] .mail { pointer-events:auto; }
+  .three-states[data-state="1"] #members { overflow:hidden auto; scrollbar-width:none; overscroll-behavior:contain; }
+}
+/* The keyboard focus indicator belongs to the bronze rim, never the wider touch target. */
+.viewport #grip:focus-visible { outline:none; }
+.drawer:has(#grip:focus-visible) { border-left-color:#b39b78; }
