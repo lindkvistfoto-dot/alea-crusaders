@@ -31,6 +31,8 @@ async function testMobile(browser,width,height) {
   await state(0); const hidden=await geometry(page);
   assert.equal(hidden.rim,3); assert.equal(hidden.drawer.x,hidden.map.right-3);
   assert.ok(hidden.persona.x>=hidden.map.right && hidden.lamp.x>=hidden.map.right);
+  await grip.focus(); await page.keyboard.press('Tab'); await page.keyboard.press('Shift+Tab');
+  assert.ok(await grip.evaluate(el=>getComputedStyle(el).outlineStyle==='none'));
   await shot('dold'); await grip.click(); await state(1);
   const portraits=await geometry(page);
   assert.equal(portraits.map.right-portraits.drawer.x,58); await shot('portratt');

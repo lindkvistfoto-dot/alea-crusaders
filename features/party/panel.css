@@ -131,3 +131,6 @@
   .three-states[data-state="0"] .mail { pointer-events:auto; }
   .three-states[data-state="1"] #members { overflow:hidden auto; scrollbar-width:none; overscroll-behavior:contain; }
 }
+/* The keyboard focus indicator belongs to the bronze rim, never the wider touch target. */
+.viewport #grip:focus-visible { outline:none; }
+.drawer:has(#grip:focus-visible) { border-left-color:#b39b78; }
