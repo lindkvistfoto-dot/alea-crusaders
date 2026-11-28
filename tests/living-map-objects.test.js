@@ -41,6 +41,7 @@ it.each([false,true])('persists independently and protects the player projection
     await db.exec(discovery);await db.exec(current);
     const before=await query('select id,image_asset_key from arcane_object_definitions order by id');
     await db.exec(collections);
+    await db.exec(migration('20261124223537_object_factory_categories.sql'));
     expect(await query('select id,image_asset_key from arcane_object_definitions order by id')).toEqual(before);
     const levels=await query('select unnest(enum_range(null::map_object_category)) label');
     expect(levels.map(r=>r.label)).toEqual(objectCategories);

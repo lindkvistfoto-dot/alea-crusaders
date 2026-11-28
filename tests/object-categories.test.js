@@ -17,5 +17,7 @@ it('combines collection, category and search without including another campaign'
   expect(names('campaign', 'Övrigt')).toEqual(['Relik']);
   expect(names('shared', 'Övrigt')).toEqual([]);
   expect(names('all', '', 'förvaring')).toEqual(['Träkista', 'Kistan i kryptan']);
-  expect(new Set(objectCategories).size).toBe(9);
+  expect(objectCategories).toContain('Djur');
+  expect(objectCategories).toContain('Vapen och utrustning');
+  expect(new Set(objectCategories).size).toBe(objectCategories.length);
 });
