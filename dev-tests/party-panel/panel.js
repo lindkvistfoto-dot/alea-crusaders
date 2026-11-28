@@ -1,4 +1,4 @@
-import {createPartyPanel,loadArt,partyFirstName} from '../../features/party/panel.js';
+import {createPartyPanel,loadArt,partyFirstName,mobileScreen} from '../../features/party/panel.js';
 import {createPersonDetails} from '../../features/party/person-details.js';
 const sizes = document.querySelector('#sizes');
 const notice = document.querySelector('#notice');
@@ -33,9 +33,12 @@ async function start() {
   const response = await fetch('../../features/party/components.json');
   if (!response.ok) throw Error('Bildregistret kunde inte läsas.');
   const art = loadArt(await response.json(), document.documentElement);
-  const mobile=matchMedia('(max-width:700px), (pointer:coarse) and (max-height:540px) and (max-width:1000px)').matches;
-  if (mobile) people.forEach(person=>{person.unread=0;});
-  let detail;
+  const mobile=matchMedia(mobileScreen).matches;
+  for (const p of people) {
+    if (mobile) p.unread=0;
+    p.letters=Array.from({length:p.unread},()=>({id:crypto.randomUUID(),text:'Jag väntar vid kryptans port.',mine:false,read:false}));
+  }
+  let detail, desktopView;
   const inbox={
     list:p=>p.letters,
     mark(p,ids){for(const m of p.letters)if(ids.includes(m.id))m.read=true;update(p);},
@@ -45,8 +48,15 @@ async function start() {
     person.unread=person.letters.filter(m=>!m.mine&&!m.read).length;
     rows[people.indexOf(person)]?.refresh();
   }
+  function desktop(person,trigger,messages) {
+    window.aleaPartyCharacters.showParty(person,trigger,messages,(container,onTab)=>{
+      desktopView=createPersonDetails(container,{sheet:()=>window.aleaPartyCharacters,inbox,onTab});
+      return desktopView;
+    });
+  }
   const panel = createPartyPanel(document.querySelector('#partyMount'), art, {
     opened:!mobile,
+    onPortrait:(person,trigger)=>desktop(person,trigger,false),
     onDetails(container,person,messages){
       detail??=createPersonDetails(container,{sheet:()=>window.aleaPartyCharacters,inbox});
       detail.select(person,messages);
@@ -58,10 +68,7 @@ async function start() {
       person.statusLabel = statuses[person.status];
       notice.textContent = person.name + ' · ' + person.statusLabel;
     },
-    onRead(person) {
-      person.unread = 0;
-      notice.textContent = 'Breven till ' + person.name + ' är markerade som lästa.';
-    },
+    onRead:(person,trigger)=>desktop(person,trigger,true),
   });
   let rows;
   function show(size) {
@@ -87,8 +94,8 @@ async function start() {
     const i = nextRecipient++ % count;
     const p=people[i];
     p.letters.push({id:crypto.randomUUID(),text:'Jag väntar vid kryptans port.',mine:false,read:false});
-    update(p); void detail?.refreshMail();
-    notice.textContent = 'Ett nytt brev till ' + people[i].name + '.';
+    update(p); void detail?.refreshMail(); void desktopView?.refreshMail();
+    notice.textContent = 'Ett nytt brev från ' + people[i].name + '.';
   };
 
 }

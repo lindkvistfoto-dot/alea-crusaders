@@ -26,8 +26,8 @@
   root.querySelector('.arcane-drawer-overlay').addEventListener('click',close);
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&drawer.classList.contains('is-open'))close()});
   let start=null;
-  content.addEventListener('touchstart',e=>{const t=e.changedTouches[0];start={x:t.clientX,y:t.clientY}},{passive:true});
-  content.addEventListener('touchend',e=>{if(!start)return;const t=e.changedTouches[0],dx=t.clientX-start.x,dy=t.clientY-start.y;start=null;if(Math.abs(dx)>70&&Math.abs(dx)>Math.abs(dy))setPage(activePage+(dx<0?1:-1))},{passive:true});
+  drawer.addEventListener('touchstart',e=>{if(e.target.closest('input,textarea')||!e.target.closest('.arcane-drawer-content,.desktop-party-details'))return;const t=e.changedTouches[0];start={x:t.clientX,y:t.clientY}},{passive:true});
+  drawer.addEventListener('touchend',e=>{if(!start)return;const t=e.changedTouches[0],dx=t.clientX-start.x,dy=t.clientY-start.y;start=null;if(Math.abs(dx)>70&&Math.abs(dx)>Math.abs(dy)){if(partyView)partyView.step(dx<0?1:-1);else setPage(activePage+(dx<0?1:-1))}},{passive:true});
   const watchModal=id=>{const el=document.getElementById(id);if(!el)return;new MutationObserver(()=>{if(el.classList.contains('hidden'))setTimeout(()=>{if(!document.getElementById('dicePage')?.classList.contains('hidden'))return;restoreCurrent()},0)}).observe(el,{attributes:true,attributeFilter:['class']})};
   watchModal('skillRollMenu');watchModal('spellRollMenu');
  }

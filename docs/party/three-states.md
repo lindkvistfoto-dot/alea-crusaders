@@ -6,9 +6,11 @@ Samma ram flyttas med CSS-transform. Porträtt och lampor behåller sina DOM-nod
 
 Både mobilens informationsdel och den befintliga desktopvyn använder rollpersonsbladets grundegenskaper, färdigheter, magi och utrustning. Slag använder befintliga tärningsmenyer. Ägaren och behörig SL kan fortsätta till ordinarie redigering eller utrustningshantering. Ett klick på ett porträtt flyttar ingen figur.
 
+Kryptans befintliga regressionsprov för Äventyrsvyn kördes lokalt på desktop och pekskärm, med spelare och SL och simulerad transport. Utforskning, start, paus och återupptagning, sikt, kartkontroller och fortsatt förflyttning passerade.
+
 ## Behörigheter
 
-DEV-projektet är `wkiuyklzzroavclnsxna`. I en återställd SQL-transaktion skapades en isolerad kampanj med tre syntetiska konton samt en provfigur. Samtliga tre medlemmar kunde läsa figuren via rollen `authenticated`. Ägarens och SL:s uppdateringar träffade en rad var. Den andra spelarens uppdatering träffade noll rader. Testet använde samma RLS-regler som PostgREST. Panelen kontrollerar också den ordinarie `canEditCharacter` före både rendering och aktivering av en rollpersonsåtgärd. Informationsflikarna återanvänder samma spelvärden som desktop och hämtar inga SL-noteringar.
+DEV-projektet är `wkiuyklzzroavclnsxna`. I en återställd SQL-transaktion skapades en isolerad kampanj med tre syntetiska konton samt en provfigur. Provet finns i `scripts/party-panel-roles.sql`. Samtliga tre medlemmar kunde läsa figuren via rollen `authenticated`. Ägarens och SL:s uppdateringar träffade en rad var. Den andra spelarens uppdatering träffade noll rader. Testet använde samma RLS-regler som PostgREST. Panelen kontrollerar också den ordinarie `canEditCharacter` före både rendering och aktivering av en rollpersonsåtgärd. Informationsflikarna återanvänder samma spelvärden som desktop och hämtar inga SL-noteringar.
 
 ## Privata brev
 

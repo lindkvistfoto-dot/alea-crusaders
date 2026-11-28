@@ -98,6 +98,18 @@ async function testMobile(browser,width,height) {
   try {
     const results=[];
     for(const [w,h] of [[390,844],[360,740],[844,390]]) results.push(await testMobile(browser,w,h));
+    const desktop=await browser.newPage({viewport:{width:1440,height:920}});
+    await desktop.goto(url);
+    const astrid=desktop.getByRole('button',{name:'Visa Astrid',exact:true});
+    await astrid.click();
+    const dialog=desktop.getByRole('dialog',{name:'Rollperson',exact:true});
+    await dialog.getByRole('tab',{name:'Färdigheter'}).click();
+    assert.ok((await dialog.locator('.party-page').innerText()).includes('Upptäcka fara'));
+    await dialog.getByRole('tab',{name:'Meddelanden'}).click();
+    await dialog.getByText('Jag väntar vid kryptans port.').first().waitFor();
+    await desktop.keyboard.press('Escape'); await dialog.waitFor({state:'hidden'});
+    assert.ok(await astrid.evaluate(el=>el===document.activeElement));
+    await desktop.close();
     await fs.writeFile(path.join(output,'test.json'),JSON.stringify(results,null,2)); console.log(results);
   } finally {await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});

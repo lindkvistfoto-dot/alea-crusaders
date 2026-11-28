@@ -49,6 +49,14 @@ export function createPartyPanel(mount, art, {opened=false, onStatus, onRead, on
   drawer.classList.toggle('three-states',Boolean(onDetails));
   const key = person => person.owner ?? person.name;
 
+  function positionWaitingLetter() {
+    if (state!==0 || !supportsFull()) return;
+    const waiting=roster.find(person=>person.unread>0);
+    const row=waiting && records.get(key(waiting))?.row;
+    const shift=row?Math.max(0,row.offsetTop+row.offsetHeight+6-drawer.clientHeight):0;
+    members.style.setProperty('--peek-shift',-shift+'px');
+  }
+
   function select(person, messages=false) {
     selected = key(person);
     for (const [id, entry] of records) entry.frame.setAttribute('aria-pressed',String(id===selected));
@@ -64,6 +72,7 @@ export function createPartyPanel(mount, art, {opened=false, onStatus, onRead, on
     grip.setAttribute('aria-label',state===2?'Till porträtten':state===1?'Fäll in spelarlistan':'Öppna spelarlistan');
     for (const entry of records.values()) entry.row.querySelector('.portrait').inert=state===0;
     details.inert=state!==2;
+    if (state===0) positionWaitingLetter();
     onVisibility?.(state===2);
   }
   grip.onclick = () => setState(state===0?1:state-1);
@@ -107,6 +116,7 @@ export function createPartyPanel(mount, art, {opened=false, onStatus, onRead, on
     const count = element('span','count');
     mail.append(letter,count);
 
+    let lastUnread;
     function refresh() {
       lamp.firstChild.src = art['LAMP_' + (person.colour || 'GREEN')];
       lamp.classList.toggle('unknown', !person.colour);
@@ -116,6 +126,7 @@ export function createPartyPanel(mount, art, {opened=false, onStatus, onRead, on
       count.hidden = unread < 2;
       count.textContent = unread > 99 ? '99+' : unread;
       mail.setAttribute('aria-label', person.name + ', ' + unread + ' olästa brev');
+      if (unread!==lastUnread) {lastUnread=unread; positionWaitingLetter();}
     }
     if (onStatus) lamp.onclick = () => { onStatus(person); refresh(); };
     mail.onclick = () => {
@@ -204,6 +215,7 @@ export function createPartyPanel(mount, art, {opened=false, onStatus, onRead, on
   drawer.onlostpointercapture = event=>finish(event,true);
   function resize() { setState(state); }
   media.addEventListener('change',resize);
+  const observer=new ResizeObserver(positionWaitingLetter); observer.observe(drawer);
   setState(opened?1:0);
-  return {setPeople,setState,setOpen:open=>setState(open?1:0),destroy:()=>media.removeEventListener('change',resize)};
+  return {setPeople,setState,setOpen:open=>setState(open?1:0),destroy(){observer.disconnect(); media.removeEventListener('change',resize);}};
 }
