@@ -31,91 +31,83 @@ export function loadArt(components, target) {
   return art;
 }
 
+const neutralPortrait = new URL('../../assets/arcane/system/v1/icon-person.avif', import.meta.url).href;
+const mobileScreen = '(max-width:700px), (pointer:coarse) and (max-height:540px) and (max-width:1000px)';
+
 export function createPartyPanel(mount, art, {opened=false, onStatus, onRead, onPortrait} = {}) {
-  mount.innerHTML = `<div class="viewport"><div class="drawer-track"><div class="drawer" data-open="false">
-      <div class="skin rail" aria-hidden="true"><i></i><i></i><i></i></div>
-      <div class="skin panel" aria-hidden="true"><i></i><i></i><i></i></div>
-      <div class="panel-heading">Följet</div>
-      <button class="edge-close" type="button" aria-label="Stäng spelarlistan">×</button>
-      <div id="members"></div>
-      <button id="grip" type="button" aria-controls="members" aria-expanded="false" aria-label="Fäll in spelarlistan" title="Dra eller klicka för att fälla in"><img alt=""></button>
-      <div class="windrose" aria-hidden="true"></div>
-    </div></div></div>`;
+  mount.innerHTML = `<div class="viewport"><div class="drawer" data-open="false">
+    <button id="grip" type="button" aria-controls="members"></button>
+    <div id="members"></div>
+  </div></div>`;
   const drawer = mount.querySelector('.drawer');
   const members = mount.querySelector('#members');
   const grip = mount.querySelector('#grip');
+
   function setOpen(open) {
     drawer.dataset.open = String(open);
     grip.setAttribute('aria-expanded', String(open));
-    grip.setAttribute('aria-label', open ? 'Fäll in spelarlistan' : 'Dra ut spelarlistan');
-    grip.title = open ? 'Dra eller klicka för att fälla in' : 'Dra eller klicka för att öppna';
-    grip.firstElementChild.src = art[open ? 'ARROW_RIGHT' : 'ARROW_LEFT'];
-    for (const node of members.querySelectorAll('.details')) node.inert = !open;
-    // Keep off-screen portrait art behind the rail throughout the animation.
-    mount.querySelector('.panel-heading').setAttribute('aria-hidden', String(!open));
+    grip.setAttribute('aria-label', open ? 'Fäll in spelarlistan' : 'Öppna spelarlistan');
+    for (const portrait of members.querySelectorAll('.portrait')) portrait.inert = !open;
   }
 
-  function dismiss() {
-    setOpen(false);
-    grip.focus({preventScroll:true});
-  }
-  mount.querySelector('.edge-close').onclick = dismiss;
+  grip.onclick = () => setOpen(drawer.dataset.open !== 'true');
   drawer.addEventListener('keydown',event=>{
     if (event.key==='Escape' && drawer.dataset.open==='true') {
       event.stopPropagation();
-      dismiss();
+      setOpen(false);
+      grip.focus({preventScroll:true});
     }
   });
 
   function createRow(person) {
     const row = element('div', 'member');
-    const lamp = element(onStatus ? 'button' : 'span', 'lamp');
-    if (onStatus) lamp.type = 'button';
-    else lamp.setAttribute('role', 'img');
-    lamp.append(picture(art.LAMP_GREEN));
-    const detail = element('div', 'details');
+    const portrait = element('div', 'portrait');
     const frame = element(person.character && onPortrait ? 'button' : 'span', 'face');
     if (frame.tagName === 'BUTTON') {
       frame.type = 'button';
       frame.setAttribute('aria-label', 'Visa ' + person.name);
       frame.onclick = () => onPortrait(person);
+    } else {
+      frame.setAttribute('role', 'img');
+      frame.setAttribute('aria-label', person.name);
     }
-    if (person.portrait) frame.append(picture(person.portrait));
-    else {
-      const initial = element('span','initial');
-      initial.textContent = person.name[0];
-      frame.append(initial);
-    }
-    const name = element('span', 'name');
-    name.textContent = person.name;
-    detail.append(frame,name);
+    const photo = picture(person.portrait || neutralPortrait);
+    if (person.portrait) photo.addEventListener('error',()=>{photo.src=neutralPortrait;},{once:true});
+    frame.append(photo);
+
+    const lamp = element(onStatus ? 'button' : 'span', 'lamp');
+    if (onStatus) lamp.type = 'button';
+    else lamp.setAttribute('role', 'img');
+    lamp.append(picture(art.LAMP_GREEN));
+    portrait.append(frame,lamp);
+
     const mail = element('button','mail');
     mail.type = 'button';
-    const envelope = element('span','letter');
-    const badge = element('span','count');
-    envelope.append(badge);
-    mail.append(envelope);
+    const letter = picture(art.ENVELOPE);
+    const count = element('span','count');
+    mail.append(letter,count);
+
     function refresh() {
       lamp.firstChild.src = art['LAMP_' + (person.colour || 'GREEN')];
       lamp.classList.toggle('unknown', !person.colour);
-      lamp.title = person.name + ' · ' + person.statusLabel + (onStatus ? ' · Ändra status' : '');
-      lamp.setAttribute('aria-label', lamp.title);
+      lamp.setAttribute('aria-label', person.name + ' · ' + person.statusLabel);
       const unread = person.unread || 0;
       mail.hidden = !unread;
-      badge.textContent = unread > 99 ? '99+' : unread;
+      count.hidden = unread < 2;
+      count.textContent = unread > 99 ? '99+' : unread;
       mail.setAttribute('aria-label', person.name + ', ' + unread + ' olästa brev');
     }
     if (onStatus) lamp.onclick = () => { onStatus(person); refresh(); };
     mail.onclick = () => {
-      if (drawer.dataset.open==='false' && getComputedStyle(lamp).display==='none') {
+      if (drawer.dataset.open==='false' && matchMedia(mobileScreen).matches) {
         setOpen(true);
         return;
       }
       onRead?.(person);
       refresh();
-      (lamp.offsetWidth ? lamp : grip).focus({preventScroll:true});
+      grip.focus({preventScroll:true});
     };
-    row.append(mail,lamp,detail);
+    row.append(portrait,mail);
     refresh();
     return {row,refresh};
   }
@@ -126,45 +118,56 @@ export function createPartyPanel(mount, art, {opened=false, onStatus, onRead, on
     setOpen(drawer.dataset.open === 'true');
     return rows;
   }
-  // Keyboard activation uses the native button click. A completed drag consumes its subsequent click.
-  let drag = null;
-  let consumed = false;
-  grip.onclick = () => {
-    if (!consumed) setOpen(drawer.dataset.open !== 'true');
-    consumed = false;
-  };
-  grip.onpointerdown = event => {
-    if (event.button !== 0 || !event.isPrimary) return;
-    consumed = false;
-    const wing = parseFloat(getComputedStyle(drawer).getPropertyValue('--wing'));
-    drag = {id:event.pointerId, start:event.clientX, wing, offset:drawer.dataset.open === 'true' ? 0 : wing};
-    grip.setPointerCapture(event.pointerId);
-  };
-  grip.onpointermove = event => {
-    if (drag?.id !== event.pointerId) return;
-    const delta = event.clientX - drag.start;
-    if (Math.abs(delta) < 5 && !consumed) return;
-    consumed = true;
-    drawer.classList.add('dragging');
-    const offset = Math.min(drag.wing, Math.max(0, drag.offset + delta));
-    drawer.style.setProperty('--opening', String(1 - offset / drag.wing));
-  };
-  function finish(event, cancel) {
-    if (drag?.id !== event.pointerId) return;
-    if (consumed && !cancel) {
-      const delta = event.clientX - drag.start;
-      const mobile = mount.querySelector('.edge-close').offsetWidth > 0;
-      const open = mobile && Math.abs(delta) >= 40 ? delta < 0 : drag.offset + delta < drag.wing/2;
-      setOpen(open);
+
+  // A tap belongs to the portrait/letter underneath it. Capture only a horizontal drag.
+  let drag;
+  let suppressClick = false;
+  drawer.addEventListener('click',event=>{
+    if (suppressClick && event.detail) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      suppressClick = false;
     }
+  },true);
+  drawer.onpointerdown = event => {
+    if (!event.isPrimary || event.button !== 0) return;
+    suppressClick = false;
+    const style = getComputedStyle(drawer);
+    const travel = drawer.offsetWidth - parseFloat(style.borderLeftWidth);
+    const offset = new DOMMatrixReadOnly(style.transform).m41;
+    const captor = event.target;
+    captor.setPointerCapture(event.pointerId);
+    drag = {id:event.pointerId, startX:event.clientX, startY:event.clientY, offset, travel, captor};
+  };
+  drawer.onpointermove = event => {
+    if (drag?.id !== event.pointerId) return;
+    const dx = event.clientX - drag.startX;
+    if (!suppressClick) {
+      const dy = event.clientY - drag.startY;
+      if (Math.abs(dy)>6 && Math.abs(dy)>Math.abs(dx)) {drag=null; return;}
+      if (Math.abs(dx)<5) return;
+      drawer.classList.add('dragging');
+      suppressClick = true;
+    }
+    const offset = Math.min(drag.travel, Math.max(0, drag.offset+dx));
+    drawer.style.setProperty('--opening', String(1-offset/drag.travel));
+  };
+  function finish(event,cancel) {
+    if (drag?.id !== event.pointerId) return;
+    if (suppressClick && !cancel) {
+      const dx = event.clientX-drag.startX;
+      setOpen(drag.offset+dx < drag.travel/2);
+    }
+    const captor = drag.captor;
+    drag=null;
     drawer.classList.remove('dragging');
     drawer.style.removeProperty('--opening');
-    grip.releasePointerCapture(event.pointerId);
-    drag = null;
-    if (cancel) consumed = false;
+    if (captor.hasPointerCapture(event.pointerId)) captor.releasePointerCapture(event.pointerId);
+    if (cancel) suppressClick=false;
   }
-  grip.onpointerup = event => finish(event,false);
-  grip.onpointercancel = event => finish(event,true);
+  drawer.onpointerup = event=>finish(event,false);
+  drawer.onpointercancel = event=>finish(event,true);
+  drawer.onlostpointercapture = event=>finish(event,true);
   setOpen(opened);
-  return {setPeople, setOpen};
+  return {setPeople,setOpen};
 }
