@@ -97,6 +97,23 @@ try {
     assert.ok(await rail.evaluate(el=>el===window.acceptancePartyRail));
     assert.equal(await rail.locator('.member .lamp:visible').count(),expected);
     await page.screenshot({path:'rail-results/mobile-'+width+'-open.png',mask:[page.locator('#sessionUser:visible')]});
+    const names=await page.evaluate(()=>window.aleaPartyCharacters.list().filter(c=>c.ownerId).map(c=>window.aleaPartyCharacters.name(c).split(/\s+/)[0]));
+    const buttons=rail.locator('button.face');
+    const labels=await buttons.evaluateAll(list=>list.map(b=>b.getAttribute('aria-label')));
+    const i=labels.findIndex(label=>names.some(name=>label==='Visa '+name));
+    assert.ok(i>=0,'A campaign character has a portrait');
+    await buttons.nth(i).click(); await settle();
+    assert.equal(await drawer.getAttribute('data-state'),'2');
+    const info=rail.locator('.party-details');
+    for (const name of ['Grundegenskaper','Färdigheter','Magi','Utrustning']) {
+      await info.getByRole('tab',{name,exact:true}).click();
+      assert.ok((await info.locator('.party-page').innerText()).length>0);
+    }
+    await info.getByRole('tab',{name:'Grundegenskaper'}).click();
+    await page.screenshot({path:'rail-results/mobile-'+width+'-full.png',mask:[page.locator('#sessionUser:visible')]});
+    await grip.focus(); await page.keyboard.press('Escape'); await settle();
+    assert.equal(await drawer.getAttribute('data-state'),'1');
+
   }
   await page.locator('#mapNavBtn').evaluate(button=>button.click());
   const map=page.locator('#mapPage');

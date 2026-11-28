@@ -1,3 +1,4 @@
+@import url("../party/details.css");
 :root{--arcane-drawer-z:120}
 .arcane-character-rail{position:fixed;z-index:var(--arcane-drawer-z);right:8px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:8px;max-height:min(76vh,720px);overflow:auto;padding:8px 6px;border:1px solid rgba(191,151,88,.36);border-radius:22px;background:rgba(18,18,21,.76);backdrop-filter:blur(12px);box-shadow:0 8px 28px #0008;scrollbar-width:thin}
 body:has(> #partyRail) .arcane-character-rail,.arcane-character-rail[hidden],.arcane-character-drawer[hidden]{display:none}
@@ -35,3 +36,6 @@ body:has(> #partyRail) .arcane-character-rail,.arcane-character-rail[hidden],.ar
 .arcane-drawer-overlay{position:fixed;z-index:calc(var(--arcane-drawer-z) - 1);inset:0;background:transparent;pointer-events:none}
 @media(max-width:900px){.arcane-character-rail,.arcane-character-drawer,.arcane-drawer-overlay{display:none!important}}
 @media(prefers-reduced-motion:reduce){.arcane-character-drawer,.arcane-drawer-page{transition:none;animation:none}}
+
+.party-person-open > .arcane-drawer-tabs,.party-person-open > .arcane-drawer-content,.desktop-party-details .party-person { display:none; }
+.desktop-party-details { display:flex; flex-direction:column; min-height:0; flex:1; padding:0 12px; }

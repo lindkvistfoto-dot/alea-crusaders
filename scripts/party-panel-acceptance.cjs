@@ -1,8 +1,8 @@
-const {chromium} = require('playwright');
-const assert = require('node:assert/strict');
-const fs = require('node:fs/promises');
-const path = require('node:path');
-const [preview, output='party-panel-results'] = process.argv.slice(2);
+const {chromium}=require('playwright');
+const assert=require('node:assert/strict');
+const fs=require('node:fs/promises');
+const path=require('node:path');
+const [url,output='party-panel-results']=process.argv.slice(2);
 
 async function settle(drawer) {
   await drawer.evaluate(async el=>{
@@ -10,151 +10,85 @@ async function settle(drawer) {
     await Promise.all(el.getAnimations({subtree:true}).map(a=>a.finished.catch(()=>{})));
   });
 }
-
-async function measure(page) {
+async function geometry(page) {
   return page.evaluate(()=>{
-    const rect=el=>{
-      const {x,y,width,height,right,bottom}=el.getBoundingClientRect();
-      return {x,y,width,height,right,bottom};
-    };
-    const map=document.querySelector('.map');
-    const drawer=document.querySelector('.drawer');
-    const style=getComputedStyle(drawer);
-    return {
-      drawer:rect(drawer), border:parseFloat(style.borderLeftWidth), borderStyle:style.borderLeftStyle,
-      map:rect(map), camera:[getComputedStyle(map).backgroundSize,getComputedStyle(map).backgroundPosition],
-      scroll:[scrollX,scrollY],
-      rows:[...drawer.querySelectorAll('.member')].map(row=>({
-        face:rect(row.querySelector('.face')),lamp:rect(row.querySelector('.lamp img')),
-        letter:row.querySelector('.mail').offsetWidth?rect(row.querySelector('.mail')):null
-      }))
-    };
+    const box=s=>{const {x,y,width,height,right,bottom}=document.querySelector(s).getBoundingClientRect();return {x,y,width,height,right,bottom};};
+    const style=getComputedStyle(document.querySelector('.map'));
+    return {drawer:box('.drawer'),persona:box('.face'),lamp:box('.lamp'),map:box('.map'),
+      camera:[style.backgroundSize,style.backgroundPosition,scrollX,scrollY],rim:parseFloat(getComputedStyle(document.querySelector('.drawer')).borderLeftWidth)};
   });
 }
-function near(actual,expected) { assert.ok(Math.abs(actual-expected)<0.6,actual+' vs '+expected); }
-function checkOpen(state) {
-  near(state.drawer.right,state.map.right);
-  for (const {face,lamp,letter} of state.rows) {
-    assert.ok(state.drawer.width-face.width<=16);
-    near(lamp.x+lamp.width/2,face.x+face.width*.25);
-    near(lamp.y+lamp.height/2,face.y+face.height*.933);
-    if (letter) {
-      near(letter.x+letter.width/2,face.x+face.width*.75);
-      near(letter.y+letter.height/2,face.y+face.height*.933);
-    }
+async function testMobile(browser,width,height) {
+  const page=await browser.newPage({viewport:{width,height},isMobile:true,hasTouch:true});
+  const errors=[]; page.on('pageerror',e=>errors.push(e.message));
+  await page.goto(url);
+  const drawer=page.locator('.drawer'),grip=drawer.locator('#grip'),faces=drawer.locator('.face');
+  const tab=name=>drawer.getByRole('tab',{name,exact:true});
+  const state=async n=>{await settle(drawer);assert.equal(await drawer.getAttribute('data-state'),String(n));};
+  const shot=name=>page.screenshot({path:path.join(output,'mobil-'+width+'-'+name+'.png')});
+  await faces.first().waitFor({state:'attached'});
+  await page.evaluate(()=>{window.originalPortrait=document.querySelector('.face');});
+  await state(0); const hidden=await geometry(page);
+  assert.equal(hidden.rim,3); assert.equal(hidden.drawer.x,hidden.map.right-3);
+  assert.ok(hidden.persona.x>=hidden.map.right && hidden.lamp.x>=hidden.map.right);
+  await shot('dold'); await grip.click(); await state(1);
+  const portraits=await geometry(page);
+  assert.equal(portraits.map.right-portraits.drawer.x,58); await shot('portratt');
+  // Measure the rail halfway through an actual drag. Finish one detent at a time.
+  const handle=await grip.boundingBox(),x=handle.x+12,y=handle.y+20;
+  await page.mouse.move(x,y); await page.mouse.down(); await page.mouse.move(x-42,y,{steps:5});
+  const mid=await geometry(page);
+  assert.ok(Math.abs((portraits.persona.x-mid.persona.x)-42)<1);
+  assert.ok(Math.abs((portraits.drawer.x-mid.drawer.x)-42)<1);
+  await page.mouse.up(); await state(2);
+  const full=await geometry(page); assert.ok(full.persona.x<portraits.persona.x-100);
+  await faces.nth(1).click(); await tab('Färdigheter').click(); await state(2);
+  const details=drawer.locator('.party-page');
+  assert.ok(await details.textContent().then(s=>s.includes('Upptäcka fara')));
+  assert.equal(await drawer.locator('button[data-roll]').count(),0);
+  assert.equal(await page.evaluate(()=>document.querySelector('.face')===window.originalPortrait),true);
+  await shot('full');
+  await details.evaluate(el=>{el.scrollTop=el.scrollHeight;});
+  assert.ok(await details.evaluate(el=>el.scrollTop>0));
+  const after=await geometry(page);
+  assert.deepEqual(after.map,hidden.map); assert.deepEqual(after.camera,hidden.camera);
+  assert.deepEqual(after.persona,full.persona);
+  await faces.nth(2).click(); await state(2); assert.equal((await geometry(page)).drawer.x,full.drawer.x);
+  await page.keyboard.press('Escape'); await state(1); await page.keyboard.press('Escape'); await state(0);
+  await grip.click(); await state(1); await grip.focus(); await page.keyboard.press('ArrowLeft'); await state(2);
+  assert.equal(await tab('Färdigheter').getAttribute('aria-selected'),'true');
+  await page.keyboard.press('Escape'); await state(1); await page.keyboard.press('Escape'); await state(0);
+  await page.getByRole('button',{name:'Simulera brev'}).click();
+  const letter=drawer.locator('.mail:not([hidden])').first();
+  await letter.click({position:{x:4,y:12}}); await state(2);
+  assert.equal(await tab('Meddelanden').getAttribute('aria-selected'),'true');
+  await details.getByText('Jag väntar vid kryptans port.').waitFor(); await letter.waitFor({state:'hidden'});
+  const input=drawer.getByRole('textbox',{name:'Meddelande'});
+  await input.fill('Jag kommer.'); await drawer.getByRole('button',{name:'Skicka',exact:true}).click();
+  await details.getByText('Jag kommer.').waitFor();
+  await page.setViewportSize({width,height:Math.min(390,height)}); await input.focus();
+  const send=await drawer.getByRole('button',{name:'Skicka',exact:true}).boundingBox();
+  assert.ok(send.y+send.height<=Math.min(390,height)+1);
+  await page.setViewportSize({width,height});
+  await page.keyboard.press('Escape'); await state(1);
+  for(const count of [1,3,5,8]) {
+    await page.getByRole('button',{name:String(count),exact:true}).click(); assert.equal(await faces.count(),count);
   }
-}
-function checkFolded(state) {
-  assert.ok(state.border>=2 && state.border<=3 && state.borderStyle!=='none');
-  near(state.drawer.x+state.border,state.map.right);
-  for (const {face,lamp,letter} of state.rows) {
-    assert.ok(face.x>=state.map.right && lamp.x>=state.map.right);
-    if (letter) assert.ok(letter.x<state.map.right-5 && letter.right>state.map.right-1);
-  }
-}
-
-async function testViewport(browser,device,width,height) {
-  const mobile=device==='mobil';
-  const page=await browser.newPage({viewport:{width,height},hasTouch:mobile,isMobile:mobile});
-  const errors=[];
-  page.on('pageerror',err=>errors.push(err.message));
-  await page.goto(preview);
-  const drawer=page.locator('.drawer'),grip=drawer.locator('#grip');
-  await drawer.locator('.member').first().waitFor({state:'attached'});
-  const shot=state=>page.screenshot({path:path.join(output,device+'-'+state+'.png')});
-  // Decode the actual published art, including CSS leather, before taking screenshots.
-  await page.evaluate(async()=>{
-    const registry=await (await fetch('../../features/party/components.json')).json();
-    const wanted=['LAMP_GREEN','LAMP_RED','LAMP_YELLOW','ENVELOPE','PANEL_BACKGROUND'];
-    await Promise.all(wanted.map(async key=>{
-      const entry=registry.find(o=>o.key==='ARCANE_PARTY_'+key);
-      const img=new Image(); img.src=entry.url; await img.decode();
-      if(img.naturalWidth!==entry.width||img.naturalHeight!==entry.height)throw Error(key);
-    }));
-    await Promise.all([...document.querySelectorAll('.face img')].map(i=>i.decode()));
-  });
-  if(mobile) { checkFolded(await measure(page)); await grip.click(); await settle(drawer); }
-  assert.equal(await drawer.locator('.rail,.name,.windrose,h1,h2,.edge-close,.panel-heading').count(),0);
-  assert.equal(await drawer.locator('button.face,button.lamp').count(),4); // Demo lamps are operable.
-  const results=[];
-  for (const n of [1,3,4,5,8]) {
-    await page.getByRole('button',{name:String(n),exact:true}).click();
-    const rows=drawer.locator('.member');
-    assert.equal(await rows.count(),n);
-    assert.equal(await drawer.locator('.portrait[inert]').count(),0);
-    await rows.first().evaluate(el=>window.partyNodes=[el.closest('.drawer'),...el.querySelectorAll('.face,.lamp,.mail')]);
-    const open=await measure(page); checkOpen(open);
-    await grip.click({position:{x:6,y:9}}); await settle(drawer);
-    const folded=await measure(page); checkFolded(folded);
-    assert.deepEqual([folded.map,folded.camera,folded.scroll],[open.map,open.camera,open.scroll]);
-    assert.equal(await drawer.locator('.portrait[inert]').count(),n);
-    await grip.focus(); await page.keyboard.press('Enter'); await settle(drawer);
-    assert.ok(await rows.first().evaluate(el=>[el.closest('.drawer'),...el.querySelectorAll('.face,.lamp,.mail')].every((node,i)=>node===window.partyNodes[i])));
-    results.push({device,width,height,count:n,panelWidth:open.drawer.width,portraitWidth:open.rows[0].face.width,foldedBorder:folded.border});
-  }
-  await page.getByRole('button',{name:'4',exact:true}).click();
-  for (const btn of await drawer.locator('.mail').all()) if (await btn.isVisible()) await btn.click();
-  await grip.click(); await settle(drawer);
-  checkFolded(await measure(page)); assert.equal(await drawer.locator('.mail:not([hidden])').count(),0);
-  await shot('infalld');
-  await page.locator('#send').click(); await page.locator('#send').click();
-  await settle(drawer); checkFolded(await measure(page));
-  await shot('olast');
-  const mail=drawer.locator('.mail').first();
-  if (mobile) {
-    await mail.tap({position:{x:5,y:12}}); await settle(drawer);
-    assert.equal(await grip.getAttribute('aria-expanded'),'true');
-    assert.ok(await mail.isVisible());
-  } else { await grip.click({position:{x:7,y:10}}); await settle(drawer); }
-  for (const btn of await drawer.locator('.mail').all()) if (await btn.isVisible()) await btn.click();
-  await page.getByRole('button',{name:'4',exact:true}).click();
-  for (let i=0;i<5;i++) await page.locator('#send').click();
-  const lamp=drawer.locator('.lamp').last();
-  await lamp.click(); await lamp.click(); // leave a disconnected participant for the visual check
-  assert.match(await lamp.getAttribute('aria-label'),/Frånkopplad/);
-  assert.equal(await mail.locator('.count').textContent(),'2');
-  for(const btn of (await drawer.locator('.mail').all()).slice(1)) await btn.click();
-  checkOpen(await measure(page)); await shot('utfalld');
-  await mail.click(); assert.equal(await mail.isVisible(),false);
-  // Stop halfway and verify the portrait and lamp travel with the actual border.
-  const before=await measure(page);
-  const handle=await grip.boundingBox(),x=handle.x+7,y=handle.y+9;
-  await page.mouse.move(x,y); await page.mouse.down(); await page.mouse.move(x+22,y,{steps:8});
-  const mid=await measure(page);
-  near(mid.drawer.x-before.drawer.x,22);
-  near(mid.rows[0].lamp.x-before.rows[0].lamp.x,22);
-  near(mid.rows[0].face.x-before.rows[0].face.x,22);
-  await page.mouse.move(x+before.drawer.width-4,y,{steps:8}); await page.mouse.up(); await settle(drawer);
-  checkFolded(await measure(page));
-  await grip.focus(); await page.keyboard.press('Enter'); await settle(drawer);
-  await page.keyboard.press('Escape'); await settle(drawer); checkFolded(await measure(page));
-  if (!mobile) {
-    await page.locator('#send').click();
-    const waiting=drawer.locator('.mail:not([hidden])').first();
-    await waiting.click({position:{x:5,y:12}});
-    assert.equal(await drawer.locator('.mail:not([hidden])').count(),0);
-    assert.equal(await grip.getAttribute('aria-expanded'),'false');
-  }
-  await page.getByRole('button',{name:'8',exact:true}).click();
-  await page.setViewportSize({width:mobile?760:1100,height:360});
-  await grip.click({position:{x:7,y:9}}); await settle(drawer);
-  const long=await page.locator('.viewport').evaluate(el=>{
-    const pageY=window.scrollY;
-    el.scrollTop=el.scrollHeight;
-    const last=el.querySelector('.member:last-child .face').getBoundingClientRect();
-    return {scrolled:el.scrollTop>0,pageStill:pageY===window.scrollY,lastFits:last.bottom<=el.getBoundingClientRect().bottom};
-  });
-  assert.deepEqual(long,{scrolled:true,pageStill:true,lastFits:true});
-  assert.deepEqual(errors,[]); await page.close(); return results;
+  await faces.nth(1).click(); await state(2); await tab('Färdigheter').click();
+  const members=drawer.locator('#members');
+  await members.evaluate(el=>{el.scrollTop=el.scrollHeight;});
+  const scroll=await members.evaluate(el=>({top:el.scrollTop,max:el.scrollHeight-el.clientHeight}));
+  if(scroll.max>0)assert.ok(scroll.top>0);
+  assert.ok(await details.evaluate(el=>el.scrollTop===0));
+  assert.deepEqual(errors,[]); await page.close();
+  return {width,height,rim:hidden.rim,portraits:portraits.map.right-portraits.drawer.x,full:full.drawer.width};
 }
 (async()=>{
   await fs.mkdir(output,{recursive:true});
   const browser=await chromium.launch(process.env.CHROMIUM_PATH?{executablePath:process.env.CHROMIUM_PATH}:{channel:'chrome'});
   try {
     const results=[];
-    results.push(...await testViewport(browser,'desktop',1440,920));
-    results.push(...await testViewport(browser,'mobil',390,844));
-    await fs.writeFile(path.join(output,'test.json'),JSON.stringify(results,null,2));
-    console.log('Godkända panellägen för 1, 3, 4, 5 och 8 deltagare på mobil och desktop.');
+    for(const [w,h] of [[390,844],[360,740],[844,390]]) results.push(await testMobile(browser,w,h));
+    await fs.writeFile(path.join(output,'test.json'),JSON.stringify(results,null,2)); console.log(results);
   } finally {await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});

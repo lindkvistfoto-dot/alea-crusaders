@@ -1,6 +1,9 @@
 import components from './components.json';
 import {createPartyPanel,loadArt,partyFirstName,partyProfileName} from './panel.js';
 import styles from './panel.css?inline';
+import {createPersonDetails} from './person-details.js';
+import detailStyles from './details.css?inline';
+import sheetStyles from '../character/arcane-character-drawer.css?inline';
 import dockStyles from './login-panel.css?inline';
 import storyteller from './sl.webp';
 import {connectPartyPresence} from './presence.js';
@@ -8,7 +11,7 @@ import {connectPartyPresence} from './presence.js';
 function start() {
   const login = document.getElementById('loginScreen');
   const main = document.querySelector('main');
-  let host, panel, scope, live, loadedAt=0, loading=false, roster=[], people=[], rows=[];
+  let host, panel, detailView, syncViewport, scope, live, loadedAt=0, loading=false, roster=[], people=[], rows=[];
   let lastToken, lastPage='', retryAfter=0, suspended=false;
 
   function mount() {
@@ -17,17 +20,51 @@ function start() {
     host.setAttribute('aria-label','Spelarlista');
     const shadow=host.attachShadow({mode:'open'});
     const sheet=document.createElement('style');
-    sheet.textContent=styles+'\n'+dockStyles;
+    sheet.textContent=sheetStyles+'\n'+styles+'\n'+detailStyles+'\n'+dockStyles;
     const mountPoint=document.createElement('div');
     shadow.append(sheet,mountPoint);
+    function details(container,onTab) {
+      return createPersonDetails(container,{sheet:()=>window.aleaPartyCharacters,onTab,
+        onManage(c,page){
+          window.aleaPartyCharacters.closeParty();panel.setState(1);
+          window.aleaPartyCharacters.manage(c,page);
+        }
+      });
+    }
+    function desktop(person, trigger, messages) {
+      window.aleaPartyCharacters?.showParty(person,trigger,messages,details);
+    }
     panel=createPartyPanel(mountPoint,loadArt(components,host),{
-      onPortrait:(person,trigger)=>window.aleaPartyCharacters?.open(person.character,trigger)
+      onPortrait:(person,trigger)=>desktop(person,trigger,false),
+      onRead:(person,trigger)=>desktop(person,trigger,true),
+      onDetails(container,person,messages){
+        detailView??=details(container); detailView.select(person,messages);
+      },
+      onVisibility(full){
+        host.classList.toggle('party-full',full);
+        syncViewport?.(); detailView?.setVisible(full);
+      }
     });
+    syncViewport=()=>{
+      const vv=window.visualViewport;
+      if (!vv || !host) return;
+      host.style.setProperty('--party-vbottom',(vv.offsetTop+vv.height)+'px');
+      host.style.setProperty('--party-vtop',vv.offsetTop+'px');
+    };
+    window.visualViewport?.addEventListener('resize',syncViewport);
+    window.visualViewport?.addEventListener('scroll',syncViewport);
+    syncViewport();
     document.body.append(host);
   }
   function reset() {
     scope=null; loadedAt=retryAfter=0; loading=false; roster=[]; people=[]; rows=[]; lastPage='';
     live?.close(); live=null;
+    window.aleaPartyCharacters?.closeParty();
+    if(syncViewport){
+      window.visualViewport?.removeEventListener('resize',syncViewport);
+      window.visualViewport?.removeEventListener('scroll',syncViewport);
+    }
+    detailView?.dispose(); panel?.destroy(); syncViewport=detailView=null;
     host?.remove(); host=panel=null;
   }
   function paint() {
@@ -56,14 +93,14 @@ function start() {
     if (!members.some(m=>m.user_id===scope.user)) members.push({user_id:scope.user});
     // Presence belongs to a person. Their first player character supplies the portrait.
     const next=members.map(({user_id,role})=>{
-      if (role==='gm') return {owner:user_id,name:'SL',portrait:storyteller};
+      if (role==='gm') return {owner:user_id,self:user_id===scope.user,name:'SL',portrait:storyteller};
       const character=characters.find(c=>c.ownerId===user_id);
       const profileName=profiles.find(p=>p.id===user_id)?.display_name ||
         (user_id===scope.user ? supabaseProfile?.display_name : '');
       const name=character ? partyFirstName(window.aleaPartyCharacters.name(character)) :
         partyProfileName(profileName, user_id===scope.user ? 'Du' : 'Spelare');
       return {
-        owner:user_id, character, name,
+        owner:user_id, self:user_id===scope.user, character, name,
         portrait:character?window.aleaPartyCharacters.portrait(character):''
       };
     });
@@ -97,10 +134,7 @@ function start() {
     }
     const campaign=typeof centralCampaignId==='undefined'?null:centralCampaignId;
     if (!scope || user!==scope.user || campaign!==scope.campaign) {
-      if (scope?.user!==user) { reset(); mount(); }
-      else {
-        live?.close(); live=null; roster=[]; loading=false; loadedAt=retryAfter=0;
-      }
+      reset(); mount();
       scope={user,campaign};
     }
     if (lastToken!==session.access_token) { lastToken=session.access_token;live?.refreshToken(); }
