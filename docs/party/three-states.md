@@ -2,7 +2,7 @@
 
 ## Panel och verifiering
 
-Samma ram flyttas med CSS-transform. Porträtt och lampor behåller sina DOM-noder under dragningen. I Chromium mätte kartprovet 3 px av ramens egen kant i dolt läge och 58 px i porträttläget. Provet omfattar 360 × 740, 390 × 844 och 844 × 390, upp till åtta deltagare, direktöppning från kuvert och återgång till samma flik. Porträttlistan och informationsdelen har varsin vertikal scroll. Navigeringen och skrivfältet ligger utanför historikens scrollområde. Tangentbordsprovet reducerar tillgänglig höjd i Chromium. Fysiska tangentbord på Android och iOS ingår inte i det automatiska provet.
+Samma ram flyttas med CSS-transform. Porträtt och lampor behåller sina DOM-noder under dragningen. I Chromium mätte kartprovet 3 px av ramens egen kant i dolt läge och 58 px i porträttläget. Provet omfattar 360 × 740, 390 × 844 och 844 × 390, upp till åtta deltagare, direktöppning från kuvert och återgång till samma flik. Porträttlistan och informationsdelen har varsin vertikal scroll. Navigeringen och skrivfältet ligger utanför historikens scrollområde. Tangentbordsprovet reducerar tillgänglig höjd i Chromium. Systemtangentborden på fysiska Android- och iOS-enheter ingår inte i det automatiska provet.
 
 Både mobilens informationsdel och den befintliga desktopvyn använder rollpersonsbladets grundegenskaper, färdigheter, magi och utrustning. Slag använder befintliga tärningsmenyer. Ägaren och behörig SL kan fortsätta till ordinarie redigering eller utrustningshantering. Ett klick på ett porträtt flyttar ingen figur.
 

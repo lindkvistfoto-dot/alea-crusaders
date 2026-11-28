@@ -82,7 +82,9 @@
   renderPage(c,i){return [pageAttributes,skillPage,magicPage,equipmentPage][i](c)},
   manage(c,i){if(!mayAct(c))return;window.openCharacters?.();window.openChar?.(c.id);window.setTab?.(['grund','skills','magic','equipment'][i]);},
   showParty(person,trigger,messages,createView){
-   makeRoot();partyPortraitTrigger=trigger;
+   makeRoot();
+   if(partyView && partyPortraitTrigger===trigger && !messages){close();return}
+   partyPortraitTrigger=trigger;
    if(!partyView){
     const host=document.createElement('div');host.className='desktop-party-details';
     drawer.insertBefore(host,drawer.querySelector('footer'));

@@ -127,6 +127,7 @@
 @media (max-width:900px), (pointer:coarse) and (max-height:540px) and (max-width:1000px) {
   .viewport:has(.three-states) { overflow:clip; }
   .three-states { max-height:calc(100% - 10px); }
-  .three-states[data-state="0"] #members { transform:translateY(var(--peek-shift,0px)); }
+  .three-states[data-state="0"] #members { position:relative; z-index:2; pointer-events:none; transform:translateY(var(--peek-shift,0px)); }
+  .three-states[data-state="0"] .mail { pointer-events:auto; }
   .three-states[data-state="1"] #members { overflow:hidden auto; scrollbar-width:none; overscroll-behavior:contain; }
 }
