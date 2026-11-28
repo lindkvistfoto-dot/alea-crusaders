@@ -177,7 +177,6 @@ export function createPartyPanel(mount, art, {opened=false, onStatus, onRead, on
       const dy = event.clientY - drag.startY;
       if (Math.abs(dy)>6 && Math.abs(dy)>Math.abs(dx)) {drag=null; return;}
       if (Math.abs(dx)<5) return;
-      drag.captor.setPointerCapture(event.pointerId);
       drawer.classList.add('dragging');
       suppressClick = true;
     }

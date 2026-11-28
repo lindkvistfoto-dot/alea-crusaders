@@ -134,7 +134,16 @@ function start() {
     }
     const campaign=typeof centralCampaignId==='undefined'?null:centralCampaignId;
     if (!scope || user!==scope.user || campaign!==scope.campaign) {
-      reset(); mount();
+      if (!scope || scope.user!==user) {
+        reset(); mount();
+      } else {
+        live?.close(); live=null; roster=[]; people=[]; rows=[];
+        loadedAt=retryAfter=0; loading=false;
+        window.aleaPartyCharacters?.closeParty(); detailView?.dispose(); detailView=null;
+        if (scope.campaign) panel.setState(0);
+        panel.setPeople([]);
+        host.shadowRoot.querySelector('.party-details').replaceChildren();
+      }
       scope={user,campaign};
     }
     if (lastToken!==session.access_token) { lastToken=session.access_token;live?.refreshToken(); }

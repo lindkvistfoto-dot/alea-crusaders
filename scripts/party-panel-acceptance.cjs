@@ -48,6 +48,15 @@ async function testMobile(browser,width,height) {
   assert.equal(await drawer.locator('button[data-roll]').count(),0);
   assert.equal(await page.evaluate(()=>document.querySelector('.face')===window.originalPortrait),true);
   await shot('full');
+  const box=await details.boundingBox();
+  const touch=await page.context().newCDPSession(page);
+  const startY=box.y+Math.min(box.height-8,150), tx=box.x+box.width/2;
+  await touch.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:tx,y:startY}]});
+  for(const dy of [10,22,36,50]) await touch.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:tx+2,y:startY-dy}]});
+  await touch.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]}); await touch.detach();
+  await page.waitForFunction(()=>document.querySelector('.party-page').scrollTop>0);
+  await state(2);
+
   await details.evaluate(el=>{el.scrollTop=el.scrollHeight;});
   assert.ok(await details.evaluate(el=>el.scrollTop>0));
   const after=await geometry(page);
