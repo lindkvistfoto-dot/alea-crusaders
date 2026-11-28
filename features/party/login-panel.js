@@ -21,7 +21,7 @@ function start() {
     const mountPoint=document.createElement('div');
     shadow.append(sheet,mountPoint);
     panel=createPartyPanel(mountPoint,loadArt(components,host),{
-      onPortrait:p=>window.aleaPartyCharacters?.open(p.character)
+      onPortrait:(person,trigger)=>window.aleaPartyCharacters?.open(person.character,trigger)
     });
     document.body.append(host);
   }

@@ -49,6 +49,8 @@ try {
       await portrait.click();
       await page.locator('.arcane-character-drawer.is-open').waitFor();
       await page.keyboard.press('Escape');
+      await page.locator('.arcane-character-drawer.is-open').waitFor({state:'hidden'});
+      assert.ok(await portrait.evaluate(el=>el===el.getRootNode().activeElement));
     }
   }
   await page.locator('#landingCharactersNavBtn').evaluate(button=>button.click());

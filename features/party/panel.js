@@ -66,7 +66,7 @@ export function createPartyPanel(mount, art, {opened=false, onStatus, onRead, on
     if (frame.tagName === 'BUTTON') {
       frame.type = 'button';
       frame.setAttribute('aria-label', 'Visa ' + person.name);
-      frame.onclick = () => onPortrait(person);
+      frame.onclick = () => onPortrait(person,frame);
     } else {
       frame.setAttribute('role', 'img');
       frame.setAttribute('aria-label', person.name);
